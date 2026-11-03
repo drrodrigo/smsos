@@ -1,0 +1,80 @@
+# SMSOS — Rumo do produto (roadmap)
+
+Botão de pânico silencioso. A pessoa aciona (segurando o botão de volume, por voz, ou pelo
+botão do app) e o SMSOS avisa, em silêncio, a rede de confiança dela, com a localização.
+
+Público: começa por mulheres (segurança) e por idosos / quem tem problema de saúde.
+Não substitui 190 (polícia), 192 (SAMU) nem 180 (Central de Atendimento à Mulher).
+
+---
+
+## Fase 1 — no ar (gratuita, Android)   ✅ pronta para a loja
+- Acionar segurando o botão de volume (tela ligada e, na maioria dos aparelhos, apagada).
+- SMS de emergência pelo chip, com link do mapa.
+- Rede por GPS: contatos "sempre avisar" (família) + contatos de cada lugar (vizinhos de
+  casa, do trabalho). O app escolhe os certos pela localização.
+- Atualizações de localização e aviso de "estou bem".
+- Perfil Segurança / Saúde (muda o texto da mensagem).
+- Teto de 10 contatos por lista.
+- Modo teste (sem enviar SMS).
+- Passo a passo guiado de configuração.
+
+## Fase 2 — conta + site (o cofre e a monetização)
+- **Site com login e senha** guarda histórico, provas e créditos. O app fica só com o
+  básico, de propósito: quem pega o celular NÃO vê para quem a pessoa mandou mensagem
+  (proteção contra coação — tomarem o celular e mandarem abrir o app).
+- **Créditos / planos vendidos no site, no PIX** (como nos produtos QR). O app só mostra
+  "plano ativo / X créditos". Regra das lojas: dentro do app, principalmente no iPhone,
+  NÃO pode ter botão de comprar, preço nem link de pagamento — a compra é no site, por fora.
+- **Envio por servidor (SMS Market via disparador do BipeChat)**, deixando o chip do
+  celular como reserva (sem internet).
+- **Comando de voz** pelo assistente ("Ok Google / E aí Siri, [frase]") — Android e iPhone.
+- **Modo escuta** (palavra-chave secreta ouvida pelo próprio app, no aparelho, sem mandar
+  áudio para fora). Só Android. Ligado só nos momentos de risco, para poupar bateria.
+
+## Fase 3 — vídeo e saldo (o mais caro)
+- **Gravar vídeo + áudio** ao acionar (prova), guardado por 30 dias, apagado depois.
+  Guardar é barato (centavos). Recomendado: Cloudflare R2 (download grátis).
+- **Transmissão ao vivo** para a família (GPS, câmera e microfone em tempo real).
+  Custo por emergência baixo (centavos a ~R$2); o peso é o servidor fixo.
+- **Saldo pré-pago (carteira):** abrir vídeo R$1, +R$1 por 30 min. Debita do saldo do dono
+  da conta. REGRA DE OURO: o alerta de socorro (SMS) NUNCA é bloqueado por falta de saldo.
+- **Câmera IP de casa** (nível 1: app puxa a câmera no Wi-Fi; nível 2: aparelho sempre
+  ligado em casa; nível 3: central de monitoramento — isso é empresa de segurança
+  regulada, Lei 7.102 / Polícia Federal).
+
+---
+
+## Ideias a amadurecer
+
+### Situações de mensagem (presets)
+Além do perfil Segurança/Saúde, a pessoa cadastra **mensagens prontas por situação** e
+escolhe rápido qual disparar, cada uma com seu texto e, se quiser, seu próprio grupo:
+- Assalto / abordagem.
+- **Violência doméstica** — mensagem para um grupo de amigas de confiança. Este caso pede
+  cuidado extra:
+  - **Disfarce é essencial** (o agressor costuma ter acesso ao celular): nome/ícone
+    discretos, tela "disfarçada", nada aparecendo. Combina com o histórico ficar no site.
+  - **Discrição total** no envio (sem som, sem vibração, sem notificação visível).
+  - Oferecer os canais oficiais no app: **180** (Central de Atendimento à Mulher), **190**.
+  - Pensar no contexto de **medida protetiva** (quando o agressor se aproxima).
+- "Estou saindo / estou na rua", "cheguei", "a caminho de casa".
+  (O GPS já diz onde a pessoa está; a situação muda o TEXTO e, às vezes, o grupo.)
+
+### Disfarce do app
+Ícone/nome que não entregam a função; abrir normal e acionar escondido.
+
+### iPhone
+Botão de Ação (15 Pro e mais novos), Toque nas Costas, Siri, botão no app. Não dá para
+segurar o volume em segundo plano (regra da Apple). App precisa ser construído à parte
+(conta Apple US$99/ano, Mac). Envio sempre por servidor.
+
+### Marca e domínios
+Marca **SMSOS**. Domínios registrados: smsos.com.br e alertasilencioso.com.br
+(este último atrai quem pesquisa "alerta silencioso" e aponta para o site).
+
+### Modelo de planos (ponto de partida)
+- Básico (~R$20/ano, até 3 contatos) — alerta por SMS + pacote de SMS.
+- Família (até 7 contatos) — rede de vizinhos por lugar.
+- Completo (até 10 contatos) — vídeo + ao vivo.
+- SMS pré-pago (recarga). Créditos de vídeo por uso. Venda no site (PIX).
