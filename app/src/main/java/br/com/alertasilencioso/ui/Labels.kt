@@ -1,0 +1,37 @@
+package br.com.alertasilencioso.ui
+
+import br.com.alertasilencioso.data.FollowUpAudience
+import br.com.alertasilencioso.data.Settings
+import br.com.alertasilencioso.data.TriggerKey
+import br.com.alertasilencioso.data.TriggerMode
+
+val TriggerKey.label: String
+    get() = when (this) {
+        TriggerKey.VOLUME_DOWN -> "Volume −"
+        TriggerKey.VOLUME_UP -> "Volume +"
+        TriggerKey.ANY -> "Qualquer um"
+    }
+
+private val TriggerKey.buttonName: String
+    get() = when (this) {
+        TriggerKey.VOLUME_DOWN -> "de diminuir o volume (−)"
+        TriggerKey.VOLUME_UP -> "de aumentar o volume (+)"
+        TriggerKey.ANY -> "de volume (+ ou −)"
+    }
+
+val TriggerMode.label: String
+    get() = when (this) {
+        TriggerMode.HOLD -> "Segurar"
+        TriggerMode.TAPS -> "Apertar várias vezes"
+    }
+
+val FollowUpAudience.label: String
+    get() = when (this) {
+        FollowUpAudience.ALWAYS_ONLY -> "Só \"Sempre avisar\""
+        FollowUpAudience.EVERYONE -> "Todos que receberam"
+    }
+
+fun Settings.triggerDescription(): String = when (triggerMode) {
+    TriggerMode.HOLD -> "Segure o botão ${triggerKey.buttonName} por $holdSeconds segundos."
+    TriggerMode.TAPS -> "Aperte o botão ${triggerKey.buttonName} $tapCount vezes seguidas, rápido."
+}

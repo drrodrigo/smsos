@@ -1,0 +1,191 @@
+package br.com.alertasilencioso.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import br.com.alertasilencioso.alert.SmsSender
+import br.com.alertasilencioso.core.GeoPoint
+import br.com.alertasilencioso.core.MessageBuilder
+import br.com.alertasilencioso.core.PhoneNumbers
+import br.com.alertasilencioso.core.SmsLength
+import br.com.alertasilencioso.data.FollowUpAudience
+import br.com.alertasilencioso.data.Repository
+import br.com.alertasilencioso.data.Settings
+import br.com.alertasilencioso.data.TriggerKey
+import br.com.alertasilencioso.data.TriggerMode
+import kotlin.math.roundToInt
+
+// Só para mostrar o exemplo da mensagem (Praça da Sé, São Paulo).
+private val PREVIEW_POSITION = GeoPoint(-23.55052, -46.63331)
+
+@Composable
+fun SettingsScreen(settings: Settings) {
+    val context = LocalContext.current
+    var name by remember { mutableStateOf(settings.userName) }
+    var template by remember { mutableStateOf(settings.messageTemplate) }
+    var testPhone by rememberSaveable { mutableStateOf("") }
+    val save: ((Settings) -> Settings) -> Unit = Repository::updateSettings
+
+    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item { Text("Ajustes", style = MaterialTheme.typography.headlineSmall) }
+        item {
+            SectionCard("Seu nome") {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { value ->
+                        name = value
+                        save { it.copy(userName = value) }
+                    },
+                    label = { Text("Nome que aparece na mensagem") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        item {
+            SectionCard("Botão de acionamento") {
+                Text("Qual botão", style = MaterialTheme.typography.labelLarge)
+                ChipRow(TriggerKey.entries, settings.triggerKey, { it.label }) { key -> save { it.copy(triggerKey = key) } }
+                Text("Como acionar", style = MaterialTheme.typography.labelLarge)
+                ChipRow(TriggerMode.entries, settings.triggerMode, { it.label }) { mode -> save { it.copy(triggerMode = mode) } }
+                when (settings.triggerMode) {
+                    TriggerMode.HOLD -> {
+                        Text("Segurar por ${settings.holdSeconds} segundos")
+                        Slider(
+                            value = settings.holdSeconds.toFloat(),
+                            onValueChange = { v -> save { it.copy(holdSeconds = v.roundToInt()) } },
+                            valueRange = 3f..30f,
+                            steps = 26,
+                        )
+                    }
+                    TriggerMode.TAPS -> {
+                        Text("Apertar ${settings.tapCount} vezes (em até 4 segundos)")
+                        Slider(
+                            value = settings.tapCount.toFloat(),
+                            onValueChange = { v -> save { it.copy(tapCount = v.roundToInt()) } },
+                            valueRange = 3f..10f,
+                            steps = 6,
+                        )
+                    }
+                }
+                HelpText("Toques rápidos no botão continuam mudando o volume normalmente.")
+            }
+        }
+        item {
+            SectionCard("Mensagem") {
+                OutlinedTextField(
+                    value = template,
+                    onValueChange = { value ->
+                        template = value
+                        save { it.copy(messageTemplate = value) }
+                    },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                HelpText(MessageBuilder.PLACEHOLDER_HELP)
+                val preview = MessageBuilder.alert(template, name, PREVIEW_POSITION, listOf("Casa"), System.currentTimeMillis())
+                Text("Exemplo de como chega:", style = MaterialTheme.typography.labelLarge)
+                Text(preview, style = MaterialTheme.typography.bodySmall)
+                val parts = SmsLength.parts(preview)
+                Text(
+                    "${preview.length} letras · $parts SMS por contato",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (parts > 1) StatusColors.warning else StatusColors.ok,
+                )
+                TextButton(onClick = {
+                    template = MessageBuilder.DEFAULT_TEMPLATE
+                    save { it.copy(messageTemplate = MessageBuilder.DEFAULT_TEMPLATE) }
+                }) { Text("Voltar para a mensagem padrão") }
+            }
+        }
+        item {
+            SectionCard("Depois do alerta") {
+                SwitchRow("Vibrar discretamente quando o alerta for enviado", settings.vibrateOnSend) { on ->
+                    save { it.copy(vibrateOnSend = on) }
+                }
+                Text(
+                    if (settings.followUpCount == 0) {
+                        "Não mandar atualizações de localização"
+                    } else {
+                        "Mandar a localização atualizada ${settings.followUpCount} vez(es), a cada ${settings.followUpIntervalMinutes} min"
+                    }
+                )
+                Slider(
+                    value = settings.followUpCount.toFloat(),
+                    onValueChange = { v -> save { it.copy(followUpCount = v.roundToInt()) } },
+                    valueRange = 0f..10f,
+                    steps = 9,
+                )
+                if (settings.followUpCount > 0) {
+                    Text("Intervalo: ${settings.followUpIntervalMinutes} min", style = MaterialTheme.typography.labelLarge)
+                    Slider(
+                        value = settings.followUpIntervalMinutes.toFloat(),
+                        onValueChange = { v -> save { it.copy(followUpIntervalMinutes = v.roundToInt()) } },
+                        valueRange = 1f..15f,
+                        steps = 13,
+                    )
+                    Text("As atualizações vão para:", style = MaterialTheme.typography.labelLarge)
+                    ChipRow(FollowUpAudience.entries, settings.followUpAudience, { it.label }) { audience ->
+                        save { it.copy(followUpAudience = audience) }
+                    }
+                }
+                HelpText("Atenção: o Android pede confirmação na tela quando um app manda mais de 30 SMS em meia hora. Por isso o padrão é mandar as atualizações só para os contatos de \"Sempre avisar\".")
+            }
+        }
+        item {
+            SectionCard("Tela apagada (experimental)") {
+                SwitchRow("Perceber o botão com a tela apagada", settings.screenOffDetection) { on ->
+                    save { it.copy(screenOffDetection = on) }
+                }
+                HelpText("Funciona na maioria dos celulares, mas não em todos. Use o modo teste, na tela Início, para conferir no seu.")
+            }
+        }
+        item {
+            SectionCard("Testar o envio de SMS") {
+                HelpText("Manda uma mensagem de teste para um número (o seu ou de alguém da família).")
+                OutlinedTextField(
+                    value = testPhone,
+                    onValueChange = { testPhone = it },
+                    label = { Text("Número com DDD") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    onClick = {
+                        when {
+                            !SmsSender.hasPermission(context) -> context.toast("Libere o SMS primeiro, na tela Início.")
+                            SmsSender.send(context, testPhone, MessageBuilder.testSms()) -> context.toast("SMS de teste enviado")
+                            else -> context.toast("Não foi possível enviar o SMS")
+                        }
+                    },
+                    enabled = PhoneNumbers.isPlausible(testPhone),
+                ) { Text("Enviar SMS de teste") }
+            }
+        }
+        item {
+            val version = remember {
+                runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+            }
+            HelpText("Alerta Silencioso · versão ${version ?: "?"}")
+        }
+    }
+}

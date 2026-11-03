@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Alerta Silencioso</string>
+    <string name="accessibility_service_label">Alerta Silencioso – botão de pânico</string>
+    <string name="accessibility_service_description">Percebe quando você segura o botão de volume para enviar o alerta de emergência por SMS. Não lê a tela nem o que você digita.</string>
+</resources>
