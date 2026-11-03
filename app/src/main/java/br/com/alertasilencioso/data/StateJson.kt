@@ -40,6 +40,7 @@ internal object StateJson {
         put("followUpAudience", s.followUpAudience.name)
         put("screenOffDetection", s.screenOffDetection)
         put("testMode", s.testMode)
+        put("onboardingDone", s.onboardingDone)
     }
 
     private fun decodeSettings(o: JSONObject): Settings {
@@ -57,6 +58,7 @@ internal object StateJson {
             followUpAudience = enumOr(o.optString("followUpAudience"), d.followUpAudience),
             screenOffDetection = o.optBoolean("screenOffDetection", d.screenOffDetection),
             testMode = o.optBoolean("testMode", d.testMode),
+            onboardingDone = o.optBoolean("onboardingDone", d.onboardingDone),
         )
     }
 

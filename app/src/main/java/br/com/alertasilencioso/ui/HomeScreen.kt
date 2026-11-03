@@ -1,13 +1,7 @@
 package br.com.alertasilencioso.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings as AndroidSettings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -72,7 +66,13 @@ import br.com.alertasilencioso.trigger.GuardianService
 private const val APP_BUTTON_HOLD_MILLIS = 2_000L
 
 @Composable
-fun HomeScreen(state: AppState, status: SetupStatus, onRefreshStatus: () -> Unit, onOpenTab: (Tab) -> Unit) {
+fun HomeScreen(
+    state: AppState,
+    status: SetupStatus,
+    onRefreshStatus: () -> Unit,
+    onOpenTab: (Tab) -> Unit,
+    onOpenWizard: () -> Unit,
+) {
     val context = LocalContext.current
     val running by GuardianService.running.collectAsStateWithLifecycle()
     val diagnostics by Diagnostics.state.collectAsStateWithLifecycle()
@@ -85,6 +85,13 @@ fun HomeScreen(state: AppState, status: SetupStatus, onRefreshStatus: () -> Unit
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { StatusCard(state.settings, status, running, recipients) }
+        if (!status.essentialsOk || !running || recipients == 0) {
+            item {
+                Button(onClick = onOpenWizard, Modifier.fillMaxWidth()) {
+                    Text("Configurar passo a passo", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
         state.activeAlert?.let { active -> item { ActiveAlertCard(active) } }
         item { PanicButton { AlertManager.trigger(context, TriggerSource.APP_BUTTON) } }
         item { SetupCard(state.settings, status, recipients, onRefreshStatus, onOpenTab) }
@@ -319,7 +326,7 @@ private fun SetupCard(
             confirmButton = {
                 TextButton(onClick = {
                     dialog = null
-                    context.startActivity(Intent(AndroidSettings.ACTION_ACCESSIBILITY_SETTINGS))
+                    context.openAccessibilitySettings()
                 }) { Text("Abrir Acessibilidade") }
             },
             dismissButton = {
@@ -443,15 +450,3 @@ private fun HistoryItem(record: AlertRecord) {
     }
 }
 
-private fun Context.openAppDetails() {
-    startActivity(Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
-}
-
-@SuppressLint("BatteryLife")
-private fun Context.requestIgnoreBatteryOptimizations() {
-    try {
-        startActivity(Intent(AndroidSettings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
-    } catch (e: ActivityNotFoundException) {
-        startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-    }
-}
