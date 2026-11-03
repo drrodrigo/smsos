@@ -184,12 +184,15 @@ fun AddContactDialog(onDismiss: () -> Unit, onConfirm: (name: String, phone: Str
                     label = { Text("Nome") },
                     singleLine = true,
                 )
+                val warning = PhoneNumbers.formatWarning(phone)
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
                     label = { Text("Celular com DDD") },
                     placeholder = { Text("(31) 99999-8888") },
                     singleLine = true,
+                    isError = warning != null,
+                    supportingText = warning?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 )
             }

@@ -2,6 +2,7 @@ package br.com.alertasilencioso.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -37,8 +38,19 @@ class SmallParsersTest {
         assertEquals("+5531999998888", PhoneNumbers.clean(" +55 (31) 99999-8888 "))
         assertEquals("31999998888", PhoneNumbers.clean("(31) 99999-8888"))
         assertEquals(PhoneNumbers.key("+55 31 99999-8888"), PhoneNumbers.key("(31) 99999-8888"))
-        assertTrue(PhoneNumbers.isPlausible("9999-8888"))
+    }
+
+    @Test
+    fun `numero so vale com DDD`() {
+        // Com DDD (11 dígitos) ou internacional (com +): vale.
+        assertTrue(PhoneNumbers.isPlausible("(31) 99476-9224"))
+        assertTrue(PhoneNumbers.isPlausible("+1 202 555 0147"))
+        // Sem DDD (só o celular) ou curto demais: não vale, e foi o que fez o SMS falhar.
+        assertFalse(PhoneNumbers.isPlausible("99476-9224"))
         assertFalse(PhoneNumbers.isPlausible("190"))
+        assertNotNull(PhoneNumbers.formatWarning("99476-9224"))
+        assertNull(PhoneNumbers.formatWarning("(31) 99476-9224"))
+        assertNull(PhoneNumbers.formatWarning(""))
     }
 
     @Test
