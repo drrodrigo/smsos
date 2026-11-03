@@ -5,3 +5,7 @@ local.properties
 *.iml
 .kotlin/
 entregas/
+
+# Chave de PRODUÇÃO (nunca versionar)
+keystore/release.keystore
+keystore/release.properties

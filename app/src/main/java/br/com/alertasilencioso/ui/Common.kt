@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.Contact
+import br.com.alertasilencioso.data.Limits
 import java.util.Locale
 
 fun Context.toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -101,14 +102,16 @@ fun ContactListEditor(
     emptyText: String,
     onAdd: (Contact) -> Unit,
     onRemove: (Contact) -> Unit,
+    max: Int = Limits.MAX_CONTACTS,
 ) {
     val context = LocalContext.current
     var typing by remember { mutableStateOf(false) }
     val add: (String, String) -> Unit = { name, phone ->
-        if (contacts.any { PhoneNumbers.key(it.phone) == PhoneNumbers.key(phone) }) {
-            context.toast("Esse número já está na lista")
-        } else {
-            onAdd(Contact(name = name, phone = phone))
+        when {
+            contacts.size >= max -> context.toast("Limite de $max contatos nesta lista.")
+            contacts.any { PhoneNumbers.key(it.phone) == PhoneNumbers.key(phone) } ->
+                context.toast("Esse número já está na lista")
+            else -> onAdd(Contact(name = name, phone = phone))
         }
     }
     val pickContact = rememberContactPicker(add)
@@ -125,16 +128,20 @@ fun ContactListEditor(
             }
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = pickContact) {
-            Icon(Icons.Filled.Person, contentDescription = null, Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("Da agenda")
-        }
-        OutlinedButton(onClick = { typing = true }) {
-            Icon(Icons.Filled.Add, contentDescription = null, Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("Digitar")
+    if (contacts.size >= max) {
+        HelpText("Você chegou ao limite de $max contatos nesta lista.")
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = pickContact) {
+                Icon(Icons.Filled.Person, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Da agenda")
+            }
+            OutlinedButton(onClick = { typing = true }) {
+                Icon(Icons.Filled.Add, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Digitar")
+            }
         }
     }
     if (typing) {

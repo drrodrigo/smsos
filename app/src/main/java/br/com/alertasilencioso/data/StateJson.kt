@@ -29,6 +29,7 @@ internal object StateJson {
 
     private fun encodeSettings(s: Settings) = JSONObject().apply {
         put("userName", s.userName)
+        put("profile", s.profile.name)
         put("triggerKey", s.triggerKey.name)
         put("triggerMode", s.triggerMode.name)
         put("holdSeconds", s.holdSeconds)
@@ -47,6 +48,7 @@ internal object StateJson {
         val d = Settings()
         return Settings(
             userName = o.optString("userName", d.userName),
+            profile = enumOr(o.optString("profile"), d.profile),
             triggerKey = enumOr(o.optString("triggerKey"), d.triggerKey),
             triggerMode = enumOr(o.optString("triggerMode"), d.triggerMode),
             holdSeconds = o.optInt("holdSeconds", d.holdSeconds),

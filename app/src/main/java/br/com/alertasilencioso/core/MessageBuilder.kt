@@ -1,5 +1,6 @@
 package br.com.alertasilencioso.core
 
+import br.com.alertasilencioso.data.Profile
 import java.text.Normalizer
 import java.time.Instant
 import java.time.ZoneId
@@ -10,6 +11,8 @@ import java.util.Locale
 object MessageBuilder {
     const val DEFAULT_TEMPLATE =
         "ALERTA! {nome} acionou o botao de emergencia e pode estar em perigo. Local: {mapa} - {hora}"
+    const val HEALTH_TEMPLATE =
+        "ALERTA DE SAUDE! {nome} apertou o botao e pode estar passando mal. Local: {mapa} - {hora}"
     const val PLACEHOLDER_HELP =
         "{nome} = seu nome · {mapa} = link do mapa · {hora} = data e hora · {lugar} = lugar cadastrado"
 
@@ -19,6 +22,9 @@ object MessageBuilder {
     private val DATE_TIME = DateTimeFormatter.ofPattern("dd/MM HH:mm")
     private val TIME = DateTimeFormatter.ofPattern("HH:mm")
     private val COMBINING_MARKS = Regex("\\p{Mn}+")
+
+    fun defaultTemplate(profile: Profile): String =
+        if (profile == Profile.SAUDE) HEALTH_TEMPLATE else DEFAULT_TEMPLATE
 
     fun alert(
         template: String,

@@ -1,6 +1,7 @@
 package br.com.alertasilencioso.ui
 
 import br.com.alertasilencioso.data.FollowUpAudience
+import br.com.alertasilencioso.data.Profile
 import br.com.alertasilencioso.data.Settings
 import br.com.alertasilencioso.data.TriggerKey
 import br.com.alertasilencioso.data.TriggerMode
@@ -23,6 +24,18 @@ val TriggerMode.label: String
     get() = when (this) {
         TriggerMode.HOLD -> "Segurar"
         TriggerMode.TAPS -> "Apertar várias vezes"
+    }
+
+val Profile.label: String
+    get() = when (this) {
+        Profile.SEGURANCA -> "🛡️ Segurança"
+        Profile.SAUDE -> "❤️ Saúde"
+    }
+
+val Profile.descricao: String
+    get() = when (this) {
+        Profile.SEGURANCA -> "Para assalto e situações de perigo. A mensagem diz que você pode estar em perigo."
+        Profile.SAUDE -> "Para idoso ou quem tem problema de saúde. A mensagem diz que você pode estar passando mal."
     }
 
 val FollowUpAudience.label: String

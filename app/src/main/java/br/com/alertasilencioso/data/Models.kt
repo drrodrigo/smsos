@@ -29,8 +29,17 @@ enum class TriggerMode { HOLD, TAPS }
 
 enum class FollowUpAudience { ALWAYS_ONLY, EVERYONE }
 
+/** Para quem é o alerta: muda o texto que chega ("em perigo" x "passando mal"). */
+enum class Profile { SEGURANCA, SAUDE }
+
+object Limits {
+    /** Teto de contatos por lista. Acima disso o alerta tumultua e o custo de SMS dispara. */
+    const val MAX_CONTACTS = 10
+}
+
 data class Settings(
     val userName: String = "",
+    val profile: Profile = Profile.SEGURANCA,
     val triggerKey: TriggerKey = TriggerKey.VOLUME_DOWN,
     val triggerMode: TriggerMode = TriggerMode.HOLD,
     val holdSeconds: Int = 10,

@@ -1,6 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+// Dados da chave de produção. Ficam fora do projeto (keystore/release.properties, no .gitignore).
+// Sem esse arquivo, o build de release sai sem assinatura — o de teste (debug) continua funcionando.
+val releaseProps = rootProject.file("keystore/release.properties").takeIf { it.exists() }?.let {
+    Properties().apply { it.inputStream().use(::load) }
 }
 
 android {
@@ -8,11 +16,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "br.com.alertasilencioso"
+        applicationId = "br.com.smsos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
     }
 
     signingConfigs {
@@ -24,11 +32,20 @@ android {
             keyAlias = "teste"
             keyPassword = "android"
         }
+        if (releaseProps != null) {
+            create("release") {
+                storeFile = rootProject.file(releaseProps.getProperty("storeFile"))
+                storePassword = releaseProps.getProperty("storePassword")
+                keyAlias = releaseProps.getProperty("keyAlias")
+                keyPassword = releaseProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (releaseProps != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -27,6 +27,7 @@ import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.core.SmsLength
 import br.com.alertasilencioso.data.FollowUpAudience
+import br.com.alertasilencioso.data.Profile
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
 import br.com.alertasilencioso.data.TriggerKey
@@ -58,6 +59,16 @@ fun SettingsScreen(settings: Settings) {
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+            }
+        }
+        item {
+            SectionCard("Para que você usa") {
+                ChipRow(Profile.entries, settings.profile, { it.label }) { p ->
+                    template = MessageBuilder.defaultTemplate(p)
+                    save { it.copy(profile = p, messageTemplate = template) }
+                }
+                HelpText(settings.profile.descricao)
+                HelpText("Trocar aqui também troca o texto padrão da mensagem (você pode editar abaixo).")
             }
         }
         item {
