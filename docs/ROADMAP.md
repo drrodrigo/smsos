@@ -161,3 +161,49 @@ principais do Rodrigo). Dois ganhos no mesmo produto:
   - Quando as **contas** entrarem (Fase 2), **atualizar a política de privacidade** e o
     Data Safety: hoje dizem "não coletamos nada" (porque é tudo no aparelho); com conta e
     nome isso muda e tem que estar declarado certinho.
+
+---
+
+## Aprendizados dos testes (madrugada 03 → manhã 04/11)
+
+Validado em aparelho real (Samsung) e no servidor. Isto é a base pra deixar o app consistente.
+
+### O que PROVAMOS que funciona
+- Acionar (botão da tela e botão de volume, tela ligada) → pega **GPS**, escolhe os
+  **contatos** certos pelo lugar, monta a **mensagem**, grava **histórico**, e **envia pela
+  nossa estrutura** (app → função `smsos-alerta` → `bipe-sms` → SMS Market).
+- **Entrega confirmada**: o Leandro recebeu. E com **confirmação de verdade** (id de
+  mensagem + status no servidor) — dá pra SABER o que chegou, diferente do chip.
+- **Atualizações de localização** (a cada 3 min) disparando certo.
+
+### O que NOS mordeu (e a lição)
+- **Chip do celular**: o Samsung (Bloqueador Automático) **bloqueia SMS de app** instalado
+  por APK, e re-liga sozinho. → **Play Store resolve** (app confiável). E o **gateway**
+  pula o chip de vez.
+- **Número errado é o maior vilão** e falha **calado**: faltar o **9** do celular ou o
+  **DDD** → a operadora recusa. O **+55 escondia** o erro. → validação dura + **editar
+  contato** + **aviso em vermelho** (v0.9.0). Falta: **avisar na tela principal** quem está
+  errado, e mostrar **"chegou em X de Y"** depois do alerta.
+- **Faltava a permissão de INTERNET** no app (o envio falhava calado). → corrigido (v0.8.3).
+- **Tela apagada** (detecção do botão): experimental, falha no Samsung. v1 = **tela ligada**.
+
+### Critérios a estudar (pedido do Rodrigo)
+- **Push é o principal** — mais barato e mais eficaz: de madrugada/no silencioso/dormindo o
+  SMS vira um bip que ninguém vê; o push **apita alto, fura o silencioso, acorda**. E
+  **não tem "número errado"** (vai pra aparelho registrado, confirmado no convite).
+- **SMS continua útil**: (a) pra quem **não quer instalar** o app ("me manda SMS que eu
+  vejo aqui"); (b) como **reforço repetido** (3 SMS em 3 min = insistência que chama
+  atenção, "por que apitou 3 vezes?").
+- **Redundância salva vidas**: quanto **MAIS pessoas** recebem, maior a chance de **alguém**
+  ver e socorrer (1 em 3, 1 em 4, 1 em 5...). → a **rede de socorro** deve ser **generosa**;
+  repensar o teto de contatos (hoje 10) e **não** limitar o alerta a 3 por plano. Pesar
+  contra: custo de SMS (resolvido no push, que é grátis) e privacidade.
+- **Confirmação visível**: a pessoa precisa **saber** quem foi avisado e quem não (medida de
+  segurança, não só conforto).
+
+### Nome / marca
+- Com o foco indo pro **push**, "SMS" em SMSOS fica impreciso. Mas **cuidado**: "push" é
+  **jargão** (público não técnico não entende) e trocar um mecanismo por outro cai na
+  **armadilha do AutoBipe** (não amarrar no que muda). Nome de **resultado**
+  (ex.: **alertasilencioso**) envelhece menos. `pushsos.com.br` está **disponível** (04/11)
+  — vale **segurar** o domínio por barato, mesmo sem casar a marca com ele ainda.
