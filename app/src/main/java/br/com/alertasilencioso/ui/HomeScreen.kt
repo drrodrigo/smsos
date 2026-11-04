@@ -513,31 +513,42 @@ private fun SetupRow(
     onHelp: ((String, String) -> Unit)? = null,
     onAction: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            if (done) Icons.Filled.CheckCircle else Icons.Filled.Warning,
-            contentDescription = if (done) "Pronto" else "Pendente",
-            tint = if (done) StatusColors.ok else StatusColors.warning,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            HelpText(description)
-        }
-        if (!done) {
-            Spacer(Modifier.width(8.dp))
-            FilledTonalButton(onClick = onAction, enabled = enabled) { Text(action) }
-        }
-        if (help != null && onHelp != null) {
-            IconButton(onClick = { onHelp(title, help) }) {
-                Text(
-                    "?",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+    // Em coluna: título (+ interrogação) em cima, texto na largura toda e botão embaixo.
+    // Antes era tudo na mesma linha e o texto ficava espremido num cantinho, difícil de ler.
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                if (done) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                contentDescription = if (done) "Pronto" else "Pendente",
+                tint = if (done) StatusColors.ok else StatusColors.warning,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            if (help != null && onHelp != null) {
+                IconButton(onClick = { onHelp(title, help) }, modifier = Modifier.size(32.dp)) {
+                    Text(
+                        "?",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
+        }
+        // Texto corrido, alinhado embaixo do título (padding = ícone 24 + espaço 12).
+        Text(
+            description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 36.dp),
+        )
+        if (!done) {
+            FilledTonalButton(
+                onClick = onAction,
+                enabled = enabled,
+                modifier = Modifier.padding(start = 36.dp),
+            ) { Text(action) }
         }
     }
 }
