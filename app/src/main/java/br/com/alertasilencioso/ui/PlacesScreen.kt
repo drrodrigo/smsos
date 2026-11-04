@@ -66,6 +66,26 @@ fun PlacesScreen(state: AppState) {
             Text("Lugares", style = MaterialTheme.typography.headlineSmall)
             HelpText("Cadastre os lugares onde você costuma ficar: casa, escritório, garagem... Quando o alerta sair de dentro de um lugar, as pessoas dele (por exemplo, os vizinhos) também recebem a mensagem.")
         }
+        // Sugestões prontas: a pessoa toca e já vai configurar. Some quando o lugar já foi criado.
+        val sugestoes = listOf("🏠 Casa" to "Casa", "💼 Trabalho" to "Trabalho")
+            .filter { (_, nome) -> state.places.none { it.name.equals(nome, ignoreCase = true) } }
+        if (sugestoes.isNotEmpty()) {
+            item {
+                HelpText("Comece pelos mais comuns:")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    sugestoes.forEach { (rotulo, nome) ->
+                        OutlinedButton(
+                            onClick = {
+                                val place = Place(name = nome)
+                                Repository.addPlace(place)
+                                editingId = place.id
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(rotulo) }
+                    }
+                }
+            }
+        }
         items(state.places, key = { it.id }) { place -> PlaceCard(place) { editingId = place.id } }
         item {
             Button(onClick = {
