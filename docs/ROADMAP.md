@@ -119,3 +119,23 @@ Se o contato **tem o app instalado**, mandar **push** em vez de (ou além de) SM
   2. Contato **sem o app** → **SMS** (pago, do pacote). Funciona pra todo mundo, mas custa.
   Isso vira o discurso de venda: o app é barato e mais seguro; o SMS é o reforço que a
   pessoa paga quando o contato não tem o app.
+
+### Clube de benefícios (a base de usuários vale ouro)
+O SMSOS é barato **de propósito**: assinatura baixa → **milhares de cadastros** → uma
+**base de dados** (com nome) que alimenta o **clube de benefícios** (um dos focos
+principais do Rodrigo). Dois ganhos no mesmo produto:
+1. **Assinatura** barata, mas com **margem quase cheia** no modo push (push é grátis):
+   ~R$20–25/ano já paga. Volume vira dinheiro de verdade; o SMS pago é extra em cima.
+2. **Base qualificada** — e o público casa: quem confia num **app de segurança** é público
+   perfeito pro clube; a confiança do produto de segurança **transfere** pro resto.
+- **Preço de partida:** ~R$25/ano (≈ US$5), preço de app. Mesmo **só no push** já vale.
+- **Cuidado que PROTEGE a marca (e é LGPD):**
+  - **Consentimento separado** pro clube: opt-in próprio no cadastro ("quero receber
+    benefícios"), nunca embutido na assinatura de segurança.
+  - **Nunca** usar os dados **sensíveis** (contatos de emergência, localização, histórico
+    de alertas) pra marketing. O clube usa só **nome/contato + opt-in**. Misturar "sei quem
+    são seus contatos de emergência" com propaganda **quebra a confiança** — e num app de
+    segurança, confiança é o produto.
+  - Quando as **contas** entrarem (Fase 2), **atualizar a política de privacidade** e o
+    Data Safety: hoje dizem "não coletamos nada" (porque é tudo no aparelho); com conta e
+    nome isso muda e tem que estar declarado certinho.
