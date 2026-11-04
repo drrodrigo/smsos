@@ -32,7 +32,9 @@ object PhoneNumbers {
      * um +55 que está sem o 9 do celular (ex.: "+55 31 9348-3704").
      */
     private fun nacionais(raw: String): String {
-        val d = raw.filter { it.isDigit() }
+        // Tira o "0" de discagem na frente (ex.: "031 99999-8888" -> "31 99999-8888"). DDD nunca começa
+        // com 0, então zero à esquerda é sempre prefixo de discagem -- muita gente escreve o número assim.
+        val d = raw.filter { it.isDigit() }.trimStart('0')
         return if (d.startsWith("55") && d.length >= 12) d.substring(2) else d
     }
 

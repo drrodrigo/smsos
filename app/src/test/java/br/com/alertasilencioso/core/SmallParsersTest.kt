@@ -59,6 +59,9 @@ class SmallParsersTest {
         assertNull(PhoneNumbers.formatWarning("+55 31 98909-2272"))
         assertFalse(PhoneNumbers.isPlausible("+55 31 9348-3704"))
         assertNotNull(PhoneNumbers.formatWarning("+55 31 9348-3704"))
+        // O "0" de discagem na frente do DDD (ex.: 031...) é prefixo, não dígito do número: vale.
+        assertTrue(PhoneNumbers.isPlausible("031994769224"))
+        assertNull(PhoneNumbers.formatWarning("031994769224"))
     }
 
     @Test
@@ -69,6 +72,8 @@ class SmallParsersTest {
         // Celular de 10 dígitos (sem o 9): acrescenta o 9 sozinho.
         assertEquals("31998331775", PhoneNumbers.normalize("(31) 9833-1775"))
         assertEquals("31998331775", PhoneNumbers.normalize("5531983317 75"))
+        // Tira o "0" de discagem na frente do DDD (031 99476-9224 -> 31 99476-9224).
+        assertEquals("31994769224", PhoneNumbers.normalize("031994769224"))
         // Idempotente: padronizar de novo não muda nem duplica o 9.
         assertEquals("31998331775", PhoneNumbers.normalize(PhoneNumbers.normalize("(31) 9833-1775")))
         // Sem DDD não dá para inventar: fica como está (e o aviso pega).

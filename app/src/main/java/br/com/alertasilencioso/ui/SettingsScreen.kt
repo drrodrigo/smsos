@@ -2,7 +2,9 @@ package br.com.alertasilencioso.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -162,17 +164,39 @@ fun SettingsScreen(settings: Settings) {
         item { Text("Ajustes", style = MaterialTheme.typography.headlineSmall) }
         item {
             SectionCard("Seu nome") {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { value ->
-                        name = value
-                        save { it.copy(userName = value) }
-                    },
-                    label = { Text("Nome que aparece na mensagem") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // Mostra o nome salvo com um "Editar"; só grava quando toca "Salvar". Assim a pessoa
+                // sabe que ficou salvo e não muda sem querer ao tocar no campo.
+                var editandoNome by remember { mutableStateOf(settings.userName.isBlank()) }
+                if (editandoNome) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nome que aparece na mensagem") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Button(
+                        onClick = {
+                            save { it.copy(userName = name.trim()) }
+                            editandoNome = false
+                            context.toast("Nome salvo ✓")
+                        },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Salvar") }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            settings.userName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = { name = settings.userName; editandoNome = true }) {
+                            Text("Editar")
+                        }
+                    }
+                }
             }
         }
         item { ConfirmarNumeroCard(settings) }
