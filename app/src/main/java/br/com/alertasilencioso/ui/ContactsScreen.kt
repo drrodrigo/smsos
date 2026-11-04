@@ -1,17 +1,35 @@
 package br.com.alertasilencioso.ui
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import br.com.alertasilencioso.alert.Convidar
+import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.AppState
+import br.com.alertasilencioso.data.Contact
 import br.com.alertasilencioso.data.Repository
+import kotlinx.coroutines.launch
 
 @Composable
 fun ContactsScreen(state: AppState) {
+    val context = LocalContext.current
+    val escopo = rememberCoroutineScope()
+    var convidando by remember { mutableStateOf(false) }
+
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Text("Guardiões", style = MaterialTheme.typography.headlineSmall)
@@ -29,7 +47,48 @@ fun ContactsScreen(state: AppState) {
             }
         }
         item {
+            SectionCard("Convidar pro app") {
+                HelpText("Quem instala o app com o seu convite recebe o alerta na hora (aviso no celular) e vai poder te acompanhar. O convite leva um código só seu.")
+                Button(onClick = { convidando = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Convidar um guardião")
+                }
+            }
+        }
+        item {
             HelpText("Os vizinhos e as pessoas de cada lugar (casa, escritório...) ficam na aba \"Lugares\".")
         }
+    }
+
+    if (convidando) {
+        ContactDialog(
+            title = "Convidar guardião",
+            confirmLabel = "Convidar",
+            onDismiss = { convidando = false },
+            onConfirm = { nome, fone ->
+                convidando = false
+                val numero = PhoneNumbers.normalize(fone)
+                // Já entra como guardião (recebe SMS) e, ao instalar com o convite, ganha o app (push).
+                if (state.alwaysContacts.none { PhoneNumbers.key(it.phone) == PhoneNumbers.key(numero) }) {
+                    Repository.addAlwaysContact(Contact(name = nome, phone = numero))
+                }
+                context.toast("Criando o convite...")
+                escopo.launch {
+                    val r = Convidar.convidar(numero)
+                    if (r == null) {
+                        context.toast("Não consegui criar o convite agora. Confira a internet e tente de novo.")
+                    } else {
+                        val nomeUsuario = state.settings.userName.ifBlank { "Alguém" }
+                        val msg = "$nomeUsuario te escolheu como guardião no GuardiõesSOS. " +
+                            "Se algo acontecer, você recebe o alerta com a localização. " +
+                            "Baixe o app e use o código ${r.codigo}: ${r.link}"
+                        val share = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, msg)
+                        }
+                        context.startActivity(Intent.createChooser(share, "Convidar guardião"))
+                    }
+                }
+            },
+        )
     }
 }
