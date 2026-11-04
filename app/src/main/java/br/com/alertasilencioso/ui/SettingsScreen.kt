@@ -171,12 +171,16 @@ fun SettingsScreen(settings: Settings) {
         }
         item {
             SectionCard("Testar o envio de SMS") {
-                HelpText("Manda uma mensagem de teste para um número (o seu ou de alguém da família).")
+                HelpText("Manda uma mensagem de teste para um número (o seu ou de alguém da família). Precisa ser celular com os 11 dígitos: DDD + 9 + número.")
+                val testWarning = PhoneNumbers.formatWarning(testPhone)
                 OutlinedTextField(
                     value = testPhone,
                     onValueChange = { testPhone = it },
-                    label = { Text("Número com DDD") },
+                    label = { Text("Celular com DDD") },
+                    placeholder = { Text("(31) 99999-8888") },
                     singleLine = true,
+                    isError = testWarning != null,
+                    supportingText = testWarning?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -184,7 +188,8 @@ fun SettingsScreen(settings: Settings) {
                     onClick = {
                         when {
                             !SmsSender.hasPermission(context) -> context.toast("Libere o SMS primeiro, na tela Início.")
-                            SmsSender.send(context, testPhone, MessageBuilder.testSms()) -> context.toast("SMS de teste enviado")
+                            SmsSender.send(context, testPhone, MessageBuilder.testSms()) ->
+                                context.toast("SMS disparado. Confira no app de mensagens se chegou de verdade.")
                             else -> context.toast("Não foi possível enviar o SMS")
                         }
                     },

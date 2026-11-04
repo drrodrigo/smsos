@@ -51,6 +51,9 @@ class SmallParsersTest {
         assertNotNull(PhoneNumbers.formatWarning("99476-9224"))
         assertNull(PhoneNumbers.formatWarning("(31) 99476-9224"))
         assertNull(PhoneNumbers.formatWarning(""))
+        // Com DDD mas sem o 9 do celular (10 dígitos): a operadora recusa com "inclua o 9".
+        assertFalse(PhoneNumbers.isPlausible("(31) 9833-1775"))
+        assertNotNull(PhoneNumbers.formatWarning("(31) 9833-1775"))
     }
 
     @Test
