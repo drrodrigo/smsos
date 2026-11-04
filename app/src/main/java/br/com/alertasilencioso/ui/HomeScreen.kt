@@ -340,6 +340,9 @@ private fun SetupCard(
 ) {
     val context = LocalContext.current
     var dialog by remember { mutableStateOf<SetupDialog?>(null) }
+    // Ajuda (?) de cada item: abre um modal com o passo a passo daquele item.
+    var ajuda by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val abrirAjuda: (String, String) -> Unit = { titulo, texto -> ajuda = titulo to texto }
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         onRefreshStatus()
     }
@@ -372,24 +375,38 @@ private fun SetupCard(
             title = "Seu nome",
             description = "Aparece na mensagem, para as pessoas saberem quem pediu ajuda.",
             action = "Preencher",
+            help = "É o nome que aparece na mensagem de alerta, para quem recebe saber quem pediu ajuda. " +
+                "Toque em \"Preencher\" (ou vá em Ajustes) e escreva o seu nome.",
+            onHelp = abrirAjuda,
         ) { onOpenTab(Tab.SETTINGS) }
         SetupRow(
             done = recipients > 0,
             title = "Guardiões",
             description = "Quem recebe o alerta: seus guardiões e as pessoas de cada lugar.",
             action = "Cadastrar",
+            help = "São as pessoas que recebem o seu alerta — por exemplo seu filho ou seu cônjuge. " +
+                "Toque em \"Cadastrar\" e adicione pelo número, ou use \"Convidar um guardião\" na aba Guardiões " +
+                "para enviar o convite pelo WhatsApp.",
+            onHelp = abrirAjuda,
         ) { onOpenTab(Tab.CONTACTS) }
         SetupRow(
             done = status.sms,
             title = "Enviar SMS",
             description = "Para mandar o alerta pelo seu chip, sem precisar de internet.",
             action = "Permitir",
+            help = "Deixa o app avisar seus guardiões pelo seu chip quando não houver internet. " +
+                "Toque em \"Permitir\" e aceite. Se você já negou antes, vá em Configurações do Android > " +
+                "Apps > GuardiõesSOS > Permissões > SMS e permita.",
+            onHelp = abrirAjuda,
         ) { permissions.launch(arrayOf(Manifest.permission.SEND_SMS)) }
         SetupRow(
             done = status.location,
             title = "Localização",
             description = "Para mandar o link do mapa e saber em qual lugar você está.",
             action = "Permitir",
+            help = "Deixa o app mandar o link do mapa com onde você está no momento do alerta. " +
+                "Toque em \"Permitir\" e escolha permitir a localização.",
+            onHelp = abrirAjuda,
         ) {
             permissions.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
@@ -404,6 +421,10 @@ private fun SetupCard(
                 },
                 action = "Permitir",
                 enabled = status.location,
+                help = "Para pegar o GPS mesmo com o app fechado ou a tela apagada. Na tela de permissão, " +
+                    "escolha \"Permitir o tempo todo\". Se essa opção não aparecer, vá em Configurações do " +
+                    "Android > Apps > GuardiõesSOS > Permissões > Localização > \"Permitir o tempo todo\".",
+                onHelp = abrirAjuda,
             ) { dialog = SetupDialog.BACKGROUND_LOCATION }
         }
         SetupRow(
@@ -411,13 +432,31 @@ private fun SetupCard(
             title = "Perceber o botão de volume",
             description = "Liga o serviço que observa o botão, mesmo com o app fechado.",
             action = "Ativar",
+            help = "Liga o serviço que percebe quando você segura o botão de volume, mesmo com o app fechado. " +
+                "Toque em \"Ativar\" e ligue o GuardiõesSOS na lista de Acessibilidade. No Samsung, se aparecer " +
+                "\"Configuração restrita\": Informações do app > 3 pontinhos (⋮) > \"Permitir configurações " +
+                "restritas\". Não está funcionando? Confira se o serviço está ligado e, no Samsung, se o " +
+                "Bloqueador automático está desligado.",
+            onHelp = abrirAjuda,
         ) { dialog = SetupDialog.ACCESSIBILITY }
         SetupRow(
             done = status.batteryUnrestricted,
             title = "Sem economia de bateria",
             description = "Evita que o celular desligue o app sozinho.",
             action = "Liberar",
+            help = "Evita que o Android desligue o app sozinho e você perca o alerta. Toque em \"Liberar\" e " +
+                "confirme (escolha \"Não otimizar\" ou \"Permitir\").",
+            onHelp = abrirAjuda,
         ) { context.requestIgnoreBatteryOptimizations() }
+    }
+
+    ajuda?.let { (titulo, texto) ->
+        AlertDialog(
+            onDismissRequest = { ajuda = null },
+            title = { Text(titulo) },
+            text = { Text(texto) },
+            confirmButton = { TextButton(onClick = { ajuda = null }) { Text("Entendi") } },
+        )
     }
 
     when (dialog) {
@@ -470,6 +509,8 @@ private fun SetupRow(
     description: String,
     action: String,
     enabled: Boolean = true,
+    help: String? = null,
+    onHelp: ((String, String) -> Unit)? = null,
     onAction: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -487,6 +528,16 @@ private fun SetupRow(
         if (!done) {
             Spacer(Modifier.width(8.dp))
             FilledTonalButton(onClick = onAction, enabled = enabled) { Text(action) }
+        }
+        if (help != null && onHelp != null) {
+            IconButton(onClick = { onHelp(title, help) }) {
+                Text(
+                    "?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
