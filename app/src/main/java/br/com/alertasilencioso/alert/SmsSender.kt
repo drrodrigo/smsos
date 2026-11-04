@@ -41,6 +41,25 @@ object SmsSender {
         }
     }
 
+    /**
+     * SMS de teste: envia e pede ao Android o resultado real de cada parte, que o [SmsTestReceiver] mostra
+     * na tela. Assim dá para ver POR QUE um "disparado" não chega. Retorna false se nem deu para tentar.
+     */
+    fun sendTest(context: Context, phone: String, text: String): Boolean {
+        val number = PhoneNumbers.clean(phone)
+        if (number.isEmpty()) return false
+        return try {
+            val manager = smsManager(context)
+            val parts = manager.divideMessage(text)
+            val sentIntents = ArrayList(parts.indices.map { SmsTestReceiver.pendingIntent(context, it) })
+            manager.sendMultipartTextMessage(number, null, parts, sentIntents, null)
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha ao enviar SMS de teste", e)
+            false
+        }
+    }
+
     // Em celulares com dois chips, usar um chip definido evita que o Android pergunte na tela qual usar.
     private fun smsManager(context: Context): SmsManager {
         val subscriptionId = SubscriptionManager.getDefaultSmsSubscriptionId()

@@ -188,9 +188,9 @@ fun SettingsScreen(settings: Settings) {
                     onClick = {
                         when {
                             !SmsSender.hasPermission(context) -> context.toast("Libere o SMS primeiro, na tela Início.")
-                            SmsSender.send(context, testPhone, MessageBuilder.testSms()) ->
-                                context.toast("SMS disparado. Confira no app de mensagens se chegou de verdade.")
-                            else -> context.toast("Não foi possível enviar o SMS")
+                            SmsSender.sendTest(context, testPhone, MessageBuilder.testSms()) ->
+                                context.toast("Enviando... o resultado real aparece em instantes.")
+                            else -> context.toast("Não foi possível nem tentar enviar o SMS")
                         }
                     },
                     enabled = PhoneNumbers.isPlausible(testPhone),

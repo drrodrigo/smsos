@@ -48,5 +48,9 @@
         <receiver
             android:name=".alert.SmsSentReceiver"
             android:exported="false" />
+
+        <receiver
+            android:name=".alert.SmsTestReceiver"
+            android:exported="false" />
     </application>
 </manifest>
