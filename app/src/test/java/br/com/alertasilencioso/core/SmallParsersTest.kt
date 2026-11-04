@@ -62,6 +62,22 @@ class SmallParsersTest {
     }
 
     @Test
+    fun `padroniza numero tirando simbolos, 55 e acrescentando o 9`() {
+        // Tira o +55, o traço, parênteses e espaços -> 11 dígitos nacionais, sempre igual.
+        assertEquals("31989092272", PhoneNumbers.normalize("+55 (31) 98909-2272"))
+        assertEquals("31984491586", PhoneNumbers.normalize("  31 98449-1586 "))
+        // Celular de 10 dígitos (sem o 9): acrescenta o 9 sozinho.
+        assertEquals("31998331775", PhoneNumbers.normalize("(31) 9833-1775"))
+        assertEquals("31998331775", PhoneNumbers.normalize("5531983317 75"))
+        // Idempotente: padronizar de novo não muda nem duplica o 9.
+        assertEquals("31998331775", PhoneNumbers.normalize(PhoneNumbers.normalize("(31) 9833-1775")))
+        // Sem DDD não dá para inventar: fica como está (e o aviso pega).
+        assertEquals("984491586", PhoneNumbers.normalize("984491586"))
+        // Mostra sempre no mesmo formato.
+        assertEquals("(31) 98909-2272", PhoneNumbers.format("+55 31 989092272"))
+    }
+
+    @Test
     fun `contagem de SMS`() {
         assertEquals(1, SmsLength.parts("a".repeat(160)))
         assertEquals(2, SmsLength.parts("a".repeat(161)))

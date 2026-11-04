@@ -57,4 +57,29 @@ object PhoneNumbers {
             else -> "Número com dígitos demais. Confira."
         }
     }
+
+    /**
+     * Padroniza para GUARDAR: só os dígitos nacionais (sem +55, sem traço/parênteses/espaço) e, quando é
+     * celular de 10 dígitos (DDD + número começando em 6-9), ACRESCENTA o 9 sozinho. Número de outro país
+     * (com + e sem 55) fica como "+dígitos". Assim o que vem da agenda/WhatsApp já sai arrumado e igual.
+     */
+    fun normalize(raw: String): String {
+        val trimmed = raw.trim()
+        if (ehInternacional(trimmed)) return "+" + trimmed.filter { it.isDigit() }
+        var d = nacionais(trimmed)
+        if (d.length == 10 && d[2] in '6'..'9') d = d.substring(0, 2) + "9" + d.substring(2)
+        return d
+    }
+
+    /** Mostra sempre igual: "(31) 99999-8888". Internacional ou incompleto: mostra como está. */
+    fun format(raw: String): String {
+        val trimmed = raw.trim()
+        if (ehInternacional(trimmed)) return trimmed
+        val d = normalize(trimmed)
+        return when (d.length) {
+            11 -> "(${d.substring(0, 2)}) ${d.substring(2, 7)}-${d.substring(7)}"
+            10 -> "(${d.substring(0, 2)}) ${d.substring(2, 6)}-${d.substring(6)}"
+            else -> if (d.isEmpty()) trimmed else d
+        }
+    }
 }

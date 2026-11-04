@@ -41,16 +41,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.Contact
 import br.com.alertasilencioso.data.Limits
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 fun Context.toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -108,17 +113,33 @@ fun ContactListEditor(
     max: Int = Limits.MAX_CONTACTS,
 ) {
     val context = LocalContext.current
+    val escopo = rememberCoroutineScope()
     var typing by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Contact?>(null) }
     val add: (String, String) -> Unit = { name, phone ->
+        val numero = PhoneNumbers.normalize(phone)
         when {
             contacts.size >= max -> context.toast("Limite de $max contatos nesta lista.")
-            contacts.any { PhoneNumbers.key(it.phone) == PhoneNumbers.key(phone) } ->
+            contacts.any { PhoneNumbers.key(it.phone) == PhoneNumbers.key(numero) } ->
                 context.toast("Esse número já está na lista")
-            else -> onAdd(Contact(name = name, phone = phone))
+            else -> onAdd(Contact(name = name, phone = numero))
         }
     }
     val pickContact = rememberContactPicker(add)
+    // Manda um SMS de teste pro próprio número do guardião, pra confirmar que ele recebe.
+    val testar: (String) -> Unit = { phone ->
+        if (!GatewaySender.configurado()) {
+            context.toast("Teste indisponível nesta versão.")
+        } else {
+            context.toast("Enviando um teste pra esse número...")
+            escopo.launch {
+                val texto = "Teste do GuardioesSOS: voce foi adicionado como guardiao. " +
+                    "Se recebeu, seu numero esta certo para os alertas. Pode ignorar."
+                val ok = withContext(Dispatchers.IO) { GatewaySender.enviar(listOf(phone to texto))[phone] == true }
+                context.toast(if (ok) "Teste enviado ✓ Confira se ele recebeu." else "Não enviou. Confira o número.")
+            }
+        }
+    }
 
     if (contacts.isEmpty()) HelpText(emptyText)
     contacts.forEach { contact ->
@@ -128,7 +149,7 @@ fun ContactListEditor(
             Column(Modifier.weight(1f).clickable { editing = contact }.padding(vertical = 4.dp)) {
                 Text(contact.name.ifBlank { "Sem nome" }, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    contact.phone.ifBlank { "Sem número" },
+                    if (contact.phone.isBlank()) "Sem número" else PhoneNumbers.format(contact.phone),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (aviso != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -162,8 +183,9 @@ fun ContactListEditor(
     }
     if (typing) {
         ContactDialog(
-            title = "Novo contato",
+            title = "Novo guardião",
             confirmLabel = "Adicionar",
+            onTest = testar,
             onDismiss = { typing = false },
             onConfirm = { name, phone ->
                 add(name, phone)
@@ -173,13 +195,14 @@ fun ContactListEditor(
     }
     editing?.let { alvo ->
         ContactDialog(
-            title = "Editar contato",
+            title = "Editar guardião",
             confirmLabel = "Salvar",
             initialName = alvo.name,
             initialPhone = alvo.phone,
+            onTest = testar,
             onDismiss = { editing = null },
             onConfirm = { name, phone ->
-                onUpdate(alvo.copy(name = name, phone = phone))
+                onUpdate(alvo.copy(name = name, phone = PhoneNumbers.normalize(phone)))
                 editing = null
             },
         )
@@ -213,11 +236,16 @@ fun ContactDialog(
     confirmLabel: String,
     onDismiss: () -> Unit,
     onConfirm: (name: String, phone: String) -> Unit,
+    onTest: ((String) -> Unit)? = null,
     initialName: String = "",
     initialPhone: String = "",
 ) {
     var name by remember { mutableStateOf(initialName) }
     var phone by remember { mutableStateOf(initialPhone) }
+    // A padronização (tira traço/+/55, acrescenta o 9) é feita aqui, pra validar e avisar já no número arrumado.
+    val canonico = PhoneNumbers.normalize(phone)
+    val warning = PhoneNumbers.formatWarning(canonico)
+    val valido = PhoneNumbers.isPlausible(canonico)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -229,7 +257,6 @@ fun ContactDialog(
                     label = { Text("Nome") },
                     singleLine = true,
                 )
-                val warning = PhoneNumbers.formatWarning(phone)
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
@@ -240,10 +267,22 @@ fun ContactDialog(
                     supportingText = warning?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 )
+                if (valido && canonico != phone.trim()) {
+                    Text(
+                        "Vai salvar como: ${PhoneNumbers.format(canonico)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (onTest != null) {
+                    TextButton(onClick = { onTest(canonico) }, enabled = valido) {
+                        Text("Enviar um teste pra esse número")
+                    }
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name.trim(), phone.trim()) }, enabled = PhoneNumbers.isPlausible(phone)) {
+            TextButton(onClick = { onConfirm(name.trim(), phone.trim()) }, enabled = valido) {
                 Text(confirmLabel)
             }
         },
