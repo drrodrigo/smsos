@@ -408,12 +408,32 @@ private fun pressesText(count: Int) =
 
 @Composable
 private fun HistoryCard(history: List<AlertRecord>) {
+    var confirmarApagar by remember { mutableStateOf(false) }
     SectionCard("Histórico") {
-        if (history.isEmpty()) HelpText("Nenhum alerta ainda.")
-        history.take(10).forEachIndexed { index, record ->
-            if (index > 0) HorizontalDivider()
-            HistoryItem(record)
+        if (history.isEmpty()) {
+            HelpText("Nenhum alerta ainda.")
+        } else {
+            history.take(10).forEachIndexed { index, record ->
+                if (index > 0) HorizontalDivider()
+                HistoryItem(record)
+            }
+            HorizontalDivider()
+            TextButton(onClick = { confirmarApagar = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Apagar o histórico deste aparelho")
+            }
+            HelpText("Apaga a lista só aqui do celular — útil se tomarem seu telefone. O histórico completo fica guardado na sua conta no site (em breve).")
         }
+    }
+    if (confirmarApagar) {
+        AlertDialog(
+            onDismissRequest = { confirmarApagar = false },
+            title = { Text("Apagar o histórico?") },
+            text = { Text("Isso apaga a lista de alertas deste celular e não dá para desfazer.") },
+            confirmButton = {
+                TextButton(onClick = { Repository.clearHistory(); confirmarApagar = false }) { Text("Apagar") }
+            },
+            dismissButton = { TextButton(onClick = { confirmarApagar = false }) { Text("Cancelar") } },
+        )
     }
 }
 

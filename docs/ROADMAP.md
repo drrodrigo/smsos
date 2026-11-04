@@ -23,6 +23,10 @@ Não substitui 190 (polícia), 192 (SAMU) nem 180 (Central de Atendimento à Mul
 - **Site com login e senha** guarda histórico, provas e créditos. O app fica só com o
   básico, de propósito: quem pega o celular NÃO vê para quem a pessoa mandou mensagem
   (proteção contra coação — tomarem o celular e mandarem abrir o app).
+  - **Histórico:** o completo mora no **site** (vê e apaga lá, junto com créditos/venda).
+    No app, a lista fica **enxuta** e tem **"apagar deste aparelho"** (feito na v0.8.2),
+    pra não deixar rastro se tomarem o celular. (Depois: agrupar por dia e esconder/
+    minimizar ainda mais no app; o detalhe fica no site.)
 - **Créditos / planos vendidos no site, no PIX** (como nos produtos QR). O app só mostra
   "plano ativo / X créditos". Regra das lojas: dentro do app, principalmente no iPhone,
   NÃO pode ter botão de comprar, preço nem link de pagamento — a compra é no site, por fora.

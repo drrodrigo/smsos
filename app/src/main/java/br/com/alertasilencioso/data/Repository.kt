@@ -66,6 +66,9 @@ object Repository {
         s.copy(history = s.history.map { if (it.id == id) transform(it) else it })
     }
 
+    /** Apaga o histórico deste aparelho (proteção contra coação). O histórico completo fica no site. */
+    fun clearHistory() = update { it.copy(history = emptyList()) }
+
     /** Uma falha sempre vale; "enviado" só substitui "aguardando" (se uma parte falhou, fica como falha). */
     fun setDeliveryStatus(alertId: String, phone: String, status: DeliveryStatus) = updateAlert(alertId) { r ->
         r.copy(deliveries = r.deliveries.map { d ->
