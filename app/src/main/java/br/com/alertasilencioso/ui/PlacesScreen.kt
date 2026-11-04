@@ -204,6 +204,7 @@ private fun PlaceEditor(place: Place, onClose: () -> Unit) {
                     emptyText = "Nenhum contato. Adicione seus vizinhos ou quem estiver perto deste lugar.",
                     onAdd = { contact -> update { it.copy(contacts = it.contacts + contact) } },
                     onRemove = { contact -> update { it.copy(contacts = it.contacts.filterNot { c -> c.id == contact.id }) } },
+                    onUpdate = { contact -> update { it.copy(contacts = it.contacts.map { c -> if (c.id == contact.id) contact else c }) } },
                 )
             }
         }

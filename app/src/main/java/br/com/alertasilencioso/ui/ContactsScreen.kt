@@ -24,6 +24,7 @@ fun ContactsScreen(state: AppState) {
                     emptyText = "Nenhum contato ainda.",
                     onAdd = Repository::addAlwaysContact,
                     onRemove = { Repository.removeAlwaysContact(it.id) },
+                    onUpdate = Repository::updateAlwaysContact,
                 )
             }
         }

@@ -54,6 +54,11 @@ class SmallParsersTest {
         // Com DDD mas sem o 9 do celular (10 dígitos): a operadora recusa com "inclua o 9".
         assertFalse(PhoneNumbers.isPlausible("(31) 9833-1775"))
         assertNotNull(PhoneNumbers.formatWarning("(31) 9833-1775"))
+        // Com +55: o certo (13 díg.) vale; sem o 9 (12 díg.) NÃO vale -- o +55 não pode esconder o erro.
+        assertTrue(PhoneNumbers.isPlausible("+55 31 98909-2272"))
+        assertNull(PhoneNumbers.formatWarning("+55 31 98909-2272"))
+        assertFalse(PhoneNumbers.isPlausible("+55 31 9348-3704"))
+        assertNotNull(PhoneNumbers.formatWarning("+55 31 9348-3704"))
     }
 
     @Test

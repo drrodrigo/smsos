@@ -46,6 +46,10 @@ object Repository {
 
     fun addAlwaysContact(contact: Contact) = update { it.copy(alwaysContacts = it.alwaysContacts + contact) }
 
+    fun updateAlwaysContact(contact: Contact) = update { s ->
+        s.copy(alwaysContacts = s.alwaysContacts.map { if (it.id == contact.id) contact else it })
+    }
+
     fun removeAlwaysContact(id: String) = update { s ->
         s.copy(alwaysContacts = s.alwaysContacts.filterNot { it.id == id })
     }

@@ -8,6 +8,7 @@ import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -102,10 +104,12 @@ fun ContactListEditor(
     emptyText: String,
     onAdd: (Contact) -> Unit,
     onRemove: (Contact) -> Unit,
+    onUpdate: (Contact) -> Unit,
     max: Int = Limits.MAX_CONTACTS,
 ) {
     val context = LocalContext.current
     var typing by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Contact?>(null) }
     val add: (String, String) -> Unit = { name, phone ->
         when {
             contacts.size >= max -> context.toast("Limite de $max contatos nesta lista.")
@@ -118,10 +122,22 @@ fun ContactListEditor(
 
     if (contacts.isEmpty()) HelpText(emptyText)
     contacts.forEach { contact ->
+        val aviso = PhoneNumbers.formatWarning(contact.phone)
+            ?: "Número incompleto. Toque para corrigir.".takeIf { !PhoneNumbers.isPlausible(contact.phone) }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f).clickable { editing = contact }.padding(vertical = 4.dp)) {
                 Text(contact.name.ifBlank { "Sem nome" }, style = MaterialTheme.typography.bodyLarge)
-                HelpText(contact.phone)
+                Text(
+                    contact.phone.ifBlank { "Sem número" },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (aviso != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (aviso != null) {
+                    Text("⚠ $aviso", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+            }
+            IconButton(onClick = { editing = contact }) {
+                Icon(Icons.Filled.Edit, contentDescription = "Editar ${contact.name}")
             }
             IconButton(onClick = { onRemove(contact) }) {
                 Icon(Icons.Filled.Delete, contentDescription = "Remover ${contact.name}")
@@ -145,11 +161,26 @@ fun ContactListEditor(
         }
     }
     if (typing) {
-        AddContactDialog(
+        ContactDialog(
+            title = "Novo contato",
+            confirmLabel = "Adicionar",
             onDismiss = { typing = false },
             onConfirm = { name, phone ->
                 add(name, phone)
                 typing = false
+            },
+        )
+    }
+    editing?.let { alvo ->
+        ContactDialog(
+            title = "Editar contato",
+            confirmLabel = "Salvar",
+            initialName = alvo.name,
+            initialPhone = alvo.phone,
+            onDismiss = { editing = null },
+            onConfirm = { name, phone ->
+                onUpdate(alvo.copy(name = name, phone = phone))
+                editing = null
             },
         )
     }
@@ -177,12 +208,19 @@ fun rememberContactPicker(onPicked: (name: String, phone: String) -> Unit): () -
 }
 
 @Composable
-fun AddContactDialog(onDismiss: () -> Unit, onConfirm: (name: String, phone: String) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+fun ContactDialog(
+    title: String,
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, phone: String) -> Unit,
+    initialName: String = "",
+    initialPhone: String = "",
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var phone by remember { mutableStateOf(initialPhone) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Novo contato") },
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -206,7 +244,7 @@ fun AddContactDialog(onDismiss: () -> Unit, onConfirm: (name: String, phone: Str
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name.trim(), phone.trim()) }, enabled = PhoneNumbers.isPlausible(phone)) {
-                Text("Adicionar")
+                Text(confirmLabel)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },

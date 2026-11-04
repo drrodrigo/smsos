@@ -109,6 +109,13 @@ receber. Isso resolve TRÊS coisas de uma vez:
   consentimento. Sem aceite, manda SMS do mesmo jeito (interesse vital numa emergência);
   o convidado pode se descadastrar.
 - Convite sai por SMS/WhatsApp/link; aceite no site ou no app.
+- **Teste por contato (medida de segurança):** um botão "testar" em cada contato manda UMA
+  mensagem de teste só pra ele, pra ter certeza que o número está certo e chega. Ideal no
+  fluxo do convite: a pessoa aceitou → manda o teste → confirma que funciona. (A edição de
+  contato + o aviso de número errado já entraram na v0.9.0; o teste por contato vem depois.)
+- **Número puxado da agenda/WhatsApp costuma vir sem o 9** — por isso o app agora valida,
+  avisa em vermelho e deixa editar. Avaliar também **sugerir acrescentar o 9** quando o
+  número tem 10 dígitos (com cuidado pra não estragar fixo).
 
 ### Notificação push (canal grátis, além do SMS)
 Se o contato **tem o app instalado**, mandar **push** em vez de (ou além de) SMS:

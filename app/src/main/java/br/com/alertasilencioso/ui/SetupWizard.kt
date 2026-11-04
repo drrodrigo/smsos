@@ -174,6 +174,7 @@ private fun ContactsStep(state: AppState, onNext: () -> Unit) {
         emptyText = "Toque em \"Da agenda\" para escolher alguém dos seus contatos, ou em \"Digitar\" para escrever o número.",
         onAdd = Repository::addAlwaysContact,
         onRemove = { Repository.removeAlwaysContact(it.id) },
+        onUpdate = Repository::updateAlwaysContact,
     )
     BigButton("Continuar", enabled = state.alwaysContacts.isNotEmpty(), onClick = onNext)
     SkipButton(onNext)
@@ -367,6 +368,9 @@ private fun PlaceStep(state: AppState, status: SetupStatus, onNext: () -> Unit) 
             onAdd = { contact -> Repository.updatePlace(home.id) { it.copy(contacts = it.contacts + contact) } },
             onRemove = { contact ->
                 Repository.updatePlace(home.id) { it.copy(contacts = it.contacts.filterNot { c -> c.id == contact.id }) }
+            },
+            onUpdate = { contact ->
+                Repository.updatePlace(home.id) { it.copy(contacts = it.contacts.map { c -> if (c.id == contact.id) contact else c }) }
             },
         )
         BigButton("Continuar", onClick = onNext)

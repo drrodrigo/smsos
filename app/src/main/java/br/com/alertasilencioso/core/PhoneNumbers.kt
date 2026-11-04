@@ -20,27 +20,41 @@ object PhoneNumbers {
     /** Chave para reconhecer o mesmo número escrito de jeitos diferentes ("+55 31 9..." e "(31) 9..."). */
     fun key(raw: String): String = raw.filter { it.isDigit() }.takeLast(KEY_DIGITS)
 
-    /** Dá para tentar enviar? Número internacional (com +) ou pelo menos DDD + número no Brasil. */
-    fun isPlausible(raw: String): Boolean {
+    /** Verdadeiro quando é um número de OUTRO país (tem + e não começa com o DDI 55). */
+    private fun ehInternacional(raw: String): Boolean {
         val trimmed = raw.trim()
-        val digits = trimmed.count { it.isDigit() }
-        return if (trimmed.startsWith("+")) digits >= MIN_INTL_DIGITS else digits >= MIN_BR_DIGITS
+        return trimmed.startsWith("+") && !trimmed.filter { it.isDigit() }.startsWith("55")
     }
 
     /**
-     * Aviso quando o número parece errado, para explicar antes de a pessoa salvar. Os dois erros que já
-     * derrubaram o envio de verdade: faltar o DDD (8-9 dígitos) e faltar o 9 do celular (10 dígitos, o
-     * formato antigo). Em ambos a operadora recusa e o alerta não chega.
+     * Só os dígitos NACIONAIS (DDD + número), tirando o DDI 55 quando ele veio junto.
+     * Assim "+55 31 98909-2272" e "(31) 98909-2272" viram os mesmos 11 dígitos — e dá para flagrar
+     * um +55 que está sem o 9 do celular (ex.: "+55 31 9348-3704").
+     */
+    private fun nacionais(raw: String): String {
+        val d = raw.filter { it.isDigit() }
+        return if (d.startsWith("55") && d.length >= 12) d.substring(2) else d
+    }
+
+    /** Dá para tentar enviar? Internacional (outro país) com + e >= 11 dígitos; no Brasil, celular = 11. */
+    fun isPlausible(raw: String): Boolean {
+        if (ehInternacional(raw)) return raw.count { it.isDigit() } >= MIN_INTL_DIGITS
+        return nacionais(raw).length == MIN_BR_DIGITS
+    }
+
+    /**
+     * Aviso quando o número parece errado, para explicar antes de a pessoa salvar. Pega os dois erros que
+     * já derrubaram o envio de verdade -- faltar o DDD e faltar o 9 do celular -- inclusive quando o
+     * número vem com o +55 na frente (que antes escondia o problema).
      */
     fun formatWarning(raw: String): String? {
-        val trimmed = raw.trim()
-        if (trimmed.isEmpty() || trimmed.startsWith("+")) return null
-        val digits = trimmed.count { it.isDigit() }
-        return when {
-            digits == 10 -> "Parece faltar o 9 do celular. Hoje o celular tem 11 dígitos (DDD + 9): (31) 99999-8888."
-            digits in 8..9 -> "Parece faltar o DDD. Escreva com DDD, assim: (31) 99999-8888."
-            digits in 1..7 -> "Número curto demais. Confira o DDD e o número."
-            else -> null
+        if (raw.trim().isEmpty() || ehInternacional(raw)) return null
+        return when (nacionais(raw).length) {
+            11 -> null
+            10 -> "Parece faltar o 9 do celular. Hoje o celular tem 11 dígitos (DDD + 9): (31) 99999-8888."
+            in 8..9 -> "Parece faltar o DDD. Escreva com DDD, assim: (31) 99999-8888."
+            in 1..7 -> "Número curto demais. Confira o DDD e o número."
+            else -> "Número com dígitos demais. Confira."
         }
     }
 }
