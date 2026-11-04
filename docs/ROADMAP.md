@@ -207,3 +207,20 @@ Validado em aparelho real (Samsung) e no servidor. Isto é a base pra deixar o a
   **armadilha do AutoBipe** (não amarrar no que muda). Nome de **resultado**
   (ex.: **alertasilencioso**) envelhece menos. `pushsos.com.br` está **disponível** (04/11)
   — vale **segurar** o domínio por barato, mesmo sem casar a marca com ele ainda.
+- **Estratégia multi-marca (decisão do Rodrigo, 04/11):** segurar **vários nomes de
+  posicionamento** como fosso — `smsos`, `pushsos` e `panicosos` (todos `.com.br`
+  disponíveis, menos smsos que é dele) — pra concorrente não flanquear ("o dele é SMS, o
+  nosso é push"). Lançar já (não travar por nome), e **refinar a marca com calma** depois
+  (enquete, agência, registro no INPI quando houver dinheiro).
+- **Push > SMS (o porquê, nas palavras dele):** SMS não é 100% — "o cara vê o SMS 2 dias
+  depois, já foi". Push é imediato, confirma entrega e vai pra aparelho registrado (sem
+  número errado). SMS vira reforço pra quem não tem o app.
+- **Cuidado prático:** "mesmo app com dois nomes nas lojas" **não** é trivial — cada listing
+  da loja amarra UM pacote/bundle. Ou é **um app + os outros domínios redirecionam** pro
+  site principal (barato, protege os nomes), ou são **dois apps** de verdade (dois pacotes,
+  dobro de manutenção). Recomendado no início: um app + redirecionamentos.
+- **Concorrência:** já existem apps de botão de pânico (inclusive pra mulher, que avisam a
+  polícia). Isso **valida o mercado**, não condena. Diferenciais nossos: rede de vizinhos
+  por GPS + adesivo/QR, push+SMS com convite/aceite, base pro clube de benefícios, e o
+  desenho silencioso/anti-coação (histórico no site). Vale um **levantamento** dos
+  concorrentes pra achar o buraco.
