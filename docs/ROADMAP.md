@@ -94,6 +94,17 @@ Marca **SMSOS**. Domínios registrados: smsos.com.br e alertasilencioso.com.br
 - Completo (até 10 contatos) — vídeo + ao vivo.
 - SMS pré-pago (recarga). Créditos de vídeo por uso. Venda no site (PIX).
 
+### Estratégia de preço (decisão do Rodrigo, 04/11)
+- **Free não dá valor** — mesmo barato, tem que ter PREÇO (filtra quem leva a sério e
+  banca os créditos). R$1 é pouco; teto confortável ~R$30 (≈ US$5), já que o push é barato.
+- **Partida:** **R$19,90/ano**, ou **R$10 a cada 6 meses** (porta de entrada "experimenta").
+- **Gancho do clube:** entra no **Clube Prime** → **50% de desconto** (ex.: R$30 → R$15, ou
+  R$19,90 → R$10). O desconto é a isca pra encher a **base do clube** (o ativo que vale mais
+  que os reais do desconto). Penetração: começa com desconto e **tira aos poucos** conforme
+  cresce — **nunca dobrar o preço** lá na frente (sensação de injustiça).
+- **Regra de ouro (segurança):** um **alerta ativo NUNCA** é bloqueado por pagamento
+  vencido/saldo. Preço não pode travar socorro. (Dar carência, avisar antes, etc.)
+
 ### Convite e aceite (consentimento + crescimento + captação de leads)
 Cadastrar um contato vira um **convite**: "Fulano te convidou para ser contato de
 emergência dele no SMSOS — como filho / cônjuge / amigo / vizinho". A pessoa **aceita**
@@ -224,3 +235,16 @@ Validado em aparelho real (Samsung) e no servidor. Isto é a base pra deixar o a
   por GPS + adesivo/QR, push+SMS com convite/aceite, base pro clube de benefícios, e o
   desenho silencioso/anti-coação (histórico no site). Vale um **levantamento** dos
   concorrentes pra achar o buraco.
+- **DECISÃO de marca (04/11):** o conceito é **Guardiões**. Nome na loja: **GuardiõesSOS**
+  (o SOS dá clareza e o nome É o chamado — "Guardiões, SOS!"). Domínios comprados/segurados:
+  pushsos (defensivo), guardioessos, rededeguardioes; **Pânico descartado** (emoção de medo).
+- **Como proteger o nome nas lojas (resposta à dúvida do Rodrigo):**
+  - O **package** (ex.: `br.com.smsos`) é **único e eterno** na Play — trava o app; e o nome
+    de exibição **não precisa** combinar com ele (dá pra chamar de "GuardiõesSOS" mantendo o
+    package atual).
+  - **Mas o nome de EXIBIÇÃO não é exclusivo** na Play: outro app pode tentar se chamar
+    "Guardiões SOS". Google barra cópia/impersonação, mas a trava de verdade é a **marca**.
+  - **Proteção real do NOME = registro de marca no INPI** (no Brasil, **quem registra
+    primeiro ganha** — vale protocolar cedo, mesmo barato).
+  - **Apple:** ao criar o app no App Store Connect, **reservar o nome** "GuardiõesSOS" já
+    segura ele lá.
