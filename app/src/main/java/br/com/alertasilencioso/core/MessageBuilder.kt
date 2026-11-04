@@ -59,7 +59,7 @@ object MessageBuilder {
     )
 
     fun testSms(): String =
-        "Teste do SMSOS: se voce recebeu esta mensagem, o envio de SMS esta funcionando. Pode ignorar."
+        "Teste do GuardioesSOS: se voce recebeu esta mensagem, o envio esta funcionando. Pode ignorar."
 
     fun mapLink(p: GeoPoint): String =
         String.format(Locale.US, "https://maps.google.com/?q=%.6f,%.6f", p.latitude, p.longitude)

@@ -219,7 +219,7 @@ fun SettingsScreen(settings: Settings) {
             val version = remember {
                 runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
             }
-            HelpText("SMSOS · versão ${version ?: "?"}")
+            HelpText("GuardiõesSOS · versão ${version ?: "?"}")
         }
     }
 }

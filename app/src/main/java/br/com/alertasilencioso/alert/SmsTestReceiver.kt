@@ -19,7 +19,7 @@ class SmsTestReceiver : BroadcastReceiver() {
             Activity.RESULT_OK ->
                 "SMS de teste ACEITO pelo chip ✓ — veja se chegou no outro celular."
             SmsManager.RESULT_ERROR_GENERIC_FAILURE ->
-                "Falhou: erro genérico da operadora/aparelho. Em Xiaomi/MIUI é comum o sistema bloquear SMS enviado por app — veja as permissões do SMSOS."
+                "Falhou: erro genérico da operadora/aparelho. Em Xiaomi/MIUI é comum o sistema bloquear SMS enviado por app — veja as permissões do GuardiõesSOS."
             SmsManager.RESULT_ERROR_NO_SERVICE ->
                 "Falhou: sem serviço no chip usado. O chip padrão de SMS pode ser o que não envia."
             SmsManager.RESULT_ERROR_RADIO_OFF ->

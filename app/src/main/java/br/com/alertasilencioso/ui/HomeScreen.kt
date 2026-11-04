@@ -315,9 +315,9 @@ private fun SetupCard(
             title = { Text("Perceber o botão de volume") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Para perceber quando você segura o botão de volume, mesmo com outro app aberto, o SMSOS usa o serviço de Acessibilidade do Android.")
+                    Text("Para perceber quando você segura o botão de volume, mesmo com outro app aberto, o GuardiõesSOS usa o serviço de Acessibilidade do Android.")
                     Text("Ele NÃO lê a tela, NÃO vê o que você digita e NÃO coleta dados. Só observa os botões de volume.", fontWeight = FontWeight.Bold)
-                    Text("Na próxima tela, toque em \"SMSOS\" (às vezes fica dentro de \"Apps instalados\" ou \"Serviços baixados\") e ative.")
+                    Text("Na próxima tela, toque em \"GuardiõesSOS\" (às vezes fica dentro de \"Apps instalados\" ou \"Serviços baixados\") e ative.")
                     HelpText("Se aparecer \"Configuração restrita\": toque em \"Informações do app\" aqui embaixo, depois nos 3 pontinhos ⋮ no canto de cima e em \"Permitir configurações restritas\". Depois volte e ative.")
                 }
             },

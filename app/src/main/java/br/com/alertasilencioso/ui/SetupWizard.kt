@@ -282,7 +282,7 @@ private fun PermissionStep(
                         "Abra as Configurações do celular → \"Bateria\".",
                         "Toque em \"Limites de uso em segundo plano\".",
                         "Toque em \"Apps que nunca entram em suspensão\".",
-                        "Toque no \"+\" e marque \"SMSOS\".",
+                        "Toque no \"+\" e marque \"GuardiõesSOS\".",
                     )
                 }
             }
@@ -313,12 +313,12 @@ private fun AccessibilityStep(done: Boolean, onNext: () -> Unit) {
     }
     Instructions(
         "Toque em \"Abrir Acessibilidade\" aqui embaixo.",
-        "Toque em \"SMSOS – botão de pânico\". No Samsung ele fica dentro de \"Apps instalados\".",
+        "Toque em \"GuardiõesSOS – botão de pânico\". No Samsung ele fica dentro de \"Apps instalados\".",
         "Ligue a chave e toque em \"Permitir\".",
         "Toque na seta de voltar para voltar ao app.",
     )
     BigButton("Abrir Acessibilidade") { context.openAccessibilitySettings() }
-    HelpText("Se o celular perguntar sobre um \"atalho\" pelo botão lateral, pode recusar — o SMSOS não precisa disso.")
+    HelpText("Se o celular perguntar sobre um \"atalho\" pelo botão lateral, pode recusar — o GuardiõesSOS não precisa disso.")
     HelpCard("Travou em \"Acesso negado\" ou \"Configuração restrita\"?") {
         HelpText("Isso acontece porque o app ainda não veio da Play Store. No Samsung novo, faça nesta ordem:")
         Instructions(
