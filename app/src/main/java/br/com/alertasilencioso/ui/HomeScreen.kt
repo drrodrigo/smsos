@@ -353,6 +353,13 @@ private fun SetupCard(
             context.openAppDetails()
         }
     }
+    val notificacao = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        onRefreshStatus()
+        if (!granted) {
+            context.toast("Para receber os avisos, ligue: Apps > GuardiõesSOS > Notificações.")
+            context.openAppDetails()
+        }
+    }
 
     val isQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     val feitos = listOf(
@@ -361,6 +368,7 @@ private fun SetupCard(
         status.sms,
         status.location,
         if (isQ) status.backgroundLocation else true,
+        status.notifications,
         status.accessibility,
         status.batteryUnrestricted,
     )
@@ -389,6 +397,23 @@ private fun SetupCard(
                 "para enviar o convite pelo WhatsApp.",
             onHelp = abrirAjuda,
         ) { onOpenTab(Tab.CONTACTS) }
+        SetupRow(
+            done = status.notifications,
+            title = "Notificações",
+            description = "Para receber o aviso quando alguém que você protege acionar o SOS (e os avisos do app).",
+            action = "Permitir",
+            help = "Deixa o app te avisar na tela: quando você é guardião de alguém e essa pessoa aciona o SOS, " +
+                "e também os resultados do modo teste. Toque em \"Permitir\" e aceite. Muita gente deixa as " +
+                "notificações desligadas — se você já negou, vá em Configurações do Android > Apps > GuardiõesSOS " +
+                "> Notificações e ligue.",
+            onHelp = abrirAjuda,
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificacao.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                context.openAppDetails()
+            }
+        }
         SetupRow(
             done = status.sms,
             title = "Enviar SMS",
