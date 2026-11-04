@@ -248,3 +248,13 @@ Validado em aparelho real (Samsung) e no servidor. Isto é a base pra deixar o a
     primeiro ganha** — vale protocolar cedo, mesmo barato).
   - **Apple:** ao criar o app no App Store Connect, **reservar o nome** "GuardiõesSOS" já
     segura ele lá.
+- **Domínios como funil de SEO + fosso (estratégia 04/11):** UM app só (GuardiõesSOS). Os
+  outros domínios (smsos, pushsos, alertasilencioso) viram **landings/sites** que capturam
+  buscas diferentes ("sms sos", "push sos", "alerta silencioso", "botão de pânico") e
+  **funilam o download** do GuardiõesSOS. Segurar os domínios = **negar à concorrência**
+  (não soltar o nome até bombar). Avaliar por tráfego depois de ~1 ano (keep/drop).
+  - **Cuidado de SEO:** o Google **pune "doorway pages"** (sites finos só pra redirecionar).
+    Pra ranquear, cada domínio precisa de **conteúdo real e distinto** (igual aos sites
+    `conheca[cidade]` dele) — OU então só **redireciona** (protege o nome, mas sem SEO).
+  - Não precisa se dizer "parceiro" do próprio app: a landing só **recomenda e linka** o
+    download do GuardiõesSOS (mais limpo e honesto).
