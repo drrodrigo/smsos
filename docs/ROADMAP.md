@@ -61,6 +61,17 @@ escolhe rápido qual disparar, cada uma com seu texto e, se quiser, seu próprio
 - "Estou saindo / estou na rua", "cheguei", "a caminho de casa".
   (O GPS já diz onde a pessoa está; a situação muda o TEXTO e, às vezes, o grupo.)
 
+### Dois botões, dois alertas (volume − = SOS, volume + = Saúde)
+Usar os **dois botões de volume** para **dois tipos** de alerta, sem olhar a tela:
+- **Volume −** → **SOS / segurança** (texto e, se quiser, grupo de segurança).
+- **Volume +** → **Saúde** (texto e grupo de saúde — família, cuidador).
+- A MESMA pessoa pode ter os dois: segura o − se for perigo, o + se passar mal.
+- O app já detecta a direção do botão, então é natural ligar cada uma a um perfil/preset.
+- **Manter simples por padrão:** começa com UM perfil e **qualquer** botão (como é hoje);
+  "dois botões, dois tipos" é uma **opção** que a pessoa liga. É a porta de entrada das
+  "situações de mensagem" acima (cada gesto → um preset).
+- Segurar os 5s continua valendo em cada botão (evita disparo sem querer).
+
 ### Disfarce do app
 Ícone/nome que não entregam a função; abrir normal e acionar escondido.
 
