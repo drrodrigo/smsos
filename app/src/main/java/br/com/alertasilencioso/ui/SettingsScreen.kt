@@ -49,23 +49,40 @@ private val PREVIEW_POSITION = GeoPoint(-23.55052, -46.63331)
 private fun ConfirmarNumeroCard(settings: Settings) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
+    var numeroDigitado by remember { mutableStateOf("") }
     var enviado by remember { mutableStateOf(false) }
     var codigo by remember { mutableStateOf("") }
     var ocupado by remember { mutableStateOf(false) }
+    // Usa o número do cadastro; se não tiver (pulou o cadastro), deixa digitar aqui mesmo.
+    val numero = settings.userPhone.ifBlank { PhoneNumbers.normalize(numeroDigitado) }
+    val numeroOk = PhoneNumbers.isPlausible(numero)
     SectionCard("Confirmar seu número") {
         when {
             settings.numeroVerificado ->
                 Text("✓ Número confirmado: ${PhoneNumbers.format(settings.userPhone)}", color = StatusColors.ok)
-            settings.userPhone.isBlank() ->
-                HelpText("Preencha o seu WhatsApp no cadastro primeiro, aí dá para confirmar.")
             !enviado -> {
-                HelpText("Confirme que o ${PhoneNumbers.format(settings.userPhone)} é seu. Mandamos um código por SMS.")
+                if (settings.userPhone.isBlank()) {
+                    HelpText("Qual é o seu WhatsApp? Mandamos um código por SMS para confirmar que é seu.")
+                    OutlinedTextField(
+                        value = numeroDigitado,
+                        onValueChange = { numeroDigitado = it },
+                        label = { Text("Celular com DDD") },
+                        placeholder = { Text("(31) 99999-8888") },
+                        singleLine = true,
+                        isError = numeroDigitado.isNotBlank() && !numeroOk,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    HelpText("Confirme que o ${PhoneNumbers.format(settings.userPhone)} é seu. Mandamos um código por SMS.")
+                }
                 Button(
-                    enabled = !ocupado,
+                    enabled = numeroOk && !ocupado,
                     onClick = {
+                        if (settings.userPhone.isBlank()) Repository.updateSettings { it.copy(userPhone = numero) }
                         ocupado = true
                         escopo.launch {
-                            val ok = Otp.enviar(settings.userPhone)
+                            val ok = Otp.enviar(numero)
                             ocupado = false
                             if (ok) { enviado = true; context.toast("Código enviado por SMS.") }
                             else context.toast("Não consegui enviar o código agora. Confira a internet.")
@@ -74,7 +91,7 @@ private fun ConfirmarNumeroCard(settings: Settings) {
                 ) { Text(if (ocupado) "Enviando..." else "Enviar código por SMS") }
             }
             else -> {
-                HelpText("Digite o código de 6 dígitos que chegou por SMS no ${PhoneNumbers.format(settings.userPhone)}.")
+                HelpText("Digite o código de 6 dígitos que chegou por SMS no ${PhoneNumbers.format(numero)}.")
                 OutlinedTextField(
                     value = codigo,
                     onValueChange = { codigo = it.filter { c -> c.isDigit() }.take(6) },
@@ -88,7 +105,7 @@ private fun ConfirmarNumeroCard(settings: Settings) {
                     onClick = {
                         ocupado = true
                         escopo.launch {
-                            val r = Otp.confirmar(settings.userPhone, codigo)
+                            val r = Otp.confirmar(numero, codigo)
                             ocupado = false
                             when {
                                 r.ok -> {
