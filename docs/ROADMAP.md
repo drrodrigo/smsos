@@ -27,6 +27,17 @@ Não substitui 190 (polícia), 192 (SAMU) nem 180 (Central de Atendimento à Mul
     No app, a lista fica **enxuta** e tem **"apagar deste aparelho"** (feito na v0.8.2),
     pra não deixar rastro se tomarem o celular. (Depois: agrupar por dia e esconder/
     minimizar ainda mais no app; o detalhe fica no site.)
+  - **Conta / captação de lead (esclarece a dúvida do Rodrigo 04/11):** "sem login e senha"
+    = **sem SENHA** (fricção baixa), **NÃO** anônimo. No 1º uso o app pede **nome + telefone/
+    WhatsApp** e **registra o aparelho no nosso backend** (conta leve, sem senha) → **isso é
+    o LEAD** (nome, telefone, token de push). Então sabemos **quem instalou** e dá pra mandar
+    push. A proteção contra coação é só **não exibir o cofre** (histórico/rede) no celular —
+    ele mora no site, atrás de um **PIN**. Ter conta ≠ expor dados no aparelho.
+  - **Dois momentos de lead:** (1) o **dono** (instala/registra/paga) e (2) o **guardião**
+    (aceita o convite / instala pra receber push). Guardião de hoje = dono de amanhã (viral).
+  - **Hoje (v0.9.2)** ainda é **local, sem backend de conta** → **sem lead ainda**. A captação
+    entra junto com a camada de **registro/conta** (Fase 2), que roda em cima do backend que
+    já subimos (o gateway). Multi-idioma (PT/EN/ES) abre o caminho pra app **mundial**.
 - **Créditos / planos vendidos no site, no PIX** (como nos produtos QR). O app só mostra
   "plano ativo / X créditos". Regra das lojas: dentro do app, principalmente no iPhone,
   NÃO pode ter botão de comprar, preço nem link de pagamento — a compra é no site, por fora.
