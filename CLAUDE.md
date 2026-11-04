@@ -29,7 +29,8 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
 ## Stack e build
 
 - Kotlin + Jetpack Compose (Material 3), minSdk 26.
-- `applicationId = br.com.smsos`; namespace `br.com.alertasilencioso`.
+- `applicationId = br.com.guardioessos` (identidade da loja, PERMANENTE depois de publicar —
+  era `br.com.smsos`, trocado antes da 1ª publicação); namespace interno `br.com.alertasilencioso`.
 - Build/teste: `./gradlew test assembleDebug bundleRelease`. Rode **antes de qualquer PR**.
 - APK de teste e AAB de loja saem em `entregas/` (nome `GuardioesSOS-teste-vX.Y.Z.apk` / `-loja-`).
 - Segredos (chave do gateway, keystore de release) ficam **fora do git**: `gateway.properties` e
