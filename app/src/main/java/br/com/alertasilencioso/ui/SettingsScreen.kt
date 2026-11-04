@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.GatewaySender
@@ -86,6 +87,7 @@ fun SettingsScreen(settings: Settings) {
                     },
                     label = { Text("Nome que aparece na mensagem") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

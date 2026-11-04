@@ -50,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.GatewaySender
@@ -295,6 +296,7 @@ fun ContactDialog(
                     onValueChange = { name = it },
                     label = { Text("Nome") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 )
                 OutlinedTextField(
                     value = phone,

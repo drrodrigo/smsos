@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -39,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.LocationFetcher
 import br.com.alertasilencioso.core.Coordinates
@@ -161,6 +163,7 @@ private fun PlaceEditor(place: Place, onClose: () -> Unit) {
                 },
                 label = { Text("Nome do lugar (ex.: Casa, Escritório)") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
