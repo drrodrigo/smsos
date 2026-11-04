@@ -15,12 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.alert.SmsSender
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
@@ -32,6 +34,9 @@ import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
 import br.com.alertasilencioso.data.TriggerKey
 import br.com.alertasilencioso.data.TriggerMode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 // Só para mostrar o exemplo da mensagem (Praça da Sé, São Paulo).
@@ -40,6 +45,7 @@ private val PREVIEW_POSITION = GeoPoint(-23.55052, -46.63331)
 @Composable
 fun SettingsScreen(settings: Settings) {
     val context = LocalContext.current
+    val escopo = rememberCoroutineScope()
     var name by remember { mutableStateOf(settings.userName) }
     var template by remember { mutableStateOf(settings.messageTemplate) }
     var testPhone by rememberSaveable { mutableStateOf("") }
@@ -171,7 +177,7 @@ fun SettingsScreen(settings: Settings) {
         }
         item {
             SectionCard("Testar o envio de SMS") {
-                HelpText("Manda uma mensagem de teste para um número (o seu ou de alguém da família). Precisa ser celular com os 11 dígitos: DDD + 9 + número.")
+                HelpText("Manda uma mensagem de teste pela nossa estrutura (internet). Precisa ser celular com os 11 dígitos: DDD + 9 + número.")
                 val testWarning = PhoneNumbers.formatWarning(testPhone)
                 OutlinedTextField(
                     value = testPhone,
@@ -187,9 +193,21 @@ fun SettingsScreen(settings: Settings) {
                 Button(
                     onClick = {
                         when {
+                            GatewaySender.configurado() -> {
+                                context.toast("Enviando pela nossa estrutura...")
+                                escopo.launch {
+                                    val ok = withContext(Dispatchers.IO) {
+                                        GatewaySender.enviar(listOf(testPhone to MessageBuilder.testSms()))[testPhone] == true
+                                    }
+                                    context.toast(
+                                        if (ok) "Enviado ✓ Confira se chegou no celular."
+                                        else "Não enviado. Confira o número (11 dígitos com o 9) e a internet.",
+                                    )
+                                }
+                            }
                             !SmsSender.hasPermission(context) -> context.toast("Libere o SMS primeiro, na tela Início.")
                             SmsSender.sendTest(context, testPhone, MessageBuilder.testSms()) ->
-                                context.toast("Enviando... o resultado real aparece em instantes.")
+                                context.toast("Enviando pelo chip... o resultado aparece em instantes.")
                             else -> context.toast("Não foi possível nem tentar enviar o SMS")
                         }
                     },
