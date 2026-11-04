@@ -78,3 +78,44 @@ Marca **SMSOS**. Domínios registrados: smsos.com.br e alertasilencioso.com.br
 - Família (até 7 contatos) — rede de vizinhos por lugar.
 - Completo (até 10 contatos) — vídeo + ao vivo.
 - SMS pré-pago (recarga). Créditos de vídeo por uso. Venda no site (PIX).
+
+### Convite e aceite (consentimento + crescimento + captação de leads)
+Cadastrar um contato vira um **convite**: "Fulano te convidou para ser contato de
+emergência dele no SMSOS — como filho / cônjuge / amigo / vizinho". A pessoa **aceita**
+receber. Isso resolve TRÊS coisas de uma vez:
+1. **Consentimento (LGPD + saúde da conta de SMS).** Só quem aceitou recebe. Reduz
+   reclamação de spam, que é o que pode fazer a operadora/SMS Market bloquear o pacote.
+2. **Crescimento viral.** Cada contato convidado é um **novo usuário em potencial**: o
+   convite é a porta pra ele **baixar o app** e virar dono da própria rede.
+3. **Captação de lead.** No aceite dá pra pegar **nome, relação e WhatsApp** — e o
+   trabalho do lead é feito **no site** (não no app), onde a gente capta e nutre.
+- **Regra de ouro (segurança não pode travar):** o alerta por SMS deve sair **mesmo sem o
+  aceite**. O aceite NÃO é um bloqueio do socorro — ele **destrava o push** e confirma o
+  consentimento. Sem aceite, manda SMS do mesmo jeito (interesse vital numa emergência);
+  o convidado pode se descadastrar.
+- Convite sai por SMS/WhatsApp/link; aceite no site ou no app.
+
+### Notificação push (canal grátis, além do SMS)
+Se o contato **tem o app instalado**, mandar **push** em vez de (ou além de) SMS:
+- **De graça** (não gasta o pacote de SMS), **instantâneo** e **rico** (link do mapa,
+  botão "estou bem", abrir o alerta no app).
+- **Desenho:** o servidor (a mesma função `smsos-alerta`) decide por contato — **tem app
+  registrado? manda push; não tem? manda SMS.** Melhor dos dois: barato e alcança todo
+  mundo.
+- Técnico: FCM (Firebase Cloud Messaging), grátis. O app registra o token do aparelho no
+  nosso backend; o alerta dispara o push pra esses tokens. Encaixa na mesma espinha dorsal
+  de contas/rede do site.
+- **A assimetria é o pulo do gato:** quem ACIONA faz tudo em silêncio (pro agressor não
+  perceber), mas quem RECEBE tem que ser avisado **da forma mais barulhenta possível** —
+  senão o socorro passa batido. O push do app pode **apitar alto, com som próprio, e furar
+  o silencioso / Não Perturbe** (como um alarme/emergência). Um SMS comum não faz isso:
+  chega como texto e é fácil não ver. Então o push ganha do SMS em **duas** frentes:
+  **custo (grátis)** e, principalmente, **chamar a atenção de verdade** (acorda a pessoa).
+- **Som configurável pelo quem recebe:** escolher um toque mais alto, vibração forte,
+  repetir até abrir. O recebedor manda no som; o acionador, não (ele só dispara).
+- **Camadas de entrega e preço** (o servidor decide por contato):
+  1. Contato **com o app** → **push grátis** (barato e mais seguro). É o que puxa o
+     convidado a baixar: "para funcionar de verdade, instala o app".
+  2. Contato **sem o app** → **SMS** (pago, do pacote). Funciona pra todo mundo, mas custa.
+  Isso vira o discurso de venda: o app é barato e mais seguro; o SMS é o reforço que a
+  pessoa paga quando o contato não tem o app.
