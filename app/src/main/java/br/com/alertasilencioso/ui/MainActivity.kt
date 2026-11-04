@@ -48,6 +48,7 @@ import br.com.alertasilencioso.R
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.alertasilencioso.alert.Backup
 import br.com.alertasilencioso.data.Repository
 
 enum class Tab(val label: String, val icon: ImageVector) {
@@ -83,6 +84,8 @@ private fun AppRoot() {
         // O histórico some sozinho conforme o limite escolhido em Ajustes (0 = nunca).
         Repository.purgeExpiredHistory(System.currentTimeMillis())
     }
+    // Ao sair do app, salva o backup da config na nuvem (guardiões/lugares/ajustes; sem histórico).
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { Backup.salvarEmBackground() }
 
     // Cadastro do primeiro uso (a conta, sem senha) aparece antes do passo a passo, até a pessoa passar.
     if (!state.settings.registroVisto) {

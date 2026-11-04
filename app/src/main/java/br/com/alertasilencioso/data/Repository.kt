@@ -74,6 +74,26 @@ object Repository {
         s.copy(history = s.history.map { if (it.id == id) transform(it) else it })
     }
 
+    /**
+     * Aplica um backup restaurado da nuvem: traz guardiões, lugares e ajustes, mas MANTÉM o que é
+     * deste aparelho (id, token de push, flags de cadastro) e NÃO mexe no histórico local.
+     */
+    fun restaurarBackup(dadosJson: String) = update { cur ->
+        val bk = runCatching { StateJson.decode(dadosJson) }.getOrNull() ?: return@update cur
+        cur.copy(
+            alwaysContacts = bk.alwaysContacts,
+            places = bk.places,
+            settings = bk.settings.copy(
+                dispositivo = cur.settings.dispositivo,
+                tokenPush = cur.settings.tokenPush,
+                registroVisto = true,
+                registrado = cur.settings.registrado,
+                numeroVerificado = true,
+                onboardingDone = cur.settings.onboardingDone,
+            ),
+        )
+    }
+
     /** Apaga o histórico deste aparelho (proteção contra coação). O histórico completo fica no site. */
     fun clearHistory() = update { it.copy(history = emptyList()) }
 
