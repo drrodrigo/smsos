@@ -40,8 +40,11 @@ object Limits {
 data class Settings(
     val userName: String = "",
     val profile: Profile = Profile.SEGURANCA,
-    /** Dois SOS ativos ao mesmo tempo: Volume − = Segurança, Volume + = Saúde (e botão dividido na tela). */
-    val dualSos: Boolean = false,
+    /**
+     * Dois SOS ativos ao mesmo tempo: Volume − = Segurança, Volume + = Saúde (e botão dividido na tela).
+     * Ligado por padrão — é melhor a pessoa ver as duas opções e desligar uma do que achar que só tem uma.
+     */
+    val dualSos: Boolean = true,
     val triggerKey: TriggerKey = TriggerKey.ANY,
     val triggerMode: TriggerMode = TriggerMode.HOLD,
     val holdSeconds: Int = 5,

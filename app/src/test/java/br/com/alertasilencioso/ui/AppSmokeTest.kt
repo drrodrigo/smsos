@@ -48,7 +48,9 @@ class AppSmokeTest {
     fun todasAsTelasAbrem() {
         // O simulador não tem chip, então o aviso de cima é o de aparelho sem SMS.
         compose.onNodeWithText("Este aparelho não envia SMS").assertExists()
-        compose.onNodeWithText("SEGURE AQUI").assertExists()
+        // Padrão: os dois SOS ligados, botão dividido Segurança/Saúde.
+        compose.onNode(hasText("SEGURANÇA", substring = true)).assertExists()
+        compose.onNode(hasText("SAÚDE", substring = true)).assertExists()
         scrollTo("Testar sem enviar SMS")
         scrollTo("Histórico")
 
@@ -68,7 +70,7 @@ class AppSmokeTest {
         scrollTo("Testar o envio de SMS")
 
         openTab("Início")
-        compose.onNodeWithText("SEGURE AQUI").assertExists()
+        compose.onNode(hasText("SEGURANÇA", substring = true)).assertExists()
     }
 
     @Test
@@ -93,7 +95,7 @@ class AppSmokeTest {
         }
         compose.onNodeWithText("Tudo pronto! Vamos testar?").assertExists()
         compose.onNodeWithText("Concluir").performScrollTo().performClick()
-        compose.onNodeWithText("SEGURE AQUI").assertExists()
+        compose.onNode(hasText("SEGURANÇA", substring = true)).assertExists()
     }
 
     @Test

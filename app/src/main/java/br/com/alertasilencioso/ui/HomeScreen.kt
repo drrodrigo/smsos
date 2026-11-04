@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -12,10 +13,14 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -96,7 +101,7 @@ fun HomeScreen(
             }
         }
         state.activeAlert?.let { active -> item { ActiveAlertCard(active) } }
-        item { PanicArea(state.settings, context) }
+        item { PanicArea(state.settings, recipients, context, onOpenTab) }
         item { SetupCard(state.settings, status, recipients, onRefreshStatus, onOpenTab) }
         item {
             TestCard(
@@ -192,44 +197,79 @@ private fun ActiveAlertCard(active: ActiveAlert) {
 
 /** Área do botão: um botão só (modo simples) ou dois lados — Segurança e Saúde (modo duplo). */
 @Composable
-private fun PanicArea(settings: Settings, context: android.content.Context) {
+private fun PanicArea(settings: Settings, recipients: Int, context: android.content.Context, onOpenTab: (Tab) -> Unit) {
     val hold = settings.holdSeconds * 1_000L
     val seg = settings.holdSeconds
+    // Sem guardião cadastrado, o botão não "arma": tocar leva para a configuração (desperta a curiosidade).
+    val ready = recipients > 0
+    // Cores fortes e iguais nos dois temas — botão de emergência não pode ficar pastel no escuro.
+    val corSeguranca = Color(0xFFD32F2F)
+    val corSaude = Color(0xFF1E66D0)
+    var nudge by remember { mutableStateOf<Profile?>(null) }
+    val acionar: (Profile) -> Unit = { p ->
+        if (ready) AlertManager.trigger(context, TriggerSource.APP_BUTTON, p) else nudge = p
+    }
+    val sub = { curto: Boolean -> if (ready) (if (curto) "segure $seg s" else "por $seg segundos para enviar o alerta agora") else "toque para configurar" }
+
     if (!settings.dualSos) {
+        val ehSaude = settings.profile == Profile.SAUDE
         HoldButton(
             holdMillis = hold,
+            armed = ready,
             title = "SEGURE AQUI",
-            subtitle = "por $seg segundos para enviar o alerta agora",
-            color = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            subtitle = sub(false),
+            color = if (ehSaude) corSaude else corSeguranca,
+            contentColor = Color.White,
             modifier = Modifier.fillMaxWidth(),
-        ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, settings.profile) }
+        ) { acionar(settings.profile) }
     } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // height(IntrinsicSize.Min) + fillMaxHeight deixa os dois lados SEMPRE do mesmo tamanho,
+        // mesmo quando um texto quebra em mais linhas que o outro.
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HoldButton(
                 holdMillis = hold,
+                armed = ready,
                 title = "🛡️ SEGURANÇA",
-                subtitle = "segure $seg s",
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.weight(1f),
-            ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, Profile.SEGURANCA) }
+                subtitle = sub(true),
+                color = corSeguranca,
+                contentColor = Color.White,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) { acionar(Profile.SEGURANCA) }
             HoldButton(
                 holdMillis = hold,
+                armed = ready,
                 title = "❤️ SAÚDE",
-                subtitle = "segure $seg s",
-                color = Color(0xFF1E66D0),
+                subtitle = sub(true),
+                color = corSaude,
                 contentColor = Color.White,
-                modifier = Modifier.weight(1f),
-            ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, Profile.SAUDE) }
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) { acionar(Profile.SAUDE) }
         }
+    }
+
+    nudge?.let { profile ->
+        val saude = profile == Profile.SAUDE
+        AlertDialog(
+            onDismissRequest = { nudge = null },
+            title = { Text(if (saude) "SOS de Saúde" else "SOS de Segurança") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Pra esse botão enviar o alerta, cadastre seus guardiões — as pessoas que recebem o aviso com a sua localização.")
+                    if (saude) HelpText("No SOS de Saúde você também vai poder avisar por WhatsApp (em breve).")
+                    HelpText("Os dois SOS (Segurança e Saúde) ficam ativos. Se quiser usar só um, você desliga em Ajustes.")
+                }
+            },
+            confirmButton = { TextButton(onClick = { nudge = null; onOpenTab(Tab.CONTACTS) }) { Text("Cadastrar guardiões") } },
+            dismissButton = { TextButton(onClick = { nudge = null }) { Text("Agora não") } },
+        )
     }
 }
 
-/** Botão que fica pressionado pelo mesmo tempo do botão de volume, para não disparar sem querer. */
+/** Botão de emergência. Armado: segura pelo tempo configurado (não dispara sem querer). Não armado: um toque leva à configuração. */
 @Composable
 private fun HoldButton(
     holdMillis: Long,
+    armed: Boolean,
     title: String,
     subtitle: String,
     color: androidx.compose.ui.graphics.Color,
@@ -244,11 +284,8 @@ private fun HoldButton(
         animationSpec = tween(if (holding) holdMillis.toInt() else 150, easing = LinearEasing),
         label = "holdProgress",
     )
-    Surface(
-        color = color,
-        contentColor = contentColor,
-        shape = MaterialTheme.shapes.large,
-        modifier = modifier.pointerInput(holdMillis) {
+    val gesto = if (armed) {
+        Modifier.pointerInput(holdMillis) {
             awaitEachGesture {
                 awaitFirstDown()
                 holding = true
@@ -262,16 +299,24 @@ private fun HoldButton(
                 }
                 holding = false
             }
-        },
+        }
+    } else {
+        Modifier.clickable { currentOnTrigger() }
+    }
+    Surface(
+        color = color,
+        contentColor = contentColor,
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier.then(gesto),
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 12.dp),
+            Modifier.fillMaxSize().padding(vertical = 20.dp, horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-            if (holding) {
+            if (armed && holding) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),

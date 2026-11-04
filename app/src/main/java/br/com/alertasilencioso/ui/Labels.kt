@@ -44,7 +44,15 @@ val FollowUpAudience.label: String
         FollowUpAudience.EVERYONE -> "Todos que receberam"
     }
 
-fun Settings.triggerDescription(): String = when (triggerMode) {
-    TriggerMode.HOLD -> "Segure o botão ${triggerKey.buttonName} por $holdSeconds segundos."
-    TriggerMode.TAPS -> "Aperte o botão ${triggerKey.buttonName} $tapCount vezes seguidas, rápido."
+fun Settings.triggerDescription(): String {
+    if (dualSos) {
+        return when (triggerMode) {
+            TriggerMode.HOLD -> "Segure Volume − (Segurança) ou Volume + (Saúde) por $holdSeconds segundos."
+            TriggerMode.TAPS -> "Aperte Volume − (Segurança) ou Volume + (Saúde) $tapCount vezes, rápido."
+        }
+    }
+    return when (triggerMode) {
+        TriggerMode.HOLD -> "Segure o botão ${triggerKey.buttonName} por $holdSeconds segundos."
+        TriggerMode.TAPS -> "Aperte o botão ${triggerKey.buttonName} $tapCount vezes seguidas, rápido."
+    }
 }
