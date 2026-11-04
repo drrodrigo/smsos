@@ -50,6 +50,7 @@ internal object StateJson {
         put("dispositivo", s.dispositivo)
         put("registroVisto", s.registroVisto)
         put("registrado", s.registrado)
+        put("tokenPush", s.tokenPush)
     }
 
     private fun decodeSettings(o: JSONObject): Settings {
@@ -77,6 +78,7 @@ internal object StateJson {
             dispositivo = o.optString("dispositivo", d.dispositivo),
             registroVisto = o.optBoolean("registroVisto", d.registroVisto),
             registrado = o.optBoolean("registrado", d.registrado),
+            tokenPush = o.optString("tokenPush", d.tokenPush),
         )
     }
 

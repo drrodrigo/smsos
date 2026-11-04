@@ -56,6 +56,7 @@ object Registrar {
             put("idioma", Locale.getDefault().language.ifBlank { "pt" })
             put("plataforma", "android")
             put("versao", BuildConfig.VERSION_NAME)
+            if (s.tokenPush.isNotBlank()) put("token_push", s.tokenPush)
         }.toString()
         var conn: HttpURLConnection? = null
         return try {

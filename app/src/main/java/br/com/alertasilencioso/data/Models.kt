@@ -72,6 +72,8 @@ data class Settings(
     val registroVisto: Boolean = false,
     /** Se o cadastro (lead) já foi aceito pelo servidor. Se não, tenta de novo no próximo início. */
     val registrado: Boolean = false,
+    /** Token do FCM deste aparelho (push). Vai no cadastro para o servidor saber onde avisar. */
+    val tokenPush: String = "",
 )
 
 enum class DeliveryStatus { PENDING, SENT, FAILED }
