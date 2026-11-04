@@ -11,6 +11,14 @@ val releaseProps = rootProject.file("keystore/release.properties").takeIf { it.e
     Properties().apply { it.inputStream().use(::load) }
 }
 
+// Endereço e chave do gateway de SMS (função smsos-alerta). Ficam fora do git (gateway.properties).
+// Sem o arquivo, o app compila com gateway vazio e cai no envio pelo chip (fallback).
+val gatewayProps = rootProject.file("gateway.properties").takeIf { it.exists() }?.let {
+    Properties().apply { it.inputStream().use(::load) }
+}
+val gatewayUrl = gatewayProps?.getProperty("gatewayUrl").orEmpty()
+val gatewayKey = gatewayProps?.getProperty("gatewayKey").orEmpty()
+
 android {
     namespace = "br.com.alertasilencioso"
     compileSdk = 37
@@ -19,8 +27,11 @@ android {
         applicationId = "br.com.smsos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.7.3"
+        versionCode = 11
+        versionName = "0.8.0"
+
+        buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
+        buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")
     }
 
     signingConfigs {
@@ -51,6 +62,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {

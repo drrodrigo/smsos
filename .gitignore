@@ -9,3 +9,6 @@ entregas/
 # Chave de PRODUÇÃO (nunca versionar)
 keystore/release.keystore
 keystore/release.properties
+
+# Chave do gateway de SMS (nunca versionar)
+gateway.properties

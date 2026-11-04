@@ -18,6 +18,11 @@ import br.com.alertasilencioso.data.DeliveryStatus
 import br.com.alertasilencioso.data.FollowUpAudience
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class TriggerSource(val description: String) {
     SCREEN_ON("botão de volume, com a tela ligada"),
@@ -41,6 +46,7 @@ object AlertManager {
     private const val SMS_LIMIT_WINDOW_MILLIS = 30 * 60_000L
 
     private val handler = Handler(Looper.getMainLooper())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val sentSmsTimes = ArrayDeque<Long>()
     private var lastTriggerAt: Long? = null
     private var wakeLock: PowerManager.WakeLock? = null
@@ -77,7 +83,7 @@ object AlertManager {
         handler.removeCallbacks(followUpTick)
         val now = System.currentTimeMillis()
         val text = MessageBuilder.allClear(Repository.state.value.settings.userName, now)
-        active.allRecipients.forEach { sendSms(it.phone, text, null) }
+        enviarSimples(active.allRecipients.map { it.phone to text })
         Repository.updateAlert(active.alertId) {
             it.copy(notes = it.notes + "Aviso de \"está tudo bem\" enviado às ${MessageBuilder.formatTime(now)}")
         }
@@ -124,13 +130,57 @@ object AlertManager {
             return
         }
 
-        resolution.recipients.forEach { contact ->
-            if (!sendSms(contact.phone, text, record.id)) {
-                Repository.setDeliveryStatus(record.id, contact.phone, DeliveryStatus.FAILED)
-            }
+        enviarAlerta(record, resolution.recipients, text, settings)
+    }
+
+    /**
+     * Manda o alerta pelo gateway (internet). Se o gateway não for alcançado (sem internet) e o chip
+     * estiver disponível, cai para o chip como reserva. Sem gateway configurado, usa o chip direto.
+     */
+    private fun enviarAlerta(record: AlertRecord, recipients: List<Contact>, text: String, settings: Settings) {
+        val concluir = {
+            if (settings.vibrateOnSend) Feedback.vibrateSent(appContext)
+            startFollowUps(record, recipients, settings)
         }
-        if (settings.vibrateOnSend) Feedback.vibrateSent(appContext)
-        startFollowUps(record, resolution.recipients, settings)
+        if (recipients.isEmpty()) {
+            concluir()
+            return
+        }
+        if (!GatewaySender.configurado()) {
+            recipients.forEach { c ->
+                if (!sendSms(c.phone, text, record.id)) Repository.setDeliveryStatus(record.id, c.phone, DeliveryStatus.FAILED)
+            }
+            concluir()
+            return
+        }
+        scope.launch {
+            val resultados = withContext(Dispatchers.IO) { GatewaySender.enviar(recipients.map { it.phone to text }) }
+            val algumOk = resultados.values.any { it }
+            if (!algumOk && SmsSender.hasPermission(appContext) && SmsSender.deviceCanSend(appContext)) {
+                Repository.updateAlert(record.id) {
+                    it.copy(notes = it.notes + "Gateway indisponível (sem internet?): enviado pelo chip como reserva")
+                }
+                recipients.forEach { c ->
+                    if (!sendSms(c.phone, text, record.id)) Repository.setDeliveryStatus(record.id, c.phone, DeliveryStatus.FAILED)
+                }
+            } else {
+                recipients.forEach { c ->
+                    val status = if (resultados[c.phone] == true) DeliveryStatus.SENT else DeliveryStatus.FAILED
+                    Repository.setDeliveryStatus(record.id, c.phone, status)
+                }
+            }
+            concluir()
+        }
+    }
+
+    /** Envio simples (sem rastrear status por contato): aviso de "está tudo bem" e atualizações. */
+    private fun enviarSimples(envios: List<Pair<String, String>>) {
+        if (envios.isEmpty()) return
+        if (GatewaySender.configurado()) {
+            scope.launch { withContext(Dispatchers.IO) { GatewaySender.enviar(envios) } }
+        } else {
+            envios.forEach { (phone, text) -> sendSms(phone, text, null) }
+        }
     }
 
     private fun startFollowUps(record: AlertRecord, recipients: List<Contact>, settings: Settings) {
@@ -169,7 +219,9 @@ object AlertManager {
                 current.followUpsTotal,
                 System.currentTimeMillis(),
             )
-            if (smsBudget() >= current.followUpRecipients.size * SmsLength.parts(text)) {
+            if (GatewaySender.configurado()) {
+                enviarSimples(current.followUpRecipients.map { it.phone to text })
+            } else if (smsBudget() >= current.followUpRecipients.size * SmsLength.parts(text)) {
                 current.followUpRecipients.forEach { sendSms(it.phone, text, null) }
             } else {
                 Repository.updateAlert(current.alertId) {

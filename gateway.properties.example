@@ -1,0 +1,3 @@
+# Copie para gateway.properties e preencha. gateway.properties fica no .gitignore.
+gatewayUrl=https://SEU-PROJETO.supabase.co/functions/v1/smsos-alerta
+gatewayKey=COLE-A-CHAVE-DO-APP-AQUI
