@@ -269,3 +269,36 @@ Validado em aparelho real (Samsung) e no servidor. Isto é a base pra deixar o a
     `conheca[cidade]` dele) — OU então só **redireciona** (protege o nome, mas sem SEO).
   - Não precisa se dizer "parceiro" do próprio app: a landing só **recomenda e linka** o
     download do GuardiõesSOS (mais limpo e honesto).
+
+---
+
+## Visão de monetização e acompanhamento (ideias do Rodrigo, 04/11) — FUTURO
+
+**Regra de ouro reforçada:** o alerta básico (disparar + avisar guardiões com a localização)
+**nunca** é pago. O que se cobra são os EXTRAS abaixo, à la carte ("quer tanto? custa tanto").
+
+### Cardápio de recursos pagos (á la carte)
+- **Avisar por WhatsApp** (além do SMS) — o Rodrigo tem sistema de envio; pretende comprar um
+  **número oficial da Meta (WhatsApp Business API)** para enviar sem bloqueio.
+- **Vídeo** (a pessoa transmite vídeo no alerta).
+- **Microfone + vídeo** (áudio e vídeo ao vivo).
+- **Acompanhar com GPS** (ver abaixo).
+Cada um com preço próprio: "Quer WhatsApp? custa X. Vídeo? custa Y. Mic+vídeo? Z. GPS? W."
+
+### Acompanhamento — dois níveis (um barato, um caro)
+Depois que o guardião recebe o alerta, ele pode **autorizar acompanhar**. Dois modos:
+1. **Push de localização a cada ~3 min** (mais barato): o app fica mandando a localização
+   em sequência, formando uma **trilha** ("esteve aqui, depois ali, parou ali"). É notificação
+   push, não precisa abrir mapa — sai mais barato.
+2. **Mapa ao vivo** (custa mais): o guardião abre um mapa e vê a pessoa se movendo em tempo real.
+
+A diferença de custo é real: push de localização é barato; renderizar/servir mapa ao vivo tem
+custo. Vender os dois separados.
+
+### Onboarding "por curiosidade" (parte já em andamento)
+- **Dois SOS ligados por padrão** (Segurança + Saúde) — a pessoa vê as duas opções e desliga se
+  quiser, em vez de achar que só existe uma. (Feito na 0.10.2.)
+- **Botão não armado sem guardião**: tocar leva pra configuração. (Feito na 0.10.2.)
+- **Lugares pré-agendados**: mostrar **Casa** e **Trabalho** já sugeridos nos Lugares; a pessoa
+  clica e preenche, e aí se anima a adicionar mais (casa da namorada, trabalho 2, faculdade,
+  escola). Mesmo princípio dos dois botões. (A FAZER — próximo.)
