@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -53,6 +54,7 @@ enum class Tab(val label: String, val icon: ImageVector) {
     HOME("Início", Icons.Filled.Home),
     CONTACTS("Guardiões", Icons.Filled.Person),
     PLACES("Lugares", Icons.Filled.Place),
+    PROTEGE("Protejo", Icons.Filled.Favorite),
     SETTINGS("Ajustes", Icons.Filled.Settings),
 }
 
@@ -166,6 +168,7 @@ private fun AppRoot() {
                 )
                 Tab.CONTACTS -> ContactsScreen(state)
                 Tab.PLACES -> PlacesScreen(state)
+                Tab.PROTEGE -> GuardiaoScreen(state)
                 Tab.SETTINGS -> SettingsScreen(state.settings)
             }
         }
