@@ -30,6 +30,7 @@ internal object StateJson {
     private fun encodeSettings(s: Settings) = JSONObject().apply {
         put("userName", s.userName)
         put("userPhone", s.userPhone)
+        put("numeroVerificado", s.numeroVerificado)
         put("profile", s.profile.name)
         put("dualSos", s.dualSos)
         put("triggerKey", s.triggerKey.name)
@@ -56,6 +57,7 @@ internal object StateJson {
         return Settings(
             userName = o.optString("userName", d.userName),
             userPhone = o.optString("userPhone", d.userPhone),
+            numeroVerificado = o.optBoolean("numeroVerificado", d.numeroVerificado),
             profile = enumOr(o.optString("profile"), d.profile),
             dualSos = o.optBoolean("dualSos", d.dualSos),
             triggerKey = enumOr(o.optString("triggerKey"), d.triggerKey),

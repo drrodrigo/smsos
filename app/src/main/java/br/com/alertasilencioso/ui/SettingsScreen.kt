@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.GatewaySender
+import br.com.alertasilencioso.alert.Otp
 import br.com.alertasilencioso.alert.SmsSender
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
@@ -42,6 +43,71 @@ import kotlin.math.roundToInt
 
 // Só para mostrar o exemplo da mensagem (Praça da Sé, São Paulo).
 private val PREVIEW_POSITION = GeoPoint(-23.55052, -46.63331)
+
+/** Confirma que o número é da pessoa: manda um código por SMS e a pessoa digita de volta (OTP). */
+@Composable
+private fun ConfirmarNumeroCard(settings: Settings) {
+    val context = LocalContext.current
+    val escopo = rememberCoroutineScope()
+    var enviado by remember { mutableStateOf(false) }
+    var codigo by remember { mutableStateOf("") }
+    var ocupado by remember { mutableStateOf(false) }
+    SectionCard("Confirmar seu número") {
+        when {
+            settings.numeroVerificado ->
+                Text("✓ Número confirmado: ${PhoneNumbers.format(settings.userPhone)}", color = StatusColors.ok)
+            settings.userPhone.isBlank() ->
+                HelpText("Preencha o seu WhatsApp no cadastro primeiro, aí dá para confirmar.")
+            !enviado -> {
+                HelpText("Confirme que o ${PhoneNumbers.format(settings.userPhone)} é seu. Mandamos um código por SMS.")
+                Button(
+                    enabled = !ocupado,
+                    onClick = {
+                        ocupado = true
+                        escopo.launch {
+                            val ok = Otp.enviar(settings.userPhone)
+                            ocupado = false
+                            if (ok) { enviado = true; context.toast("Código enviado por SMS.") }
+                            else context.toast("Não consegui enviar o código agora. Confira a internet.")
+                        }
+                    },
+                ) { Text(if (ocupado) "Enviando..." else "Enviar código por SMS") }
+            }
+            else -> {
+                HelpText("Digite o código de 6 dígitos que chegou por SMS no ${PhoneNumbers.format(settings.userPhone)}.")
+                OutlinedTextField(
+                    value = codigo,
+                    onValueChange = { codigo = it.filter { c -> c.isDigit() }.take(6) },
+                    label = { Text("Código de 6 dígitos") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    enabled = codigo.length == 6 && !ocupado,
+                    onClick = {
+                        ocupado = true
+                        escopo.launch {
+                            val r = Otp.confirmar(settings.userPhone, codigo)
+                            ocupado = false
+                            when {
+                                r.ok -> {
+                                    Repository.updateSettings { it.copy(numeroVerificado = true) }
+                                    context.toast("Número confirmado ✓")
+                                }
+                                r.erro == "expirado" -> context.toast("O código expirou. Envie outro.")
+                                r.erro == "codigo_incorreto" -> context.toast("Código incorreto. Confira e tente de novo.")
+                                r.erro == "muitas_tentativas" -> context.toast("Muitas tentativas. Envie um novo código.")
+                                else -> context.toast("Não consegui confirmar agora. Tente de novo.")
+                            }
+                        }
+                    },
+                ) { Text(if (ocupado) "Confirmando..." else "Confirmar") }
+                TextButton(onClick = { enviado = false; codigo = "" }) { Text("Enviar outro código") }
+            }
+        }
+    }
+}
 
 /** Um editor de texto de alerta (com exemplo de como chega e contagem de SMS). Serve para Segurança e Saúde. */
 @Composable
@@ -92,6 +158,7 @@ fun SettingsScreen(settings: Settings) {
                 )
             }
         }
+        item { ConfirmarNumeroCard(settings) }
         item {
             SectionCard("Para que você usa") {
                 SwitchRow("Ativar os dois SOS (Segurança e Saúde)", settings.dualSos) { on ->

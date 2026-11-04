@@ -41,6 +41,8 @@ data class Settings(
     val userName: String = "",
     /** O WhatsApp/celular da própria pessoa (a conta). Guardado já padronizado. */
     val userPhone: String = "",
+    /** Se o número já foi confirmado por código (OTP) — prova que é da pessoa. */
+    val numeroVerificado: Boolean = false,
     val profile: Profile = Profile.SEGURANCA,
     /**
      * Dois SOS ativos ao mesmo tempo: Volume − = Segurança, Volume + = Saúde (e botão dividido na tela).
