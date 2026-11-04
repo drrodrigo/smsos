@@ -39,6 +39,8 @@ object Limits {
 
 data class Settings(
     val userName: String = "",
+    /** O WhatsApp/celular da própria pessoa (a conta). Guardado já padronizado. */
+    val userPhone: String = "",
     val profile: Profile = Profile.SEGURANCA,
     /**
      * Dois SOS ativos ao mesmo tempo: Volume − = Segurança, Volume + = Saúde (e botão dividido na tela).
@@ -62,6 +64,12 @@ data class Settings(
     val historyRetentionDays: Int = 7,
     /** Se a pessoa já passou pelo passo a passo inicial (ele abre sozinho até isso acontecer). */
     val onboardingDone: Boolean = false,
+    /** Id deste aparelho (gerado uma vez). É a identidade da conta, junto do telefone — sem senha. */
+    val dispositivo: String = "",
+    /** Se a tela de cadastro do primeiro uso já foi mostrada (não insiste de novo). */
+    val registroVisto: Boolean = false,
+    /** Se o cadastro (lead) já foi aceito pelo servidor. Se não, tenta de novo no próximo início. */
+    val registrado: Boolean = false,
 )
 
 enum class DeliveryStatus { PENDING, SENT, FAILED }

@@ -32,6 +32,10 @@ object Repository {
                 .onSuccess { _state.value = it }
                 .onFailure { Log.e(TAG, "Não foi possível ler os dados salvos", it) }
         }
+        // Id do aparelho (identidade da conta, sem senha). Gerado uma vez e guardado.
+        if (_state.value.settings.dispositivo.isBlank()) {
+            update { it.copy(settings = it.settings.copy(dispositivo = newId())) }
+        }
     }
 
     @Synchronized

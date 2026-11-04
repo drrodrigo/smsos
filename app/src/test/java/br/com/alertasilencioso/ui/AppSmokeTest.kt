@@ -32,11 +32,16 @@ class AppSmokeTest {
 
     @Before
     fun comecaDoZero() {
-        // O passo a passo pode ter aberto sozinho; os testes de telas partem da tela Início.
+        // Pula o cadastro do primeiro uso (se aparecer) e o passo a passo (se abrir sozinho);
+        // os testes de telas partem da tela Início.
+        if (compose.onAllNodesWithText("Pular por enquanto").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Pular por enquanto").performClick()
+            compose.waitForIdle()
+        }
         if (compose.onAllNodesWithText("Fazer depois").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Fazer depois").performClick()
         }
-        Repository.update { AppState(settings = Settings(onboardingDone = true)) }
+        Repository.update { AppState(settings = Settings(onboardingDone = true, registroVisto = true)) }
     }
 
     private fun openTab(label: String) = compose.onNode(hasText(label) and hasClickAction()).performClick()

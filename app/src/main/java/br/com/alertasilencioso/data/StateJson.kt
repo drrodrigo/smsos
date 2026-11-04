@@ -29,6 +29,7 @@ internal object StateJson {
 
     private fun encodeSettings(s: Settings) = JSONObject().apply {
         put("userName", s.userName)
+        put("userPhone", s.userPhone)
         put("profile", s.profile.name)
         put("dualSos", s.dualSos)
         put("triggerKey", s.triggerKey.name)
@@ -45,12 +46,16 @@ internal object StateJson {
         put("testMode", s.testMode)
         put("historyRetentionDays", s.historyRetentionDays)
         put("onboardingDone", s.onboardingDone)
+        put("dispositivo", s.dispositivo)
+        put("registroVisto", s.registroVisto)
+        put("registrado", s.registrado)
     }
 
     private fun decodeSettings(o: JSONObject): Settings {
         val d = Settings()
         return Settings(
             userName = o.optString("userName", d.userName),
+            userPhone = o.optString("userPhone", d.userPhone),
             profile = enumOr(o.optString("profile"), d.profile),
             dualSos = o.optBoolean("dualSos", d.dualSos),
             triggerKey = enumOr(o.optString("triggerKey"), d.triggerKey),
@@ -67,6 +72,9 @@ internal object StateJson {
             testMode = o.optBoolean("testMode", d.testMode),
             historyRetentionDays = o.optInt("historyRetentionDays", d.historyRetentionDays),
             onboardingDone = o.optBoolean("onboardingDone", d.onboardingDone),
+            dispositivo = o.optString("dispositivo", d.dispositivo),
+            registroVisto = o.optBoolean("registroVisto", d.registroVisto),
+            registrado = o.optBoolean("registrado", d.registrado),
         )
     }
 

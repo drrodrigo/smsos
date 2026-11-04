@@ -82,6 +82,18 @@ private fun AppRoot() {
         Repository.purgeExpiredHistory(System.currentTimeMillis())
     }
 
+    // Cadastro do primeiro uso (a conta, sem senha) aparece antes do passo a passo, até a pessoa passar.
+    if (!state.settings.registroVisto) {
+        Scaffold { padding ->
+            Box(Modifier.padding(padding).imePadding()) {
+                RegistroScreen(state.settings, onDone = {
+                    Repository.updateSettings { it.copy(registroVisto = true) }
+                })
+            }
+        }
+        return
+    }
+
     if (wizardOpen) {
         Scaffold { padding ->
             Box(Modifier.padding(padding).imePadding()) {
