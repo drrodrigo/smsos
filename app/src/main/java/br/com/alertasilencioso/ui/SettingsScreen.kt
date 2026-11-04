@@ -164,7 +164,7 @@ fun SettingsScreen(settings: Settings) {
                         save { it.copy(followUpAudience = audience) }
                     }
                 }
-                HelpText("Atenção: o Android pede confirmação na tela quando um app manda mais de 30 SMS em meia hora. Por isso o padrão é mandar as atualizações só para os contatos de \"Sempre avisar\".")
+                HelpText("Atenção: o Android pede confirmação na tela quando um app manda mais de 30 SMS em meia hora. Por isso o padrão é mandar as atualizações só para os seus guardiões.")
             }
         }
         item {

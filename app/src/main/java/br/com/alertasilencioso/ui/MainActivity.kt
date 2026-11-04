@@ -33,7 +33,7 @@ import br.com.alertasilencioso.data.Repository
 
 enum class Tab(val label: String, val icon: ImageVector) {
     HOME("Início", Icons.Filled.Home),
-    CONTACTS("Sempre avisar", Icons.Filled.Person),
+    CONTACTS("Guardiões", Icons.Filled.Person),
     PLACES("Lugares", Icons.Filled.Place),
     SETTINGS("Ajustes", Icons.Filled.Settings),
 }

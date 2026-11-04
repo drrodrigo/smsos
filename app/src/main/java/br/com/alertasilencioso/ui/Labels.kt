@@ -40,7 +40,7 @@ val Profile.descricao: String
 
 val FollowUpAudience.label: String
     get() = when (this) {
-        FollowUpAudience.ALWAYS_ONLY -> "Só \"Sempre avisar\""
+        FollowUpAudience.ALWAYS_ONLY -> "Só os guardiões"
         FollowUpAudience.EVERYONE -> "Todos que receberam"
     }
 

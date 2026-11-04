@@ -264,8 +264,8 @@ private fun SetupCard(
         ) { onOpenTab(Tab.SETTINGS) }
         SetupRow(
             done = recipients > 0,
-            title = "Contatos",
-            description = "Quem recebe o alerta: \"Sempre avisar\" e as pessoas de cada lugar.",
+            title = "Guardiões",
+            description = "Quem recebe o alerta: seus guardiões e as pessoas de cada lugar.",
             action = "Cadastrar",
         ) { onOpenTab(Tab.CONTACTS) }
         SetupRow(

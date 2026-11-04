@@ -52,8 +52,8 @@ class AppSmokeTest {
         scrollTo("Testar sem enviar SMS")
         scrollTo("Histórico")
 
-        openTab("Sempre avisar")
-        compose.onNodeWithText("Contatos").assertExists()
+        openTab("Guardiões")
+        compose.onNodeWithText("Meus guardiões").assertExists()
 
         openTab("Lugares")
         compose.onNodeWithText("Adicionar lugar").performClick()
@@ -99,7 +99,7 @@ class AppSmokeTest {
     @Test
     fun contatoCadastradoApareceNaLista() {
         Repository.addAlwaysContact(Contact(name = "Filho Teste", phone = "(31) 98888-7777"))
-        openTab("Sempre avisar")
+        openTab("Guardiões")
         compose.onNodeWithText("Filho Teste").assertExists()
         compose.onNodeWithText("(31) 98888-7777").assertExists()
         // A janela de "Digitar" não é testada aqui: o simulador não desenha janelas de diálogo do Compose.

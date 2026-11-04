@@ -14,14 +14,14 @@ import br.com.alertasilencioso.data.Repository
 fun ContactsScreen(state: AppState) {
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Sempre avisar", style = MaterialTheme.typography.headlineSmall)
-            HelpText("Estas pessoas recebem o alerta em qualquer lugar onde você estiver. Por exemplo, seu filho, mesmo que ele esteja longe.")
+            Text("Guardiões", style = MaterialTheme.typography.headlineSmall)
+            HelpText("Seus guardiões recebem o alerta em qualquer lugar onde você estiver. Por exemplo, seu filho, mesmo que ele esteja longe.")
         }
         item {
-            SectionCard("Contatos") {
+            SectionCard("Meus guardiões") {
                 ContactListEditor(
                     contacts = state.alwaysContacts,
-                    emptyText = "Nenhum contato ainda.",
+                    emptyText = "Nenhum guardião ainda.",
                     onAdd = Repository::addAlwaysContact,
                     onRemove = { Repository.removeAlwaysContact(it.id) },
                     onUpdate = Repository::updateAlwaysContact,
