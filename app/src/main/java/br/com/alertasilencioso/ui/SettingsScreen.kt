@@ -216,6 +216,20 @@ fun SettingsScreen(settings: Settings) {
             }
         }
         item {
+            SectionCard("Histórico") {
+                Text("Apagar o histórico sozinho depois de:", style = MaterialTheme.typography.labelLarge)
+                ChipRow(
+                    listOf(0, 2, 7, 30),
+                    settings.historyRetentionDays,
+                    { if (it == 0) "Nunca" else "$it dias" },
+                ) { dias -> save { it.copy(historyRetentionDays = dias) } }
+                HelpText(
+                    "Histórico curto deixa o app leve e é mais seguro se tomarem seu celular. " +
+                        "\"Nunca\" mantém tudo até você apagar. Você também pode apagar um alerta por vez na tela Início.",
+                )
+            }
+        }
+        item {
             val version = remember {
                 runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
             }

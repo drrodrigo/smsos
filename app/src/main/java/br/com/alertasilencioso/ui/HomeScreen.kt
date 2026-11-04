@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -30,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -105,7 +107,7 @@ fun HomeScreen(
                 },
             )
         }
-        item { HistoryCard(state.history) }
+        item { HistoryCard(state.history, state.settings.historyRetentionDays) }
     }
 }
 
@@ -255,7 +257,22 @@ private fun SetupCard(
         }
     }
 
-    SectionCard("Configuração") {
+    val isQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    val feitos = listOf(
+        settings.userName.isNotBlank(),
+        recipients > 0,
+        status.sms,
+        status.location,
+        if (isQ) status.backgroundLocation else true,
+        status.accessibility,
+        status.batteryUnrestricted,
+    )
+    val pendentes = feitos.count { !it }
+    CollapsibleSectionCard(
+        "Configuração",
+        subtitle = if (pendentes == 0) "Tudo pronto ✓" else "Falta $pendentes ajuste(s) — toque para abrir",
+        initiallyExpanded = pendentes > 0,
+    ) {
         SetupRow(
             done = settings.userName.isNotBlank(),
             title = "Seu nome",
@@ -387,7 +404,11 @@ private fun TestCard(
     releaseSupported: Boolean,
     onTestModeEnabled: () -> Unit,
 ) {
-    SectionCard("Testar sem enviar SMS") {
+    CollapsibleSectionCard(
+        "Testar sem enviar SMS",
+        subtitle = "Treinar o gatilho sem avisar ninguém — toque para abrir",
+        initiallyExpanded = false,
+    ) {
         SwitchRow("Modo teste", settings.testMode) { on ->
             Repository.updateSettings { it.copy(testMode = on) }
             if (on) onTestModeEnabled()
@@ -407,21 +428,37 @@ private fun pressesText(count: Int) =
     if (count > 0) "✓ $count aperto(s) percebido(s)" else "nenhum aperto percebido ainda"
 
 @Composable
-private fun HistoryCard(history: List<AlertRecord>) {
+private fun HistoryCard(history: List<AlertRecord>, retentionDays: Int) {
     var confirmarApagar by remember { mutableStateOf(false) }
-    SectionCard("Histórico") {
+    CollapsibleSectionCard(
+        "Histórico",
+        subtitle = if (history.isEmpty()) "Nenhum alerta ainda" else "${history.size} registro(s) — toque para abrir",
+        initiallyExpanded = false,
+    ) {
         if (history.isEmpty()) {
             HelpText("Nenhum alerta ainda.")
         } else {
             history.take(10).forEachIndexed { index, record ->
                 if (index > 0) HorizontalDivider()
-                HistoryItem(record)
+                HistoryItem(record, onDelete = { Repository.removeAlert(record.id) })
             }
             HorizontalDivider()
             TextButton(onClick = { confirmarApagar = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Apagar o histórico deste aparelho")
             }
-            HelpText("Apaga a lista só aqui do celular — útil se tomarem seu telefone. O histórico completo fica guardado na sua conta no site (em breve).")
+            HelpText(
+                buildString {
+                    append("Toque na lixeira ao lado de um alerta para apagar só ele. ")
+                    append(
+                        if (retentionDays > 0) {
+                            "O histórico some sozinho depois de $retentionDays dias (você muda em Ajustes)."
+                        } else {
+                            "O histórico fica guardado até você apagar (você liga o sumiço automático em Ajustes)."
+                        },
+                    )
+                    append(" Apagar aqui não desfaz — útil se tomarem seu telefone.")
+                },
+            )
         }
     }
     if (confirmarApagar) {
@@ -438,33 +475,38 @@ private fun HistoryCard(history: List<AlertRecord>) {
 }
 
 @Composable
-private fun HistoryItem(record: AlertRecord) {
+private fun HistoryItem(record: AlertRecord, onDelete: () -> Unit) {
     val context = LocalContext.current
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            "${MessageBuilder.formatDateTime(record.timestamp)} · ${if (record.test) "TESTE" else "ALERTA"}",
-            style = MaterialTheme.typography.titleSmall,
-            color = if (record.test) StatusColors.warning else MaterialTheme.colorScheme.primary,
-        )
-        if (record.placeNames.isNotEmpty()) HelpText("Lugar: ${record.placeNames.joinToString(", ")}")
-        val total = record.deliveries.size
-        if (record.test) {
-            HelpText("$total contato(s) receberiam o alerta")
-        } else {
-            val sent = record.deliveries.count { it.status == DeliveryStatus.SENT }
-            val failed = record.deliveries.count { it.status == DeliveryStatus.FAILED }
-            val pending = record.deliveries.count { it.status == DeliveryStatus.PENDING }
-            HelpText(buildString {
-                append("Enviado: $sent de $total")
-                if (failed > 0) append(" · falhou: $failed")
-                if (pending > 0) append(" · aguardando: $pending")
-            })
+    Row(verticalAlignment = Alignment.Top) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                "${MessageBuilder.formatDateTime(record.timestamp)} · ${if (record.test) "TESTE" else "ALERTA"}",
+                style = MaterialTheme.typography.titleSmall,
+                color = if (record.test) StatusColors.warning else MaterialTheme.colorScheme.primary,
+            )
+            if (record.placeNames.isNotEmpty()) HelpText("Lugar: ${record.placeNames.joinToString(", ")}")
+            val total = record.deliveries.size
+            if (record.test) {
+                HelpText("$total contato(s) receberiam o alerta")
+            } else {
+                val sent = record.deliveries.count { it.status == DeliveryStatus.SENT }
+                val failed = record.deliveries.count { it.status == DeliveryStatus.FAILED }
+                val pending = record.deliveries.count { it.status == DeliveryStatus.PENDING }
+                HelpText(buildString {
+                    append("Enviado: $sent de $total")
+                    if (failed > 0) append(" · falhou: $failed")
+                    if (pending > 0) append(" · aguardando: $pending")
+                })
+            }
+            record.notes.forEach { HelpText(it) }
+            val lat = record.latitude
+            val lng = record.longitude
+            if (lat != null && lng != null) {
+                TextButton(onClick = { context.openMap(GeoPoint(lat, lng), "Alerta") }) { Text("Ver no mapa") }
+            }
         }
-        record.notes.forEach { HelpText(it) }
-        val lat = record.latitude
-        val lng = record.longitude
-        if (lat != null && lng != null) {
-            TextButton(onClick = { context.openMap(GeoPoint(lat, lng), "Alerta") }) { Text("Ver no mapa") }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Filled.Delete, contentDescription = "Apagar este alerta", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -41,6 +41,7 @@ internal object StateJson {
         put("followUpAudience", s.followUpAudience.name)
         put("screenOffDetection", s.screenOffDetection)
         put("testMode", s.testMode)
+        put("historyRetentionDays", s.historyRetentionDays)
         put("onboardingDone", s.onboardingDone)
     }
 
@@ -60,6 +61,7 @@ internal object StateJson {
             followUpAudience = enumOr(o.optString("followUpAudience"), d.followUpAudience),
             screenOffDetection = o.optBoolean("screenOffDetection", d.screenOffDetection),
             testMode = o.optBoolean("testMode", d.testMode),
+            historyRetentionDays = o.optInt("historyRetentionDays", d.historyRetentionDays),
             onboardingDone = o.optBoolean("onboardingDone", d.onboardingDone),
         )
     }

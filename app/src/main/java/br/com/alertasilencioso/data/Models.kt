@@ -51,6 +51,8 @@ data class Settings(
     val followUpAudience: FollowUpAudience = FollowUpAudience.ALWAYS_ONLY,
     val screenOffDetection: Boolean = true,
     val testMode: Boolean = false,
+    /** Depois de quantos dias o histórico some sozinho deste aparelho. 0 = nunca apagar. */
+    val historyRetentionDays: Int = 7,
     /** Se a pessoa já passou pelo passo a passo inicial (ele abre sozinho até isso acontecer). */
     val onboardingDone: Boolean = false,
 )

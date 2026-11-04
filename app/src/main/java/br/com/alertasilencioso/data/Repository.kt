@@ -73,6 +73,21 @@ object Repository {
     /** Apaga o histórico deste aparelho (proteção contra coação). O histórico completo fica no site. */
     fun clearHistory() = update { it.copy(history = emptyList()) }
 
+    /** Apaga UM registro do histórico (a pessoa escolhe qual tirar e qual deixar). */
+    fun removeAlert(id: String) = update { s -> s.copy(history = s.history.filterNot { it.id == id }) }
+
+    /**
+     * Some sozinho com os alertas mais velhos que o limite escolhido em Ajustes (padrão 7 dias;
+     * 0 = nunca). Deixa o app leve e é proteção: histórico curto diz menos se o celular for tomado.
+     */
+    fun purgeExpiredHistory(now: Long) = update { s ->
+        val days = s.settings.historyRetentionDays
+        if (days <= 0) return@update s
+        val cutoff = now - days * 24L * 60L * 60L * 1000L
+        val kept = s.history.filter { it.timestamp >= cutoff }
+        if (kept.size == s.history.size) s else s.copy(history = kept)
+    }
+
     /** Uma falha sempre vale; "enviado" só substitui "aguardando" (se uma parte falhou, fica como falha). */
     fun setDeliveryStatus(alertId: String, phone: String, status: DeliveryStatus) = updateAlert(alertId) { r ->
         r.copy(deliveries = r.deliveries.map { d ->
