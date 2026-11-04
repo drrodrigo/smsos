@@ -16,8 +16,10 @@ import br.com.alertasilencioso.data.Contact
 import br.com.alertasilencioso.data.Delivery
 import br.com.alertasilencioso.data.DeliveryStatus
 import br.com.alertasilencioso.data.FollowUpAudience
+import br.com.alertasilencioso.data.Profile
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
+import br.com.alertasilencioso.data.templateFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -53,7 +55,7 @@ object AlertManager {
     private lateinit var appContext: Context
     private val followUpTick = Runnable { sendFollowUp() }
 
-    fun trigger(context: Context, source: TriggerSource) {
+    fun trigger(context: Context, source: TriggerSource, profile: Profile = Repository.state.value.settings.profile) {
         bind(context)
         val now = SystemClock.elapsedRealtime()
         val testMode = Repository.state.value.settings.testMode
@@ -72,7 +74,7 @@ object AlertManager {
         acquireWakeLock(LOCATION_TIMEOUT_MILLIS + WAKE_MARGIN_MILLIS)
         val startedAt = System.currentTimeMillis()
         LocationFetcher(appContext).fetch(LOCATION_TIMEOUT_MILLIS) { location ->
-            deliverAlert(startedAt, location, source)
+            deliverAlert(startedAt, location, source, profile)
         }
     }
 
@@ -99,13 +101,13 @@ object AlertManager {
         releaseWakeLock()
     }
 
-    private fun deliverAlert(startedAt: Long, location: Location?, source: TriggerSource) {
+    private fun deliverAlert(startedAt: Long, location: Location?, source: TriggerSource, profile: Profile) {
         val state = Repository.state.value
         val settings = state.settings
         val position = location?.toGeoPoint()
         val resolution = RecipientResolver.resolve(position, location?.accuracy, state.alwaysContacts, state.places)
         val placeNames = if (resolution.locationKnown) resolution.places.map { it.name } else emptyList()
-        val text = MessageBuilder.alert(settings.messageTemplate, settings.userName, position, placeNames, startedAt)
+        val text = MessageBuilder.alert(settings.templateFor(profile), settings.userName, position, placeNames, startedAt)
         val notes = buildList {
             add("Acionado pelo ${source.description}")
             if (!resolution.locationKnown) add("Localização não encontrada: todos os contatos foram avisados")

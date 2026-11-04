@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import br.com.alertasilencioso.alert.TriggerSource
 import br.com.alertasilencioso.core.PressPatternDetector
+import br.com.alertasilencioso.data.Profile
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.TriggerKey
 import br.com.alertasilencioso.data.TriggerMode
@@ -21,7 +22,7 @@ import br.com.alertasilencioso.data.TriggerMode
  */
 class TriggerController(
     context: Context,
-    private val onTrigger: (TriggerSource) -> Unit,
+    private val onTrigger: (TriggerSource, Profile) -> Unit,
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private val audio = context.getSystemService(AudioManager::class.java)
@@ -33,6 +34,7 @@ class TriggerController(
     private val flushVolumeRunnable = Runnable { flushVolume() }
 
     private var pressSource = TriggerSource.SCREEN_ON
+    private var pressProfile = Profile.SEGURANCA
     private var consumedKeyCode: Int? = null
     private var screenOffDirection = 0
     private var screenOffPressMatches = false
@@ -52,7 +54,7 @@ class TriggerController(
                 // Durante ligações o volume tem outras funções (silenciar o toque, volume da chamada).
                 if (!matchesTriggerKey(direction) || audio.mode != AudioManager.MODE_NORMAL) return false
                 consumedKeyCode = event.keyCode
-                press(now, TriggerSource.SCREEN_ON)
+                press(now, TriggerSource.SCREEN_ON, profileFor(direction))
                 return true
             }
             KeyEvent.ACTION_UP -> {
@@ -81,10 +83,11 @@ class TriggerController(
                 return
             }
             if (Repository.state.value.screenOffReleaseSupported) {
-                press(now, TriggerSource.SCREEN_OFF)
+                press(now, TriggerSource.SCREEN_OFF, profileFor(direction))
             } else {
                 // Enquanto não sabemos se o aparelho avisa a soltura, só conta como "segurado" se os sinais
                 // continuarem chegando. Assim um toque rápido nunca vira um alerta falso.
+                pressProfile = profileFor(direction)
                 detector.config = detectorConfig()
                 if (detector.pulse(now)) fire(TriggerSource.SCREEN_OFF)
             }
@@ -105,9 +108,10 @@ class TriggerController(
         if (wakeLock.isHeld) wakeLock.release()
     }
 
-    private fun press(now: Long, source: TriggerSource) {
+    private fun press(now: Long, source: TriggerSource, profile: Profile) {
         detector.config = detectorConfig()
         pressSource = source
+        pressProfile = profile
         handler.removeCallbacks(flushVolumeRunnable)
         wakeLock.acquire(detector.config.holdMillis + WAKE_MARGIN_MILLIS)
         if (detector.press(now)) {
@@ -136,7 +140,7 @@ class TriggerController(
         handler.removeCallbacks(pollRunnable)
         handler.removeCallbacks(flushVolumeRunnable)
         pendingVolumeSteps = 0
-        onTrigger(source)
+        onTrigger(source, pressProfile)
         if (wakeLock.isHeld) wakeLock.release()
     }
 
@@ -163,10 +167,21 @@ class TriggerController(
         if (audio.isMusicActive) audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0)
     }
 
-    private fun matchesTriggerKey(direction: Int) = when (settings.triggerKey) {
-        TriggerKey.VOLUME_UP -> direction > 0
-        TriggerKey.VOLUME_DOWN -> direction < 0
-        TriggerKey.ANY -> true
+    // No modo duplo os dois lados armam (a direção escolhe o tipo); no modo simples, vale o botão escolhido.
+    private fun matchesTriggerKey(direction: Int): Boolean {
+        if (settings.dualSos) return true
+        return when (settings.triggerKey) {
+            TriggerKey.VOLUME_UP -> direction > 0
+            TriggerKey.VOLUME_DOWN -> direction < 0
+            TriggerKey.ANY -> true
+        }
+    }
+
+    // Volume − = Segurança, Volume + = Saúde (só no modo duplo). No simples, usa o tipo configurado.
+    private fun profileFor(direction: Int): Profile = when {
+        !settings.dualSos -> settings.profile
+        direction > 0 -> Profile.SAUDE
+        else -> Profile.SEGURANCA
     }
 
     private fun volumeDirection(keyCode: Int): Int? = when (keyCode) {

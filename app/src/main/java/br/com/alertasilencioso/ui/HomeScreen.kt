@@ -45,10 +45,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.com.alertasilencioso.data.Profile
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.AlertManager
 import br.com.alertasilencioso.alert.TriggerSource
@@ -93,7 +96,7 @@ fun HomeScreen(
             }
         }
         state.activeAlert?.let { active -> item { ActiveAlertCard(active) } }
-        item { PanicButton(state.settings.holdSeconds * 1_000L) { AlertManager.trigger(context, TriggerSource.APP_BUTTON) } }
+        item { PanicArea(state.settings, context) }
         item { SetupCard(state.settings, status, recipients, onRefreshStatus, onOpenTab) }
         item {
             TestCard(
@@ -187,47 +190,93 @@ private fun ActiveAlertCard(active: ActiveAlert) {
     }
 }
 
-/** Botão dentro do app: fica pressionado pelo mesmo tempo do botão de volume, para não disparar sem querer. */
+/** Área do botão: um botão só (modo simples) ou dois lados — Segurança e Saúde (modo duplo). */
 @Composable
-private fun PanicButton(holdMillis: Long, onTrigger: () -> Unit) {
+private fun PanicArea(settings: Settings, context: android.content.Context) {
+    val hold = settings.holdSeconds * 1_000L
+    val seg = settings.holdSeconds
+    if (!settings.dualSos) {
+        HoldButton(
+            holdMillis = hold,
+            title = "SEGURE AQUI",
+            subtitle = "por $seg segundos para enviar o alerta agora",
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.fillMaxWidth(),
+        ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, settings.profile) }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HoldButton(
+                holdMillis = hold,
+                title = "🛡️ SEGURANÇA",
+                subtitle = "segure $seg s",
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.weight(1f),
+            ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, Profile.SEGURANCA) }
+            HoldButton(
+                holdMillis = hold,
+                title = "❤️ SAÚDE",
+                subtitle = "segure $seg s",
+                color = Color(0xFF1E66D0),
+                contentColor = Color.White,
+                modifier = Modifier.weight(1f),
+            ) { AlertManager.trigger(context, TriggerSource.APP_BUTTON, Profile.SAUDE) }
+        }
+    }
+}
+
+/** Botão que fica pressionado pelo mesmo tempo do botão de volume, para não disparar sem querer. */
+@Composable
+private fun HoldButton(
+    holdMillis: Long,
+    title: String,
+    subtitle: String,
+    color: androidx.compose.ui.graphics.Color,
+    contentColor: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+    onTrigger: () -> Unit,
+) {
     val currentOnTrigger by rememberUpdatedState(onTrigger)
     var holding by remember { mutableStateOf(false) }
     val progress by animateFloatAsState(
         targetValue = if (holding) 1f else 0f,
         animationSpec = tween(if (holding) holdMillis.toInt() else 150, easing = LinearEasing),
-        label = "panicProgress",
+        label = "holdProgress",
     )
     Surface(
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        color = color,
+        contentColor = contentColor,
         shape = MaterialTheme.shapes.large,
-        modifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(holdMillis) {
-                awaitEachGesture {
-                    awaitFirstDown()
-                    holding = true
-                    val releasedEarly = withTimeoutOrNull(holdMillis) {
-                        waitForUpOrCancellation()
-                        true
-                    } ?: false
-                    if (!releasedEarly) {
-                        currentOnTrigger()
-                        waitForUpOrCancellation()
-                    }
-                    holding = false
+        modifier = modifier.pointerInput(holdMillis) {
+            awaitEachGesture {
+                awaitFirstDown()
+                holding = true
+                val releasedEarly = withTimeoutOrNull(holdMillis) {
+                    waitForUpOrCancellation()
+                    true
+                } ?: false
+                if (!releasedEarly) {
+                    currentOnTrigger()
+                    waitForUpOrCancellation()
                 }
-            },
+                holding = false
+            }
+        },
     ) {
-        Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("SEGURE AQUI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text("por ${holdMillis / 1_000} segundos para enviar o alerta agora", style = MaterialTheme.typography.bodyMedium)
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             if (holding) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                    color = contentColor,
+                    trackColor = contentColor.copy(alpha = 0.3f),
                 )
             }
         }

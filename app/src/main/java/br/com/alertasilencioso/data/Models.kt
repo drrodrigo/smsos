@@ -40,11 +40,15 @@ object Limits {
 data class Settings(
     val userName: String = "",
     val profile: Profile = Profile.SEGURANCA,
+    /** Dois SOS ativos ao mesmo tempo: Volume − = Segurança, Volume + = Saúde (e botão dividido na tela). */
+    val dualSos: Boolean = false,
     val triggerKey: TriggerKey = TriggerKey.ANY,
     val triggerMode: TriggerMode = TriggerMode.HOLD,
     val holdSeconds: Int = 5,
     val tapCount: Int = 5,
     val messageTemplate: String = MessageBuilder.DEFAULT_TEMPLATE,
+    /** Texto do alerta de Saúde (o de Segurança é o messageTemplate acima). */
+    val messageTemplateSaude: String = MessageBuilder.HEALTH_TEMPLATE,
     val vibrateOnSend: Boolean = true,
     val followUpCount: Int = 3,
     val followUpIntervalMinutes: Int = 3,
@@ -84,6 +88,10 @@ data class ActiveAlert(
     val followUpsTotal: Int,
     val followUpIntervalMillis: Long,
 )
+
+/** O texto certo para o tipo do alerta: Saúde usa o seu template; o resto usa o de Segurança. */
+fun Settings.templateFor(profile: Profile): String =
+    if (profile == Profile.SAUDE) messageTemplateSaude else messageTemplate
 
 data class AppState(
     val settings: Settings = Settings(),

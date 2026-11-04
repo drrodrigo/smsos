@@ -42,12 +42,35 @@ import kotlin.math.roundToInt
 // Só para mostrar o exemplo da mensagem (Praça da Sé, São Paulo).
 private val PREVIEW_POSITION = GeoPoint(-23.55052, -46.63331)
 
+/** Um editor de texto de alerta (com exemplo de como chega e contagem de SMS). Serve para Segurança e Saúde. */
+@Composable
+private fun MensagemEditor(titulo: String?, valor: String, padrao: String, nome: String, onChange: (String) -> Unit) {
+    if (titulo != null) Text(titulo, style = MaterialTheme.typography.labelLarge)
+    OutlinedTextField(
+        value = valor,
+        onValueChange = onChange,
+        minLines = 3,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    val preview = MessageBuilder.alert(valor, nome, PREVIEW_POSITION, listOf("Casa"), System.currentTimeMillis())
+    Text("Exemplo de como chega:", style = MaterialTheme.typography.labelLarge)
+    Text(preview, style = MaterialTheme.typography.bodySmall)
+    val parts = SmsLength.parts(preview)
+    Text(
+        "${preview.length} letras · $parts SMS por contato",
+        style = MaterialTheme.typography.bodySmall,
+        color = if (parts > 1) StatusColors.warning else StatusColors.ok,
+    )
+    TextButton(onClick = { onChange(padrao) }) { Text("Voltar para o texto padrão") }
+}
+
 @Composable
 fun SettingsScreen(settings: Settings) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
     var name by remember { mutableStateOf(settings.userName) }
-    var template by remember { mutableStateOf(settings.messageTemplate) }
+    var templateSeg by remember { mutableStateOf(settings.messageTemplate) }
+    var templateSau by remember { mutableStateOf(settings.messageTemplateSaude) }
     var testPhone by rememberSaveable { mutableStateOf("") }
     val save: ((Settings) -> Settings) -> Unit = Repository::updateSettings
 
@@ -69,12 +92,15 @@ fun SettingsScreen(settings: Settings) {
         }
         item {
             SectionCard("Para que você usa") {
-                ChipRow(Profile.entries, settings.profile, { it.label }) { p ->
-                    template = MessageBuilder.defaultTemplate(p)
-                    save { it.copy(profile = p, messageTemplate = template) }
+                SwitchRow("Ativar os dois SOS (Segurança e Saúde)", settings.dualSos) { on ->
+                    save { it.copy(dualSos = on) }
                 }
-                HelpText(settings.profile.descricao)
-                HelpText("Trocar aqui também troca o texto padrão da mensagem (você pode editar abaixo).")
+                if (settings.dualSos) {
+                    HelpText("Os dois ficam ativos. No botão de volume: segure Volume − para Segurança e Volume + para Saúde. Na tela Início aparece o botão dividido, um lado de cada.")
+                } else {
+                    ChipRow(Profile.entries, settings.profile, { it.label }) { p -> save { it.copy(profile = p) } }
+                    HelpText(settings.profile.descricao)
+                }
             }
         }
         item {
@@ -108,29 +134,22 @@ fun SettingsScreen(settings: Settings) {
         }
         item {
             SectionCard("Mensagem") {
-                OutlinedTextField(
-                    value = template,
-                    onValueChange = { value ->
-                        template = value
-                        save { it.copy(messageTemplate = value) }
-                    },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 HelpText(MessageBuilder.PLACEHOLDER_HELP)
-                val preview = MessageBuilder.alert(template, name, PREVIEW_POSITION, listOf("Casa"), System.currentTimeMillis())
-                Text("Exemplo de como chega:", style = MaterialTheme.typography.labelLarge)
-                Text(preview, style = MaterialTheme.typography.bodySmall)
-                val parts = SmsLength.parts(preview)
-                Text(
-                    "${preview.length} letras · $parts SMS por contato",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (parts > 1) StatusColors.warning else StatusColors.ok,
-                )
-                TextButton(onClick = {
-                    template = MessageBuilder.DEFAULT_TEMPLATE
-                    save { it.copy(messageTemplate = MessageBuilder.DEFAULT_TEMPLATE) }
-                }) { Text("Voltar para a mensagem padrão") }
+                val mostrarSaude = settings.dualSos || settings.profile == Profile.SAUDE
+                MensagemEditor(
+                    titulo = if (mostrarSaude) "🛡️ Mensagem de Segurança" else null,
+                    valor = templateSeg,
+                    padrao = MessageBuilder.DEFAULT_TEMPLATE,
+                    nome = name,
+                ) { v -> templateSeg = v; save { it.copy(messageTemplate = v) } }
+                if (mostrarSaude) {
+                    MensagemEditor(
+                        titulo = "❤️ Mensagem de Saúde",
+                        valor = templateSau,
+                        padrao = MessageBuilder.HEALTH_TEMPLATE,
+                        nome = name,
+                    ) { v -> templateSau = v; save { it.copy(messageTemplateSaude = v) } }
+                }
             }
         }
         item {

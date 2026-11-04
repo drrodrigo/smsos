@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.LocationFetcher
-import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.data.AppState
 import br.com.alertasilencioso.data.Place
 import br.com.alertasilencioso.data.Profile
@@ -156,7 +155,7 @@ private fun NameStep(state: AppState, onNext: () -> Unit) {
     )
     Text("Para que você vai usar?", style = MaterialTheme.typography.titleSmall)
     ChipRow(Profile.entries, state.settings.profile, { it.label }) { p ->
-        Repository.updateSettings { it.copy(profile = p, messageTemplate = MessageBuilder.defaultTemplate(p)) }
+        Repository.updateSettings { it.copy(profile = p) }
     }
     HelpText(state.settings.profile.descricao)
     BigButton("Continuar", enabled = name.isNotBlank(), onClick = onNext)

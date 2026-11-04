@@ -1,6 +1,9 @@
 package br.com.alertasilencioso.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,12 +17,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -102,6 +108,25 @@ private fun AppRoot() {
                         Spacer(Modifier.width(8.dp))
                         Text("GuardiõesSOS", fontWeight = FontWeight.Bold)
                     }
+                },
+                actions = {
+                    val site = "https://guardioessos.com.br"
+                    IconButton(onClick = {
+                        val share = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Baixe o GuardiõesSOS — um toque avisa seus guardiões com a sua localização. $site",
+                            )
+                        }
+                        context.startActivity(Intent.createChooser(share, "Compartilhar"))
+                    }) { Icon(Icons.Filled.Share, contentDescription = "Compartilhar o app") }
+                    IconButton(onClick = {
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(site))) }
+                    }) { Icon(painterResource(R.drawable.ic_site), contentDescription = "Abrir o site") }
+                    IconButton(onClick = {
+                        Toast.makeText(context, "Em breve: avisos e novidades aqui.", Toast.LENGTH_SHORT).show()
+                    }) { Icon(Icons.Filled.Notifications, contentDescription = "Avisos") }
                 },
             )
         },

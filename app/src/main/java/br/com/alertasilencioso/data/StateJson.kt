@@ -30,11 +30,13 @@ internal object StateJson {
     private fun encodeSettings(s: Settings) = JSONObject().apply {
         put("userName", s.userName)
         put("profile", s.profile.name)
+        put("dualSos", s.dualSos)
         put("triggerKey", s.triggerKey.name)
         put("triggerMode", s.triggerMode.name)
         put("holdSeconds", s.holdSeconds)
         put("tapCount", s.tapCount)
         put("messageTemplate", s.messageTemplate)
+        put("messageTemplateSaude", s.messageTemplateSaude)
         put("vibrateOnSend", s.vibrateOnSend)
         put("followUpCount", s.followUpCount)
         put("followUpIntervalMinutes", s.followUpIntervalMinutes)
@@ -50,11 +52,13 @@ internal object StateJson {
         return Settings(
             userName = o.optString("userName", d.userName),
             profile = enumOr(o.optString("profile"), d.profile),
+            dualSos = o.optBoolean("dualSos", d.dualSos),
             triggerKey = enumOr(o.optString("triggerKey"), d.triggerKey),
             triggerMode = enumOr(o.optString("triggerMode"), d.triggerMode),
             holdSeconds = o.optInt("holdSeconds", d.holdSeconds),
             tapCount = o.optInt("tapCount", d.tapCount),
             messageTemplate = o.optString("messageTemplate", d.messageTemplate),
+            messageTemplateSaude = o.optString("messageTemplateSaude", d.messageTemplateSaude),
             vibrateOnSend = o.optBoolean("vibrateOnSend", d.vibrateOnSend),
             followUpCount = o.optInt("followUpCount", d.followUpCount),
             followUpIntervalMinutes = o.optInt("followUpIntervalMinutes", d.followUpIntervalMinutes),

@@ -21,7 +21,7 @@ class GuardianService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         Repository.init(this)
-        val trigger = TriggerController(this) { source -> AlertManager.trigger(this, source) }
+        val trigger = TriggerController(this) { source, profile -> AlertManager.trigger(this, source, profile) }
         controller = trigger
         screenOffListener = ScreenOffVolumeListener(this, trigger::onScreenOffVolume).also { it.start() }
         _running.value = true
