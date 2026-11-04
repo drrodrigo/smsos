@@ -196,7 +196,7 @@ fun SettingsScreen(settings: Settings) {
             val version = remember {
                 runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
             }
-            HelpText("Alerta Silencioso · versão ${version ?: "?"}")
+            HelpText("SMSOS · versão ${version ?: "?"}")
         }
     }
 }

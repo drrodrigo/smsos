@@ -86,7 +86,7 @@ class AppSmokeTest {
         var pulos = 0
         while (compose.onAllNodesWithText("Concluir").fetchSemanticsNodes().isEmpty() && pulos < 10) {
             if (compose.onAllNodesWithText("Perceber o botão de volume").fetchSemanticsNodes().isNotEmpty()) {
-                compose.onNodeWithText("Apareceu \"Configuração restrita\"?").assertExists()
+                compose.onNode(hasText("Configuração restrita", substring = true)).assertExists()
             }
             compose.onNodeWithText("Pular por enquanto").performScrollTo().performClick()
             pulos++

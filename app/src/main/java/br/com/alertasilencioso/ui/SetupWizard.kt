@@ -208,7 +208,20 @@ private fun PermissionStep(
                     tried = true
                     permissions.launch(arrayOf(Manifest.permission.SEND_SMS))
                 }
-                if (tried) AppSettingsHelp("Toque em \"Permissões\" → \"SMS\" → \"Permitir\".")
+                if (tried) {
+                    HelpCard("Travou em \"Acesso negado\"? (Samsung)") {
+                        HelpText("No Samsung novo, o SMS é bloqueado quando o app não veio da Play Store. Faça nesta ordem:")
+                        Instructions(
+                            "Configurações → Segurança e privacidade → Bloqueador automático → DESLIGUE.",
+                            "Toque em \"Abrir configurações do app\" aqui embaixo.",
+                            "Toque nos 3 pontinhos ⋮ → \"Permitir configurações restritas\" → confirme com a digital ou o PIN.",
+                            "Toque em \"Permissões\" → \"SMS\" → \"Permitir\".",
+                        )
+                        OutlinedButton(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
+                            Text("Abrir configurações do app")
+                        }
+                    }
+                }
             }
         }
         WizardStep.LOCATION -> {
@@ -268,7 +281,7 @@ private fun PermissionStep(
                         "Abra as Configurações do celular → \"Bateria\".",
                         "Toque em \"Limites de uso em segundo plano\".",
                         "Toque em \"Apps que nunca entram em suspensão\".",
-                        "Toque no \"+\" e marque \"Alerta Silencioso\".",
+                        "Toque no \"+\" e marque \"SMSOS\".",
                     )
                 }
             }
@@ -299,21 +312,22 @@ private fun AccessibilityStep(done: Boolean, onNext: () -> Unit) {
     }
     Instructions(
         "Toque em \"Abrir Acessibilidade\" aqui embaixo.",
-        "Toque em \"Alerta Silencioso – botão de pânico\". No Samsung ele fica dentro de \"Apps instalados\".",
+        "Toque em \"SMSOS – botão de pânico\". No Samsung ele fica dentro de \"Apps instalados\".",
         "Ligue a chave e toque em \"Permitir\".",
         "Toque na seta de voltar para voltar ao app.",
     )
     BigButton("Abrir Acessibilidade") { context.openAccessibilitySettings() }
-    HelpCard("Apareceu \"Configuração restrita\"?") {
-        HelpText("Isso acontece porque o app ainda não veio da Play Store. Faça nesta ordem:")
+    HelpText("Se o celular perguntar sobre um \"atalho\" pelo botão lateral, pode recusar — o SMSOS não precisa disso.")
+    HelpCard("Travou em \"Acesso negado\" ou \"Configuração restrita\"?") {
+        HelpText("Isso acontece porque o app ainda não veio da Play Store. No Samsung novo, faça nesta ordem:")
         Instructions(
-            "Na mensagem, toque em \"OK\".",
+            "SAMSUNG: Configurações → Segurança e privacidade → Bloqueador automático → DESLIGUE. (Sem isso, o passo abaixo nem aparece.)",
             "Toque em \"Abrir informações do app\" aqui embaixo.",
             "Toque nos 3 pontinhos ⋮, no canto de cima à direita.",
             "Toque em \"Permitir configurações restritas\" e confirme com a digital ou o PIN.",
             "Volte aqui e toque de novo em \"Abrir Acessibilidade\".",
         )
-        HelpText("A opção dos 3 pontinhos só aparece depois que você tentou ligar a chave pelo menos uma vez.")
+        HelpText("Quando o app estiver na Play Store, nada disso é necessário.")
         OutlinedButton(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
             Text("Abrir informações do app")
         }

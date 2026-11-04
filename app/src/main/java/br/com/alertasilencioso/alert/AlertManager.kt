@@ -59,8 +59,10 @@ object AlertManager {
             }
         }
         lastTriggerAt = now
-        // No teste, vibra logo ao reconhecer o gesto, sem esperar o GPS.
-        if (testMode) Feedback.vibrateTest(appContext)
+        // Vibra NA HORA em que o gesto é reconhecido (ao completar os segundos), sem esperar o GPS — que pode
+        // levar até 20 s. É o aviso que a pessoa sente para saber que acionou. No teste vibra sempre; no modo
+        // real respeita o ajuste de vibração (ligado por padrão).
+        if (testMode || Repository.state.value.settings.vibrateOnSend) Feedback.vibrateFired(appContext)
         acquireWakeLock(LOCATION_TIMEOUT_MILLIS + WAKE_MARGIN_MILLIS)
         val startedAt = System.currentTimeMillis()
         LocationFetcher(appContext).fetch(LOCATION_TIMEOUT_MILLIS) { location ->

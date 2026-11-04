@@ -40,9 +40,9 @@ object Limits {
 data class Settings(
     val userName: String = "",
     val profile: Profile = Profile.SEGURANCA,
-    val triggerKey: TriggerKey = TriggerKey.VOLUME_DOWN,
+    val triggerKey: TriggerKey = TriggerKey.ANY,
     val triggerMode: TriggerMode = TriggerMode.HOLD,
-    val holdSeconds: Int = 10,
+    val holdSeconds: Int = 5,
     val tapCount: Int = 5,
     val messageTemplate: String = MessageBuilder.DEFAULT_TEMPLATE,
     val vibrateOnSend: Boolean = true,

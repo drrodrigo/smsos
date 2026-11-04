@@ -26,11 +26,14 @@ object Feedback {
     private const val TEST_CHANNEL = "testes"
     private const val TEST_NOTIFICATION_ID = 1
 
-    /** Duas vibrações bem curtas: só quem está segurando o celular percebe. */
+    /** Duas vibrações bem curtas: confirma, depois, que os SMS saíram. */
     fun vibrateSent(context: Context) = vibrate(context, longArrayOf(0, 60, 120, 60))
 
-    /** No modo teste a vibração é mais forte, para ficar claro que o gesto foi reconhecido. */
-    fun vibrateTest(context: Context) = vibrate(context, longArrayOf(0, 200, 150, 200, 150, 200))
+    /**
+     * Vibração forte e clara no instante em que o gesto é reconhecido (ao completar os segundos segurando).
+     * É o aviso que a pessoa sente para saber que acionou, sem precisar contar o tempo de cabeça.
+     */
+    fun vibrateFired(context: Context) = vibrate(context, longArrayOf(0, 250, 150, 250, 150, 250))
 
     @SuppressLint("MissingPermission")
     fun showTestResult(context: Context, record: AlertRecord) {

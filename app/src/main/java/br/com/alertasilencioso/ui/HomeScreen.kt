@@ -317,9 +317,9 @@ private fun SetupCard(
             title = { Text("Perceber o botão de volume") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Para perceber quando você segura o botão de volume, mesmo com outro app aberto, o Alerta Silencioso usa o serviço de Acessibilidade do Android.")
+                    Text("Para perceber quando você segura o botão de volume, mesmo com outro app aberto, o SMSOS usa o serviço de Acessibilidade do Android.")
                     Text("Ele NÃO lê a tela, NÃO vê o que você digita e NÃO coleta dados. Só observa os botões de volume.", fontWeight = FontWeight.Bold)
-                    Text("Na próxima tela, toque em \"Alerta Silencioso\" (às vezes fica dentro de \"Apps instalados\" ou \"Serviços baixados\") e ative.")
+                    Text("Na próxima tela, toque em \"SMSOS\" (às vezes fica dentro de \"Apps instalados\" ou \"Serviços baixados\") e ative.")
                     HelpText("Se aparecer \"Configuração restrita\": toque em \"Informações do app\" aqui embaixo, depois nos 3 pontinhos ⋮ no canto de cima e em \"Permitir configurações restritas\". Depois volte e ative.")
                 }
             },
@@ -394,8 +394,9 @@ private fun TestCard(
             Repository.updateSettings { it.copy(testMode = on) }
             if (on) onTestModeEnabled()
         }
-        HelpText("No modo teste o app faz tudo (reconhece o botão, pega a localização e escolhe os contatos), mas NÃO manda SMS. Ele vibra 3 vezes e mostra uma notificação dizendo quem receberia.")
-        HelpText("Para testar com a tela apagada: ligue o modo teste, apague a tela e ${settings.triggerDescription().replaceFirstChar { it.lowercase() }} Depois acenda a tela e veja o resultado aqui.")
+        HelpText("No modo teste o app faz tudo (reconhece o botão, pega a localização e escolhe os contatos), mas NÃO manda SMS. Ao completar os segundos ele VIBRA na hora e mostra uma notificação dizendo quem receberia.")
+        HelpText("Teste agora: com o modo teste ligado, ${settings.triggerDescription().replaceFirstChar { it.lowercase() }} O número abaixo tem que subir a cada aperto. Se ele NÃO subir, o serviço de acessibilidade não está pegando a tecla — reative-o no passo a passo (no Samsung, desligue o Bloqueador automático antes).")
+        HelpText("Para testar com a tela apagada: apague a tela, faça o mesmo gesto, acenda a tela e veja o resultado aqui.")
         Text("Tela ligada: ${pressesText(diagnostics.screenOnPresses)}", style = MaterialTheme.typography.bodyMedium)
         Text("Tela apagada: ${pressesText(diagnostics.screenOffPresses)}", style = MaterialTheme.typography.bodyMedium)
         if (diagnostics.screenOffPresses > 0 && !releaseSupported && settings.triggerMode == TriggerMode.HOLD) {

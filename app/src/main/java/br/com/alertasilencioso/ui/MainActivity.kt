@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -60,7 +61,7 @@ private fun AppRoot() {
 
     if (wizardOpen) {
         Scaffold { padding ->
-            Box(Modifier.padding(padding)) {
+            Box(Modifier.padding(padding).imePadding()) {
                 SetupWizard(state, status, onRefreshStatus = refreshStatus, onClose = {
                     Repository.updateSettings { it.copy(onboardingDone = true) }
                     wizardOpen = false
@@ -85,7 +86,7 @@ private fun AppRoot() {
             }
         },
     ) { padding ->
-        Box(Modifier.padding(padding)) {
+        Box(Modifier.padding(padding).imePadding()) {
             when (tab) {
                 Tab.HOME -> HomeScreen(
                     state,
