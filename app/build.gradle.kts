@@ -27,8 +27,8 @@ android {
         applicationId = "br.com.smsos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "0.12.0"
+        versionCode = 27
+        versionName = "0.12.1"
 
         buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
         buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")

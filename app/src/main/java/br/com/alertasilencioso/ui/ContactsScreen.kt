@@ -1,6 +1,8 @@
 package br.com.alertasilencioso.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -81,11 +83,23 @@ fun ContactsScreen(state: AppState) {
                         val msg = "$nomeUsuario te escolheu como guardião no GuardiõesSOS. " +
                             "Se algo acontecer, você recebe o alerta com a localização. " +
                             "Baixe o app e use o código ${r.codigo}: ${r.link}"
-                        val share = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, msg)
+                        // Abre direto a conversa do WhatsApp DAQUELE número (sai da conta do próprio
+                        // usuário, sem API). Se não tiver WhatsApp, cai no menu de compartilhar.
+                        val soDigitos = numero.filter { it.isDigit() }
+                        val internacional = if (numero.startsWith("+")) soDigitos else "55$soDigitos"
+                        val whatsapp = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://wa.me/$internacional?text=${Uri.encode(msg)}"),
+                        )
+                        try {
+                            context.startActivity(whatsapp)
+                        } catch (e: ActivityNotFoundException) {
+                            val share = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, msg)
+                            }
+                            context.startActivity(Intent.createChooser(share, "Convidar guardião"))
                         }
-                        context.startActivity(Intent.createChooser(share, "Convidar guardião"))
                     }
                 }
             },
