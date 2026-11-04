@@ -63,8 +63,6 @@ import br.com.alertasilencioso.data.TriggerMode
 import br.com.alertasilencioso.trigger.Diagnostics
 import br.com.alertasilencioso.trigger.GuardianService
 
-private const val APP_BUTTON_HOLD_MILLIS = 2_000L
-
 @Composable
 fun HomeScreen(
     state: AppState,
@@ -93,7 +91,7 @@ fun HomeScreen(
             }
         }
         state.activeAlert?.let { active -> item { ActiveAlertCard(active) } }
-        item { PanicButton { AlertManager.trigger(context, TriggerSource.APP_BUTTON) } }
+        item { PanicButton(state.settings.holdSeconds * 1_000L) { AlertManager.trigger(context, TriggerSource.APP_BUTTON) } }
         item { SetupCard(state.settings, status, recipients, onRefreshStatus, onOpenTab) }
         item {
             TestCard(
@@ -187,14 +185,14 @@ private fun ActiveAlertCard(active: ActiveAlert) {
     }
 }
 
-/** Botão dentro do app: precisa ficar pressionado por 2 segundos, para não disparar sem querer. */
+/** Botão dentro do app: fica pressionado pelo mesmo tempo do botão de volume, para não disparar sem querer. */
 @Composable
-private fun PanicButton(onTrigger: () -> Unit) {
+private fun PanicButton(holdMillis: Long, onTrigger: () -> Unit) {
     val currentOnTrigger by rememberUpdatedState(onTrigger)
     var holding by remember { mutableStateOf(false) }
     val progress by animateFloatAsState(
         targetValue = if (holding) 1f else 0f,
-        animationSpec = tween(if (holding) APP_BUTTON_HOLD_MILLIS.toInt() else 150, easing = LinearEasing),
+        animationSpec = tween(if (holding) holdMillis.toInt() else 150, easing = LinearEasing),
         label = "panicProgress",
     )
     Surface(
@@ -203,11 +201,11 @@ private fun PanicButton(onTrigger: () -> Unit) {
         shape = MaterialTheme.shapes.large,
         modifier = Modifier
             .fillMaxWidth()
-            .pointerInput(Unit) {
+            .pointerInput(holdMillis) {
                 awaitEachGesture {
                     awaitFirstDown()
                     holding = true
-                    val releasedEarly = withTimeoutOrNull(APP_BUTTON_HOLD_MILLIS) {
+                    val releasedEarly = withTimeoutOrNull(holdMillis) {
                         waitForUpOrCancellation()
                         true
                     } ?: false
@@ -221,7 +219,7 @@ private fun PanicButton(onTrigger: () -> Unit) {
     ) {
         Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("SEGURE AQUI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text("por 2 segundos para enviar o alerta agora", style = MaterialTheme.typography.bodyMedium)
+            Text("por ${holdMillis / 1_000} segundos para enviar o alerta agora", style = MaterialTheme.typography.bodyMedium)
             if (holding) {
                 LinearProgressIndicator(
                     progress = { progress },
