@@ -33,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -93,6 +94,9 @@ fun HomeScreen(
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { StatusCard(state.settings, status, running, recipients) }
+        if (state.settings.testMode) {
+            item { TestModeBanner() }
+        }
         if (!status.essentialsOk || !running || recipients == 0) {
             item {
                 Button(onClick = onOpenWizard, Modifier.fillMaxWidth()) {
@@ -143,6 +147,32 @@ private fun StatusCard(settings: Settings, status: SetupStatus, running: Boolean
                 Text(title, style = MaterialTheme.typography.titleLarge, color = color, fontWeight = FontWeight.Bold)
                 Text(body, style = MaterialTheme.typography.bodyMedium)
             }
+        }
+    }
+}
+
+/** Aviso bem visível quando o MODO TESTE está ligado — com interruptor pra desligar ali mesmo. */
+@Composable
+private fun TestModeBanner() {
+    val warning = StatusColors.warning
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = warning.copy(alpha = 0.22f)),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = warning, modifier = Modifier.size(28.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "Modo teste LIGADO",
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = warning,
+                )
+                Switch(checked = true, onCheckedChange = { Repository.updateSettings { it.copy(testMode = false) } })
+            }
+            Text("Os botões funcionam, mas o alerta NÃO é enviado — ninguém é avisado. Desligue aqui para valer de verdade.")
         }
     }
 }
@@ -202,13 +232,22 @@ private fun PanicArea(settings: Settings, recipients: Int, context: android.cont
     // Sem guardião cadastrado, o botão não "arma": tocar leva para a configuração (desperta a curiosidade).
     val ready = recipients > 0
     // Cores fortes e iguais nos dois temas — botão de emergência não pode ficar pastel no escuro.
-    val corSeguranca = Color(0xFFD32F2F)
-    val corSaude = Color(0xFF1E66D0)
+    // Em MODO TESTE os botões ficam CINZA (apagados), pra deixar na cara que não enviam de verdade.
+    val teste = settings.testMode
+    val corSeguranca = if (teste) Color(0xFF616161) else Color(0xFFD32F2F)
+    val corSaude = if (teste) Color(0xFF9E9E9E) else Color(0xFF1E66D0)
     var nudge by remember { mutableStateOf<Profile?>(null) }
     val acionar: (Profile) -> Unit = { p ->
         if (ready) AlertManager.trigger(context, TriggerSource.APP_BUTTON, p) else nudge = p
     }
-    val sub = { curto: Boolean -> if (ready) (if (curto) "segure $seg s" else "por $seg segundos para enviar o alerta agora") else "toque para configurar" }
+    val sub = { curto: Boolean ->
+        when {
+            !ready -> "toque para configurar"
+            teste -> "modo teste · não envia"
+            curto -> "segure $seg s"
+            else -> "por $seg segundos para enviar o alerta agora"
+        }
+    }
 
     if (!settings.dualSos) {
         val ehSaude = settings.profile == Profile.SAUDE
