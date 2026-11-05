@@ -51,8 +51,17 @@ versão depois. Não traga `SEND_SMS` de volta sem decisão explícita do Rodrig
 
 **Push (FCM):** função `guardioes-push` (projeto SoluçõesdaWeb) mint o token OAuth com o
 segredo `FCM_SERVICE_ACCOUNT` (service account do Firebase do QRBio) e dispara o FCM HTTP v1.
-Recebe `tokens`/`token` + `titulo`/`corpo`; autentica com `x-smsos-app`. O canal
-`guardioes_alertas` é criado no `App.onCreate` (senão push com app fechado não aparece).
+Manda DATA message (o app recebe sempre, mesmo fechado) com `tipo`: `alerta` faz o app TOCAR a
+sirene; outro valor = aviso comum. Autentica com `x-smsos-app`.
+
+**Fluxo real do SOS (0.28.0):** ao acionar, o app chama `guardioes-alertar` com o `dispositivo`
+de quem acionou; a função usa a RPC `public.guardioes_tokens_dos_guardioes` (SECURITY DEFINER,
+schema `guardioes` não exposto) pra achar os tokens dos GUARDIÕES que aceitaram e dispara a
+sirene em cada um. Isso é EXTRA ao SMS do gateway (o SMS nunca depende do push). Helper no app:
+`alert/Alertar.kt`. O alarme (som/vibra/lanterna/tela cheia) mora em `alert/Alarme.kt` +
+`ui/AlertaRecebidoActivity.kt` + `push/MessagingService.kt` (canais `guardioes_alertas` e
+`guardioes_sos`, criados no `App.onCreate`/na hora). Sirene embutida: `res/raw/sirene.wav`.
+Pendente: limpar token morto quando o FCM devolve `UNREGISTERED` (404).
 
 ## Segurança do número = segurança da pessoa
 

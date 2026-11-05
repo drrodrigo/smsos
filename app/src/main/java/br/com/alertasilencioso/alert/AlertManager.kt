@@ -126,6 +126,14 @@ object AlertManager {
             return
         }
 
+        // Toca a SIRENE nos guardiões desta pessoa (pelo app), além do SMS pros contatos do gateway.
+        val nomeAviso = settings.userName.ifBlank { "Alguém" }
+        val tituloPush = if (profile == Profile.SAUDE) {
+            "❤️ $nomeAviso precisa de ajuda (Saúde)"
+        } else {
+            "⚠️ $nomeAviso acionou o SOS"
+        }
+        Alertar.alertarGuardioes(tituloPush, text)
         enviarAlerta(record, resolution.recipients, text, settings)
     }
 
