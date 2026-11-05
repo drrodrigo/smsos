@@ -9,3 +9,7 @@ entregas/
 # Chave de PRODUÇÃO (nunca versionar)
 keystore/release.keystore
 keystore/release.properties
+
+# Segredo do gateway e config do Firebase (nunca versionar)
+gateway.properties
+app/google-services.json

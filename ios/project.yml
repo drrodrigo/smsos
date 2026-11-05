@@ -1,0 +1,46 @@
+# A casca do iPhone do GuardiõesSOS. Espelha pdv/ios/project.yml do PDV (drrodrigo/catologoonline).
+#
+# O projeto do Xcode NÃO mora no repositório: o XcodeGen o gera deste arquivo no Mac do GitHub
+# (`xcodegen generate`). Assim o que se lê e se revisa é este arquivo e os .swift, e não o
+# project.pbxproj de milhares de linhas.
+#
+# O pacote é o mesmo da Play, br.com.guardioessos. A versão (MARKETING_VERSION) acompanha a do
+# Android; o número do build (CURRENT_PROJECT_VERSION) vem da execução do GitHub, porque a Apple
+# recusa número repetido.
+name: GuardioesSOS
+options:
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+targets:
+  GuardioesSOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: GuardioesSOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos
+        PRODUCT_NAME: GuardioesSOS
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: GuardiõesSOS
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_BITCODE: "NO"
+schemes:
+  GuardioesSOS:
+    build:
+      targets:
+        GuardioesSOS: all
+    archive:
+      config: Release

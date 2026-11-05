@@ -1,0 +1,7 @@
+# O projeto do Xcode NASCE do project.yml no Mac do GitHub (xcodegen generate). Não vai no repo.
+*.xcodeproj
+# Cache e build
+ci/__pycache__/
+*.pyc
+DerivedData/
+build/
