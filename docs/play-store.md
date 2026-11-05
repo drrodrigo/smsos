@@ -19,37 +19,44 @@ Tudo em pt-BR, pronto pra colar no Google Play Console. Vai por partes.
 ## 2. Descrição curta (máx. 80 caracteres)
 
 ```
-Um toque avisa seus guardiões com a sua localização. Botão de pânico silencioso.
+Botão de pânico e SOS: um toque avisa seus guardiões com a sua localização.
 ```
 
 ## 3. Descrição completa (máx. 4000 caracteres)
 
 ```
-GuardiõesSOS — seu botão de pânico silencioso
+GuardiõesSOS — botão de pânico e alerta de emergência
 
-Em uma emergência, cada segundo conta — e nem sempre dá pra pegar o telefone e ligar. O GuardiõesSOS transforma o seu celular num botão de pânico discreto: um gesto, e seus guardiões (as pessoas de confiança que você escolhe) recebem na hora um alerta com a sua localização.
+Um botão de pânico sempre com você. Em uma emergência — um assalto, uma perseguição, um mal súbito — nem sempre dá pra pegar o telefone e ligar. Com o GuardiõesSOS, um toque envia um SOS com a sua localização para seus guardiões: as pessoas de confiança que você escolhe.
+
+É segurança pessoal de verdade — pra você e pra quem você ama.
 
 COMO FUNCIONA
-• Segure o botão de volume por alguns segundos (ou use o botão na tela) — sem abrir nada, sem chamar atenção.
-• Seus guardiões recebem um alerta com a sua localização no mapa.
-• No celular do guardião, o alerta TOCA como uma chamada: sirene alta, vibração e uma tela de aviso — mesmo com o celular no silencioso ou no bolso.
+• Toque no botão de SOS (Segurança ou Saúde) — rápido e direto.
+• Seus guardiões recebem na hora um alerta de emergência com a sua localização no mapa.
+• No celular do guardião, o aviso TOCA como uma chamada: sirene alta, vibração e uma tela de emergência — mesmo no silencioso ou com o telefone no bolso.
 
 DOIS TIPOS DE SOS
-• Segurança — perigo, assalto, perseguição.
-• Saúde — se você passar mal, cair, precisar de socorro.
+• Segurança — perigo, assalto, perseguição, situação de risco.
+• Saúde — se você passar mal, cair ou precisar de socorro.
 
-PENSADO PRA FUNCIONAR NA HORA CERTA
-• Funciona com o app fechado e a tela apagada.
-• O alerta sai pela nossa estrutura — não depende do seu saldo de SMS.
-• Você escolhe quem são seus guardiões, e pode ser guardião de quem você ama.
-• O app aprende a confirmar que está tudo bem com um toque.
+POR QUE USAR O GUARDIÕESSOS
+• Botão de emergência que funciona com o app fechado e a tela apagada.
+• O pedido de socorro sai pela nossa estrutura — não depende do seu saldo de SMS.
+• Monte sua rede de proteção: escolha seus guardiões e seja guardião de quem você ama.
+• Avise que está tudo bem com um toque.
+
+PRA QUEM É
+• Segurança pessoal no dia a dia: ao sair à noite, ao voltar pra casa, ao andar sozinho.
+• Famílias que se cuidam: o pai, a mãe, o filho, a filha na faculdade.
+• Qualquer pessoa que queira um botão de socorro sempre à mão.
 
 PRIVACIDADE
-• Seus dados são usados só pra criar sua conta e enviar o alerta. Nada de spam.
-• O histórico de alertas fica no seu aparelho e pode ser apagado a qualquer momento.
+• Seus dados são usados só pra criar sua conta e enviar o alerta. Sem spam.
+• O histórico de alertas fica no seu aparelho e pode ser apagado quando você quiser.
 • Política de privacidade: https://www.guardioessos.com.br/privacidade
 
-Proteja quem você ama. Baixe o GuardiõesSOS.
+Baixe o GuardiõesSOS e tenha um botão de pânico sempre com você. Proteja quem você ama.
 ```
 
 ---
