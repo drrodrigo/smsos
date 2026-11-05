@@ -82,7 +82,7 @@ class AlertaRecebidoActivity : ComponentActivity() {
                                     containerColor = Color.White,
                                     contentColor = Color(0xFFB00020),
                                 ),
-                            ) { Text("Abrir no mapa", fontWeight = FontWeight.Bold, fontSize = 17.sp) }
+                            ) { Text("Ver no mapa (silencia)", fontWeight = FontWeight.Bold, fontSize = 17.sp) }
                             Spacer(Modifier.height(12.dp))
                         }
                         if (!silenciado) {

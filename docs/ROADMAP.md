@@ -319,3 +319,18 @@ custo. Vender os dois separados.
   diferente, reconhecível) numa lista — tela de Ajustes + guardar a escolha.
 - **Guardião de várias pessoas:** a tela de alerta já mostra o nome de quem acionou; se chegarem
   dois alertas juntos, pensar em empilhar/fila.
+
+### Ações do guardião DEPOIS do alerta (próximos passos, ideias do Rodrigo)
+
+A ideia: silenciar não é o fim — o guardião quer AGIR. "Ver no mapa" já silencia e abre o mapa.
+Depois de ver onde a pessoa está, a tela do alerta deveria oferecer, em ordem natural:
+
+1. **Ligar** para a pessoa (a primeira reação é querer falar/ouvir).
+2. **WhatsApp** para a pessoa (mandar mensagem na hora).
+3. **Acompanhar a localização ao vivo** (o app já manda atualizações a cada 3 min; evoluir pra um
+   mapa que atualiza).
+4. **Câmera / áudio ao vivo** — se a pessoa NÃO atender, o guardião pede pra ligar a câmera/mic do
+   aparelho dela (recurso forte, mais sensível — exige consentimento e cuidado de privacidade).
+
+Pré-requisito: o push de alerta precisa carregar o **telefone de quem acionou** (`dados.telefone`)
+pra habilitar Ligar/WhatsApp. Hoje carrega só título + corpo + link do mapa.

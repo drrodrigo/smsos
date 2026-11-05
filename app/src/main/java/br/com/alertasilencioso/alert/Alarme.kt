@@ -6,20 +6,19 @@ import android.hardware.camera2.CameraManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.provider.Settings
 import android.util.Log
+import br.com.alertasilencioso.R
 
 /**
- * Alarme de emergência: toca ALTO em loop (volume de alarme no MÁXIMO, mesmo no silencioso), VIBRA e
- * PISCA A LANTERNA — para o guardião perceber mesmo com o celular no bolso ou em reunião. Como uma
- * chamada: só para quando a pessoa silencia, ou sozinho depois de 2 minutos (segurança).
+ * Alarme de emergência: toca a SIRENE embutida (dois tons, alta e distinta) em loop, com o volume de
+ * ALARME no MÁXIMO — mesmo no silencioso. VIBRA e PISCA A LANTERNA, para o guardião perceber mesmo com
+ * o celular no bolso ou em reunião. Só para quando a pessoa silencia, ou sozinho depois de 2 minutos.
  */
 object Alarme {
     private const val TAG = "Alarme"
@@ -45,24 +44,23 @@ object Alarme {
     fun tocar(context: Context) {
         parar(context)
         maximizarVolume(context)
-        val uri = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE)
-            ?: Settings.System.DEFAULT_ALARM_ALERT_URI
         runCatching {
-            mp = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build(),
-                )
-                setDataSource(context, uri)
-                isLooping = true
-                setVolume(1f, 1f)
-                prepare()
-                start()
+            context.resources.openRawResourceFd(R.raw.sirene).use { afd ->
+                mp = MediaPlayer().apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build(),
+                    )
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    isLooping = true
+                    setVolume(1f, 1f)
+                    prepare()
+                    start()
+                }
             }
-        }.onFailure { Log.w(TAG, "Não consegui tocar o alarme", it) }
+        }.onFailure { Log.w(TAG, "Não consegui tocar a sirene", it) }
         vibrar(context)
         iniciarLanterna(context)
         handler.postDelayed({ parar(context) }, LIMITE_MILLIS)
