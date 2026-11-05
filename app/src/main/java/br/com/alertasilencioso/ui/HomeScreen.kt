@@ -408,6 +408,7 @@ private fun SetupCard(
         status.notifications,
         status.accessibility,
         status.batteryUnrestricted,
+        status.fullScreen,
     )
     val pendentes = feitos.count { !it }
     CollapsibleSectionCard(
@@ -450,6 +451,17 @@ private fun SetupCard(
             } else {
                 context.openAppDetails()
             }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            SetupRow(
+                done = status.fullScreen,
+                title = "Alerta em tela cheia",
+                description = "Para o alerta de SOS acender a tela e aparecer sozinho, mesmo com o celular bloqueado.",
+                action = "Permitir",
+                help = "No Android 14+, sem isso a tela do alerta não abre sozinha — o celular só toca. " +
+                    "Toque em \"Permitir\" e ligue \"Notificações em tela cheia\" para o GuardiõesSOS.",
+                onHelp = abrirAjuda,
+            ) { context.openFullScreenIntentSettings() }
         }
         SetupRow(
             done = status.location,

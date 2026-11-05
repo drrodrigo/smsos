@@ -302,3 +302,20 @@ custo. Vender os dois separados.
 - **Lugares pré-agendados**: mostrar **Casa** e **Trabalho** já sugeridos nos Lugares; a pessoa
   clica e preenche, e aí se anima a adicionar mais (casa da namorada, trabalho 2, faculdade,
   escola). Mesmo princípio dos dois botões. (A FAZER — próximo.)
+
+## Alerta tocando no guardião (push + alarme)
+
+- **Alarme como chamada** (Feito na 0.24–0.26): quando um guardião recebe o SOS, o app toca ALTO
+  em loop (volume de alarme no máximo, mesmo no silencioso), vibra, **pisca a lanterna** e abre
+  uma tela vermelha por cima de tudo com "Abrir no mapa" + "Silenciar". Push é DATA message com
+  `tipo: "alerta"` (função `guardioes-push`). No Android 14 precisa liberar "tela cheia" (tem item
+  na Configuração).
+- **FLUXO REAL (A FAZER — próximo grande passo):** hoje o alerta sai por SMS (gateway) e o push de
+  alerta foi testado manualmente. Falta ligar automático: quando alguém aciona o SOS, o servidor
+  busca os **guardiões que aceitaram** aquela pessoa + os tokens e dispara o `guardioes-push` pra
+  todos. Isso resolve também o "ser guardião de várias pessoas": cada alerta já carrega o nome de
+  quem acionou, então a tela do guardião mostra a pessoa certa.
+- **Toque personalizado (A FAZER):** deixar a pessoa escolher o som do alerta (um toque bem
+  diferente, reconhecível) numa lista — tela de Ajustes + guardar a escolha.
+- **Guardião de várias pessoas:** a tela de alerta já mostra o nome de quem acionou; se chegarem
+  dois alertas juntos, pensar em empilhar/fila.

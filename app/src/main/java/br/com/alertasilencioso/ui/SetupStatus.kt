@@ -1,6 +1,7 @@
 package br.com.alertasilencioso.ui
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
@@ -17,6 +18,7 @@ data class SetupStatus(
     val notifications: Boolean,
     val accessibility: Boolean,
     val batteryUnrestricted: Boolean,
+    val fullScreen: Boolean,
 ) {
     val essentialsOk: Boolean get() = location && accessibility
 
@@ -31,6 +33,8 @@ data class SetupStatus(
             accessibility = isAccessibilityEnabled(context),
             batteryUnrestricted = context.getSystemService(PowerManager::class.java)
                 .isIgnoringBatteryOptimizations(context.packageName),
+            fullScreen = Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
+                context.getSystemService(NotificationManager::class.java).canUseFullScreenIntent(),
         )
 
         private fun granted(context: Context, permission: String) =

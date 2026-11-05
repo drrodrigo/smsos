@@ -1,7 +1,10 @@
 package br.com.alertasilencioso.alert
 
 import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
@@ -14,17 +17,34 @@ import android.provider.Settings
 import android.util.Log
 
 /**
- * Toca um alarme ALTO em loop e vibra — como uma chamada — até o guardião ver o alerta. Usa o volume de
- * ALARME, então é ouvido mesmo com o celular no silencioso. Para sozinho depois de um tempo (segurança).
+ * Alarme de emergência: toca ALTO em loop (volume de alarme no MÁXIMO, mesmo no silencioso), VIBRA e
+ * PISCA A LANTERNA — para o guardião perceber mesmo com o celular no bolso ou em reunião. Como uma
+ * chamada: só para quando a pessoa silencia, ou sozinho depois de 2 minutos (segurança).
  */
 object Alarme {
     private const val TAG = "Alarme"
     private const val LIMITE_MILLIS = 120_000L
     private val handler = Handler(Looper.getMainLooper())
     private var mp: MediaPlayer? = null
+    private var volumeAnterior: Int? = null
+
+    private var cameraManager: CameraManager? = null
+    private var flashId: String? = null
+    private var flashLigado = false
+    private val piscaLanterna = object : Runnable {
+        override fun run() {
+            val cm = cameraManager
+            val id = flashId
+            if (cm == null || id == null) return
+            flashLigado = !flashLigado
+            runCatching { cm.setTorchMode(id, flashLigado) }
+            handler.postDelayed(this, 450)
+        }
+    }
 
     fun tocar(context: Context) {
         parar(context)
+        maximizarVolume(context)
         val uri = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE)
             ?: Settings.System.DEFAULT_ALARM_ALERT_URI
@@ -38,12 +58,13 @@ object Alarme {
                 )
                 setDataSource(context, uri)
                 isLooping = true
+                setVolume(1f, 1f)
                 prepare()
                 start()
             }
         }.onFailure { Log.w(TAG, "Não consegui tocar o alarme", it) }
         vibrar(context)
-        handler.removeCallbacksAndMessages(null)
+        iniciarLanterna(context)
         handler.postDelayed({ parar(context) }, LIMITE_MILLIS)
     }
 
@@ -54,6 +75,46 @@ object Alarme {
         }
         mp = null
         runCatching { vibrador(context)?.cancel() }
+        pararLanterna()
+        restaurarVolume(context)
+    }
+
+    /** Põe o volume de ALARME no máximo, guardando o anterior para devolver depois. */
+    private fun maximizarVolume(context: Context) {
+        runCatching {
+            val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            volumeAnterior = am.getStreamVolume(AudioManager.STREAM_ALARM)
+            am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0)
+        }
+    }
+
+    private fun restaurarVolume(context: Context) {
+        val anterior = volumeAnterior ?: return
+        volumeAnterior = null
+        runCatching {
+            val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            am.setStreamVolume(AudioManager.STREAM_ALARM, anterior, 0)
+        }
+    }
+
+    private fun iniciarLanterna(context: Context) {
+        runCatching {
+            val cm = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return
+            val id = cm.cameraIdList.firstOrNull {
+                cm.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+            } ?: return
+            cameraManager = cm
+            flashId = id
+            handler.post(piscaLanterna)
+        }
+    }
+
+    private fun pararLanterna() {
+        handler.removeCallbacks(piscaLanterna)
+        runCatching { flashId?.let { cameraManager?.setTorchMode(it, false) } }
+        flashLigado = false
+        cameraManager = null
+        flashId = null
     }
 
     private fun vibrar(context: Context) {

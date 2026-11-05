@@ -18,7 +18,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,7 +35,8 @@ import br.com.alertasilencioso.push.MessagingService
 
 /**
  * Tela que aparece POR CIMA DE TUDO (mesmo com o celular bloqueado) quando um alerta de SOS chega.
- * Toca o alarme junto; o botão "Estou ciente" silencia e fecha.
+ * "Abrir no mapa" é a ação principal; "Silenciar" para o alarme mas MANTÉM a tela (pra ainda dar pra
+ * ver o mapa). Só o "Fechar" sai da tela.
  */
 class AlertaRecebidoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +51,7 @@ class AlertaRecebidoActivity : ComponentActivity() {
 
         setContent {
             AlertaTheme {
+                var silenciado by remember { mutableStateOf(false) }
                 Surface(color = Color(0xFFB00020)) {
                     Column(
                         Modifier.fillMaxSize().padding(28.dp),
@@ -63,39 +68,45 @@ class AlertaRecebidoActivity : ComponentActivity() {
                             textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.height(16.dp))
-                        Text(
-                            corpo,
-                            color = Color.White,
-                            fontSize = 17.sp,
-                            textAlign = TextAlign.Center,
-                        )
+                        Text(corpo, color = Color.White, fontSize = 17.sp, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(34.dp))
                         if (mapa != null) {
-                            OutlinedButton(
-                                onClick = { runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapa))) } },
+                            Button(
+                                onClick = {
+                                    pararAlarme()
+                                    silenciado = true
+                                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapa))) }
+                                },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                            ) { Text("Abrir no mapa") }
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.White,
+                                    contentColor = Color(0xFFB00020),
+                                ),
+                            ) { Text("Abrir no mapa", fontWeight = FontWeight.Bold, fontSize = 17.sp) }
                             Spacer(Modifier.height(12.dp))
                         }
-                        Button(
-                            onClick = { silenciar() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color(0xFFB00020),
-                            ),
-                        ) { Text("Estou ciente — silenciar", fontWeight = FontWeight.Bold, fontSize = 17.sp) }
+                        if (!silenciado) {
+                            OutlinedButton(
+                                onClick = { pararAlarme(); silenciado = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                            ) { Text("Silenciar", fontSize = 16.sp) }
+                        } else {
+                            OutlinedButton(
+                                onClick = { finish() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                            ) { Text("Fechar", fontSize = 16.sp) }
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun silenciar() {
+    private fun pararAlarme() {
         Alarme.parar(applicationContext)
         NotificationManagerCompat.from(this).cancel(MessagingService.SOS_NOTIF_ID)
-        finish()
     }
 
     override fun onDestroy() {

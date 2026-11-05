@@ -16,6 +16,15 @@ fun Context.openAppDetails() {
     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
 }
 
+/** Android 14+: abre a tela onde se libera "Notificações em tela cheia" (pro alerta acender a tela sozinho). */
+fun Context.openFullScreenIntentSettings() {
+    try {
+        startActivity(Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:$packageName")))
+    } catch (e: ActivityNotFoundException) {
+        openAppDetails()
+    }
+}
+
 /**
  * Tenta abrir direto a página do serviço do app (onde fica a chave). Nem todo aparelho deixa;
  * nesse caso abre a lista de Acessibilidade, já pedindo para destacar o item do app.
