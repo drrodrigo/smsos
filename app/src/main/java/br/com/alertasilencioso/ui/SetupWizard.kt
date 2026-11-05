@@ -53,7 +53,7 @@ import br.com.alertasilencioso.trigger.Diagnostics
 
 private const val HOME_LOCATION_TIMEOUT_MILLIS = 30_000L
 
-private enum class WizardStep { WELCOME, NAME, CONTACTS, SMS, LOCATION, BACKGROUND_LOCATION, ACCESSIBILITY, BATTERY, PLACE, TEST }
+private enum class WizardStep { WELCOME, NAME, CONTACTS, LOCATION, BACKGROUND_LOCATION, ACCESSIBILITY, BATTERY, PLACE, TEST }
 
 private fun WizardStep.applies(): Boolean =
     this != WizardStep.BACKGROUND_LOCATION || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -62,7 +62,6 @@ private fun WizardStep.isDone(state: AppState, status: SetupStatus): Boolean = w
     WizardStep.WELCOME, WizardStep.TEST -> false
     WizardStep.NAME -> state.settings.userName.isNotBlank()
     WizardStep.CONTACTS -> state.alwaysContacts.isNotEmpty()
-    WizardStep.SMS -> status.sms
     WizardStep.LOCATION -> status.location
     WizardStep.BACKGROUND_LOCATION -> status.backgroundLocation
     WizardStep.ACCESSIBILITY -> status.accessibility
@@ -119,7 +118,7 @@ fun SetupWizard(
                 WizardStep.WELCOME -> WelcomeStep(stepCount = steps.lastIndex, onStart = goNext)
                 WizardStep.NAME -> NameStep(state, onNext = goNext)
                 WizardStep.CONTACTS -> ContactsStep(state, onNext = goNext)
-                WizardStep.SMS, WizardStep.LOCATION, WizardStep.BACKGROUND_LOCATION, WizardStep.BATTERY ->
+                WizardStep.LOCATION, WizardStep.BACKGROUND_LOCATION, WizardStep.BATTERY ->
                     PermissionStep(step, state, status, onRefreshStatus, onNext = goNext)
                 WizardStep.ACCESSIBILITY -> AccessibilityStep(done = status.accessibility, onNext = goNext)
                 WizardStep.PLACE -> PlaceStep(state, status, onNext = goNext)
@@ -197,33 +196,6 @@ private fun PermissionStep(
     val done = step.isDone(state, status)
 
     when (step) {
-        WizardStep.SMS -> {
-            StepHeader("💬", "Permitir enviar SMS", "O alerta sai pelo seu chip, sem precisar de internet.")
-            if (!done) {
-                Instructions(
-                    "Toque em \"Permitir SMS\" aqui embaixo.",
-                    "Na janela que abrir, toque em \"Permitir\".",
-                )
-                BigButton("Permitir SMS") {
-                    tried = true
-                    permissions.launch(arrayOf(Manifest.permission.SEND_SMS))
-                }
-                if (tried) {
-                    HelpCard("Travou em \"Acesso negado\"? (Samsung)") {
-                        HelpText("No Samsung novo, o SMS é bloqueado quando o app não veio da Play Store. Faça nesta ordem:")
-                        Instructions(
-                            "Configurações → Segurança e privacidade → Bloqueador automático → DESLIGUE.",
-                            "Toque em \"Abrir configurações do app\" aqui embaixo.",
-                            "Toque nos 3 pontinhos ⋮ → \"Permitir configurações restritas\" → confirme com a digital ou o PIN.",
-                            "Toque em \"Permissões\" → \"SMS\" → \"Permitir\".",
-                        )
-                        OutlinedButton(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
-                            Text("Abrir configurações do app")
-                        }
-                    }
-                }
-            }
-        }
         WizardStep.LOCATION -> {
             StepHeader("📍", "Permitir a localização", "Para mandar o link do mapa e saber se você está em casa, no escritório...")
             if (!done) {

@@ -40,9 +40,19 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
 
 O alerta sai pela **nossa estrutura de SMS**, não pelo chip (o chip falhava: Bloqueador
 automático da Samsung, número sem o 9/DDD). App → Edge Function `smsos-alerta` → `bipe-sms` →
-SMS Market. Projeto Supabase `ymszgqpgxtprkqxjhtwb` (SoluçõesdaWeb). O chip fica só como
-**reserva** se o gateway não estiver configurado. Captura de lead: schema `guardioes` +
-função `guardioes-registrar` (nome + telefone + idioma, sem senha).
+SMS Market. Projeto Supabase `ymszgqpgxtprkqxjhtwb` (SoluçõesdaWeb). Captura de lead: schema
+`guardioes` + função `guardioes-registrar` (nome + telefone + idioma, sem senha).
+
+**O envio pelo chip foi REMOVIDO (v0.23.0).** A permissão `SEND_SMS` era o que fazia o Play
+Protect bloquear a instalação (susto da Fernanda) e seria o maior risco na revisão da Play
+Store. Como o envio pela nossa estrutura está provado, tiramos o chip: o app agora é
+**só gateway** (precisa de internet). Se um dia a reserva offline fizer falta, sobe-se uma
+versão depois. Não traga `SEND_SMS` de volta sem decisão explícita do Rodrigo.
+
+**Push (FCM):** função `guardioes-push` (projeto SoluçõesdaWeb) mint o token OAuth com o
+segredo `FCM_SERVICE_ACCOUNT` (service account do Firebase do QRBio) e dispara o FCM HTTP v1.
+Recebe `tokens`/`token` + `titulo`/`corpo`; autentica com `x-smsos-app`. O canal
+`guardioes_alertas` é criado no `App.onCreate` (senão push com app fechado não aparece).
 
 ## Segurança do número = segurança da pessoa
 

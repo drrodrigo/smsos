@@ -125,7 +125,6 @@ private fun StatusCard(settings: Settings, status: SetupStatus, running: Boolean
     val warning = StatusColors.warning
     val danger = StatusColors.danger
     val (title, body, color) = when {
-        !status.deviceCanSendSms -> Triple("Este aparelho não envia SMS", "O alerta precisa de um celular com chip.", danger)
         !status.essentialsOk || !running -> Triple("Proteção DESLIGADA", "Termine a configuração logo abaixo.", danger)
         recipients == 0 -> Triple("Falta cadastrar contatos", "Cadastre quem deve ser avisado.", warning)
         settings.testMode -> Triple("MODO TESTE", "O botão funciona, mas nenhum SMS é enviado.", warning)
@@ -365,7 +364,6 @@ private fun SetupCard(
     val feitos = listOf(
         settings.userName.isNotBlank(),
         recipients > 0,
-        status.sms,
         status.location,
         if (isQ) status.backgroundLocation else true,
         status.notifications,
@@ -414,16 +412,6 @@ private fun SetupCard(
                 context.openAppDetails()
             }
         }
-        SetupRow(
-            done = status.sms,
-            title = "Enviar SMS",
-            description = "Para mandar o alerta pelo seu chip, sem precisar de internet.",
-            action = "Permitir",
-            help = "Deixa o app avisar seus guardiões pelo seu chip quando não houver internet. " +
-                "Toque em \"Permitir\" e aceite. Se você já negou antes, vá em Configurações do Android > " +
-                "Apps > GuardiõesSOS > Permissões > SMS e permita.",
-            onHelp = abrirAjuda,
-        ) { permissions.launch(arrayOf(Manifest.permission.SEND_SMS)) }
         SetupRow(
             done = status.location,
             title = "Localização",

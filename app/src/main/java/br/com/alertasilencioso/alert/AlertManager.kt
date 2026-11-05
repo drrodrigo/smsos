@@ -9,7 +9,6 @@ import android.os.SystemClock
 import android.util.Log
 import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.RecipientResolver
-import br.com.alertasilencioso.core.SmsLength
 import br.com.alertasilencioso.data.ActiveAlert
 import br.com.alertasilencioso.data.AlertRecord
 import br.com.alertasilencioso.data.Contact
@@ -43,13 +42,8 @@ object AlertManager {
     private const val LOCATION_TIMEOUT_MILLIS = 20_000L
     private const val WAKE_MARGIN_MILLIS = 2 * 60_000L
 
-    // O Android mostra uma confirmação na tela quando um app envia 30 SMS em 30 minutos.
-    private const val SMS_LIMIT = 28
-    private const val SMS_LIMIT_WINDOW_MILLIS = 30 * 60_000L
-
     private val handler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val sentSmsTimes = ArrayDeque<Long>()
     private var lastTriggerAt: Long? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var appContext: Context
@@ -135,10 +129,7 @@ object AlertManager {
         enviarAlerta(record, resolution.recipients, text, settings)
     }
 
-    /**
-     * Manda o alerta pelo gateway (internet). Se o gateway não for alcançado (sem internet) e o chip
-     * estiver disponível, cai para o chip como reserva. Sem gateway configurado, usa o chip direto.
-     */
+    /** Manda o alerta pela NOSSA estrutura (internet). O envio pelo chip foi removido. */
     private fun enviarAlerta(record: AlertRecord, recipients: List<Contact>, text: String, settings: Settings) {
         val concluir = {
             if (settings.vibrateOnSend) Feedback.vibrateSent(appContext)
@@ -149,27 +140,18 @@ object AlertManager {
             return
         }
         if (!GatewaySender.configurado()) {
-            recipients.forEach { c ->
-                if (!sendSms(c.phone, text, record.id)) Repository.setDeliveryStatus(record.id, c.phone, DeliveryStatus.FAILED)
+            recipients.forEach { c -> Repository.setDeliveryStatus(record.id, c.phone, DeliveryStatus.FAILED) }
+            Repository.updateAlert(record.id) {
+                it.copy(notes = it.notes + "Envio indisponível: estrutura de SMS não configurada")
             }
             concluir()
             return
         }
         scope.launch {
             val resultados = withContext(Dispatchers.IO) { GatewaySender.enviar(recipients.map { it.phone to text }) }
-            val algumOk = resultados.values.any { it }
-            if (!algumOk && SmsSender.hasPermission(appContext) && SmsSender.deviceCanSend(appContext)) {
-                Repository.updateAlert(record.id) {
-                    it.copy(notes = it.notes + "Gateway indisponível (sem internet?): enviado pelo chip como reserva")
-                }
-                recipients.forEach { c ->
-                    if (!sendSms(c.phone, text, record.id)) Repository.setDeliveryStatus(record.id, c.phone, DeliveryStatus.FAILED)
-                }
-            } else {
-                recipients.forEach { c ->
-                    val status = if (resultados[c.phone] == true) DeliveryStatus.SENT else DeliveryStatus.FAILED
-                    Repository.setDeliveryStatus(record.id, c.phone, status)
-                }
+            recipients.forEach { c ->
+                val status = if (resultados[c.phone] == true) DeliveryStatus.SENT else DeliveryStatus.FAILED
+                Repository.setDeliveryStatus(record.id, c.phone, status)
             }
             concluir()
         }
@@ -177,12 +159,8 @@ object AlertManager {
 
     /** Envio simples (sem rastrear status por contato): aviso de "está tudo bem" e atualizações. */
     private fun enviarSimples(envios: List<Pair<String, String>>) {
-        if (envios.isEmpty()) return
-        if (GatewaySender.configurado()) {
-            scope.launch { withContext(Dispatchers.IO) { GatewaySender.enviar(envios) } }
-        } else {
-            envios.forEach { (phone, text) -> sendSms(phone, text, null) }
-        }
+        if (envios.isEmpty() || !GatewaySender.configurado()) return
+        scope.launch { withContext(Dispatchers.IO) { GatewaySender.enviar(envios) } }
     }
 
     private fun startFollowUps(record: AlertRecord, recipients: List<Contact>, settings: Settings) {
@@ -221,15 +199,7 @@ object AlertManager {
                 current.followUpsTotal,
                 System.currentTimeMillis(),
             )
-            if (GatewaySender.configurado()) {
-                enviarSimples(current.followUpRecipients.map { it.phone to text })
-            } else if (smsBudget() >= current.followUpRecipients.size * SmsLength.parts(text)) {
-                current.followUpRecipients.forEach { sendSms(it.phone, text, null) }
-            } else {
-                Repository.updateAlert(current.alertId) {
-                    it.copy(notes = it.notes + "Atualização $index não enviada para não passar do limite de SMS do Android")
-                }
-            }
+            enviarSimples(current.followUpRecipients.map { it.phone to text })
             Repository.update { s ->
                 s.copy(activeAlert = s.activeAlert?.takeIf { it.alertId == current.alertId }?.copy(followUpsSent = index))
             }
@@ -239,18 +209,6 @@ object AlertManager {
                 releaseWakeLock()
             }
         }
-    }
-
-    private fun sendSms(phone: String, text: String, alertId: String?): Boolean {
-        val sent = SmsSender.send(appContext, phone, text, alertId)
-        if (sent) repeat(SmsLength.parts(text)) { sentSmsTimes.addLast(SystemClock.elapsedRealtime()) }
-        return sent
-    }
-
-    private fun smsBudget(): Int {
-        val cutoff = SystemClock.elapsedRealtime() - SMS_LIMIT_WINDOW_MILLIS
-        while (sentSmsTimes.isNotEmpty() && sentSmsTimes.first() < cutoff) sentSmsTimes.removeFirst()
-        return SMS_LIMIT - sentSmsTimes.size
     }
 
     private fun bind(context: Context) {

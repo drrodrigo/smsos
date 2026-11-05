@@ -51,8 +51,8 @@ class AppSmokeTest {
 
     @Test
     fun todasAsTelasAbrem() {
-        // O simulador não tem chip, então o aviso de cima é o de aparelho sem SMS.
-        compose.onNodeWithText("Este aparelho não envia SMS").assertExists()
+        // O simulador não libera permissão nenhuma, então a proteção aparece desligada.
+        compose.onNodeWithText("Proteção DESLIGADA").assertExists()
         // Padrão: os dois SOS ligados, botão dividido Segurança/Saúde.
         compose.onNode(hasText("SEGURANÇA", substring = true)).assertExists()
         compose.onNode(hasText("SAÚDE", substring = true)).assertExists()

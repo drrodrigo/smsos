@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.alert.Otp
-import br.com.alertasilencioso.alert.SmsSender
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.PhoneNumbers
@@ -321,23 +320,19 @@ fun SettingsScreen(settings: Settings) {
                 )
                 Button(
                     onClick = {
-                        when {
-                            GatewaySender.configurado() -> {
-                                context.toast("Enviando pela nossa estrutura...")
-                                escopo.launch {
-                                    val ok = withContext(Dispatchers.IO) {
-                                        GatewaySender.enviar(listOf(testPhone to MessageBuilder.testSms()))[testPhone] == true
-                                    }
-                                    context.toast(
-                                        if (ok) "Enviado ✓ Confira se chegou no celular."
-                                        else "Não enviado. Confira o número (11 dígitos com o 9) e a internet.",
-                                    )
+                        if (!GatewaySender.configurado()) {
+                            context.toast("Envio não configurado neste app.")
+                        } else {
+                            context.toast("Enviando pela nossa estrutura...")
+                            escopo.launch {
+                                val ok = withContext(Dispatchers.IO) {
+                                    GatewaySender.enviar(listOf(testPhone to MessageBuilder.testSms()))[testPhone] == true
                                 }
+                                context.toast(
+                                    if (ok) "Enviado ✓ Confira se chegou no celular."
+                                    else "Não enviado. Confira o número (11 dígitos com o 9) e a internet.",
+                                )
                             }
-                            !SmsSender.hasPermission(context) -> context.toast("Libere o SMS primeiro, na tela Início.")
-                            SmsSender.sendTest(context, testPhone, MessageBuilder.testSms()) ->
-                                context.toast("Enviando pelo chip... o resultado aparece em instantes.")
-                            else -> context.toast("Não foi possível nem tentar enviar o SMS")
                         }
                     },
                     enabled = PhoneNumbers.isPlausible(testPhone),
