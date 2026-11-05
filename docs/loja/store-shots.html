@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{ --nav:#0b1b36; --nav2:#16294f; --red:#d32f2f; --blue:#1e66d0; --green:#2e9e5b; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:#333; }
+  .shot {
+    width: 540px; height: 960px; position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #1b3365 0%, #0b1b36 70%);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 34px 0;
+  }
+  .head { color:#fff; font-size: 38px; font-weight: 800; text-align:center; line-height:1.15; letter-spacing:-0.5px; }
+  .head .hl { color:#ff6b73; }
+  .sub { color:#aec0de; font-size:19px; text-align:center; margin-top:12px; font-weight:500; }
+  /* telefone */
+  .phone { margin-top: 34px; width: 420px; height: 720px; border-radius: 40px; background:#0c0c0e;
+    border: 10px solid #1c1c22; box-shadow: 0 30px 70px rgba(0,0,0,.55); overflow:hidden; position:relative; }
+  .scr { position:absolute; inset:0; background:#0c0c0e; color:#eaeef5; padding: 18px 16px; display:flex; flex-direction:column; }
+  /* topbar */
+  .top { display:flex; align-items:center; gap:8px; padding: 6px 2px 14px; }
+  .top img { width: 26px; height: 26px; }
+  .top .nm { font-weight:800; font-size:18px; color:#fff; flex:1; }
+  .top .ic { color:#9fb0c9; font-size:16px; }
+  .card { background:#17171c; border-radius:16px; padding:14px 16px; margin-bottom:12px; }
+  .status { display:flex; align-items:center; gap:12px; background: rgba(46,158,91,.16); }
+  .status .big { font-size:30px; }
+  .status .t { font-weight:800; color:#49c87e; font-size:19px; }
+  .status .s { color:#c7d2e2; font-size:13px; margin-top:2px; }
+  .sosrow { display:flex; gap:12px; margin-bottom:12px; }
+  .sos { flex:1; border-radius:16px; padding:20px 10px; text-align:center; color:#fff; }
+  .sos.seg { background: var(--red); }
+  .sos.sau { background: var(--blue); }
+  .sos .em { font-size:22px; }
+  .sos .nm { font-weight:800; font-size:17px; margin-top:4px; letter-spacing:.5px; }
+  .sos .hint { font-size:12px; opacity:.9; margin-top:4px; }
+  .cfg { display:flex; align-items:center; justify-content:space-between; }
+  .cfg .t { font-weight:700; font-size:15px; }
+  .cfg .ok { color:#49c87e; font-size:13px; }
+  .nav { margin-top:auto; display:flex; justify-content:space-around; padding-top:12px; border-top:1px solid #1e1e25; color:#8d97a8; font-size:10px; }
+  .nav b { color:#cfd8e6; }
+  .nav .i { font-size:16px; display:block; text-align:center; margin-bottom:2px; }
+  /* alerta */
+  .alert { background:#b00020; align-items:center; justify-content:center; text-align:center; padding:28px; }
+  .alert .warn { font-size:84px; }
+  .alert .t { color:#fff; font-size:26px; font-weight:800; margin-top:10px; line-height:1.2; }
+  .alert .b { color:#fff; font-size:15px; margin-top:14px; opacity:.95; line-height:1.4; }
+  .alert .btn1 { margin-top:28px; width:100%; background:#fff; color:#b00020; font-weight:800; font-size:16px; border-radius:12px; padding:14px; }
+  .alert .btn2 { margin-top:12px; width:100%; border:1.5px solid #fff; color:#fff; font-weight:600; font-size:15px; border-radius:12px; padding:12px; }
+  /* guardioes */
+  .gtitle { font-weight:800; font-size:21px; color:#fff; margin: 4px 2px 12px; }
+  .grow { display:flex; align-items:center; gap:12px; background:#17171c; border-radius:14px; padding:14px 14px; margin-bottom:10px; }
+  .grow .av { width:40px; height:40px; border-radius:50%; background:#24303f; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .grow .nm { font-weight:700; font-size:16px; }
+  .grow .ph { color:#9fb0c9; font-size:13px; margin-top:1px; }
+  .ginvite { margin-top:6px; background:#1f9d55; color:#fff; font-weight:800; font-size:15px; text-align:center; border-radius:12px; padding:14px; }
+  .big-sos { display:flex; flex-direction:column; gap:16px; margin-top:8px; }
+  .bs { border-radius:18px; padding:26px 16px; color:#fff; }
+  .bs.seg{ background:var(--red);} .bs.sau{ background:var(--blue);}
+  .bs .em{ font-size:30px;} .bs .nm{ font-weight:800; font-size:22px; margin-top:6px;} .bs .d{ font-size:14px; opacity:.92; margin-top:4px;}
+</style>
+</head>
+<body>
+
+<!-- 1. HOME -->
+<div class="shot" id="s1">
+  <div class="head">Um toque. <span class="hl">Seus guardiões sabem.</span></div>
+  <div class="sub">Botão de pânico com a sua localização</div>
+  <div class="phone"><div class="scr">
+    <div class="top"><img src="escudo.png"><span class="nm">GuardiõesSOS</span><span class="ic">⌁ ◉ ◔</span></div>
+    <div class="card status"><span class="big">✅</span><div><div class="t">Proteção ATIVA</div><div class="s">Toque e segure o botão por 5 segundos para pedir ajuda.</div></div></div>
+    <div class="sosrow">
+      <div class="sos seg"><div class="em">🛡️</div><div class="nm">SEGURANÇA</div><div class="hint">segure 5 s</div></div>
+      <div class="sos sau"><div class="em">❤️</div><div class="nm">SAÚDE</div><div class="hint">segure 5 s</div></div>
+    </div>
+    <div class="card cfg"><span class="t">Configuração</span><span class="ok">Tudo pronto ✓</span></div>
+    <div class="nav">
+      <div><span class="i">⌂</span><b>Início</b></div><div><span class="i">👤</span>Guardiões</div>
+      <div><span class="i">📍</span>Lugares</div><div><span class="i">♥</span>Protejo</div><div><span class="i">⚙</span>Ajustes</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 2. ALERTA -->
+<div class="shot" id="s2">
+  <div class="head">Chega como <span class="hl">uma ligação.</span></div>
+  <div class="sub">Toca alto, vibra e acende a tela — mesmo no silencioso</div>
+  <div class="phone"><div class="scr alert">
+    <div class="warn">⚠️</div>
+    <div class="t">Fernanda acionou o SOS</div>
+    <div class="b">Pode estar em perigo.<br>Localização no mapa.</div>
+    <div class="btn1">Ver no mapa (silencia)</div>
+    <div class="btn2">Silenciar</div>
+  </div></div>
+</div>
+
+<!-- 3. DOIS SOS -->
+<div class="shot" id="s3">
+  <div class="head">Dois tipos de <span class="hl">socorro.</span></div>
+  <div class="sub">Segurança e Saúde, sempre à mão</div>
+  <div class="phone"><div class="scr">
+    <div class="top"><img src="escudo.png"><span class="nm">GuardiõesSOS</span><span class="ic">⌁ ◉ ◔</span></div>
+    <div class="big-sos">
+      <div class="bs seg"><div class="em">🛡️</div><div class="nm">SEGURANÇA</div><div class="d">Perigo, assalto, perseguição</div></div>
+      <div class="bs sau"><div class="em">❤️</div><div class="nm">SAÚDE</div><div class="d">Passou mal, caiu, precisa de socorro</div></div>
+    </div>
+    <div class="nav">
+      <div><span class="i">⌂</span><b>Início</b></div><div><span class="i">👤</span>Guardiões</div>
+      <div><span class="i">📍</span>Lugares</div><div><span class="i">♥</span>Protejo</div><div><span class="i">⚙</span>Ajustes</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 4. GUARDIÕES -->
+<div class="shot" id="s4">
+  <div class="head">Você escolhe <span class="hl">quem protege você.</span></div>
+  <div class="sub">Convide seus guardiões pelo WhatsApp</div>
+  <div class="phone"><div class="scr">
+    <div class="top"><img src="escudo.png"><span class="nm">GuardiõesSOS</span><span class="ic">⌁ ◉ ◔</span></div>
+    <div class="gtitle">Meus guardiões</div>
+    <div class="grow"><div class="av">👩</div><div><div class="nm">Fernanda</div><div class="ph">(31) 98449-1586</div></div></div>
+    <div class="grow"><div class="av">👨</div><div><div class="nm">Pai</div><div class="ph">(31) 99123-4567</div></div></div>
+    <div class="grow"><div class="av">👧</div><div><div class="nm">Ana (filha)</div><div class="ph">(31) 98777-2211</div></div></div>
+    <div class="ginvite">＋ Convidar um guardião</div>
+    <div class="nav">
+      <div><span class="i">⌂</span>Início</div><div><span class="i">👤</span><b>Guardiões</b></div>
+      <div><span class="i">📍</span>Lugares</div><div><span class="i">♥</span>Protejo</div><div><span class="i">⚙</span>Ajustes</div>
+    </div>
+  </div></div>
+</div>
+
+</body>
+</html>
