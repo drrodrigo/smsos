@@ -4,8 +4,12 @@ Foi REMOVIDO na 1ª versão da Play Store (maior motivo de recusa do Google).
 Para religar numa versão futura:
 1. Cole este <service> dentro de <application> no app/src/main/AndroidManifest.xml
    (no lugar do comentário "Servico de Acessibilidade ... REMOVIDO").
-2. Mude br.com.alertasilencioso.core.Features.ACESSIBILIDADE para true.
-3. Rode ./gradlew test assembleDebug bundleRelease.
+2. Recoloque a permissão de localização em 2o plano no AndroidManifest.xml (foi removida junto
+   na 0.29.1, porque so fazia falta com o app fechado):
+       <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+   Atencao: o Google exige declaracao + video de demonstracao pra essa permissao.
+3. Mude br.com.alertasilencioso.core.Features.ACESSIBILIDADE para true.
+4. Rode ./gradlew test assembleDebug bundleRelease.
 
 --- cole daqui ---
         <service

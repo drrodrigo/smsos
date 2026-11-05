@@ -88,8 +88,14 @@ Para cada item: "Coletado" = sim, "Compartilhado" = só com os guardiões que a 
 
 ## 6. Declarações sensíveis (onde o Google pega no pé) — LER COM ATENÇÃO
 
-### 6.1 Localização em segundo plano
-A Play vai pedir uma justificativa (e às vezes um vídeo curto). Justificativa:
+### 6.1 Localização em segundo plano — FORA da 1ª versão (0.29.1)
+A permissão `ACCESS_BACKGROUND_LOCATION` foi **removida** na 0.29.1: sem o gesto do botão de volume,
+o SOS só dispara com o app aberto, então a localização de primeiro plano basta. Assim não cai na
+declaração de localização em 2º plano (que exige **vídeo de demonstração** e é motivo comum de
+recusa). Quando voltar o gesto de volume (ou uma localização ao vivo), recoloca a permissão e usa a
+justificativa abaixo.
+
+Justificativa (para quando voltar):
 ```
 O GuardiõesSOS é um app de segurança pessoal / botão de pânico. A localização em segundo
 plano é necessária para enviar a localização do usuário aos seus guardiões no momento de uma

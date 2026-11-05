@@ -28,8 +28,8 @@ android {
         applicationId = "br.com.guardioessos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 45
-        versionName = "0.29.0"
+        versionCode = 46
+        versionName = "0.29.1"
 
         buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
         buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")

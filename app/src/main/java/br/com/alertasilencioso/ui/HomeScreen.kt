@@ -482,7 +482,7 @@ private fun SetupCard(
         ) {
             permissions.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Features.ACESSIBILIDADE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             SetupRow(
                 done = status.backgroundLocation,
                 title = "Localização o tempo todo",

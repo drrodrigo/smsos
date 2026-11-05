@@ -12,7 +12,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Localizacao em 2o plano (ACCESS_BACKGROUND_LOCATION) REMOVIDA da 1a versao da Play: o app
+         so le a localizacao quando a pessoa aciona o SOS, com o app aberto. Ela so fazia falta pro
+         gesto do botao de volume (app fechado), que saiu junto com a Acessibilidade, e o Google a
+         revisa com video de demonstracao (motivo comum de recusa). Pra religar: deixe
+         Features.ACESSIBILIDADE = true e siga docs/acessibilidade-service.xml.txt, que tem a linha
+         exata da permissao pra recolar aqui. -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

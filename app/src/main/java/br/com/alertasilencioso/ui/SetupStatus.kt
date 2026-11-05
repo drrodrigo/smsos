@@ -27,7 +27,10 @@ data class SetupStatus(
         fun read(context: Context): SetupStatus = SetupStatus(
             location = granted(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
                 granted(context, Manifest.permission.ACCESS_COARSE_LOCATION),
-            backgroundLocation = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+            // Sem o gesto do botao de volume (ACESSIBILIDADE off), o SOS so dispara com o app
+            // aberto, entao a localizacao de primeiro plano basta. Nao cobramos a de 2o plano.
+            backgroundLocation = !Features.ACESSIBILIDADE ||
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
                 granted(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
             notifications = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 granted(context, Manifest.permission.POST_NOTIFICATIONS),
