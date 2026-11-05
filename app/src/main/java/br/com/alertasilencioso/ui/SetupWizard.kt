@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.LocationFetcher
+import br.com.alertasilencioso.core.Features
 import br.com.alertasilencioso.data.AppState
 import br.com.alertasilencioso.data.Place
 import br.com.alertasilencioso.data.Profile
@@ -55,8 +56,11 @@ private const val HOME_LOCATION_TIMEOUT_MILLIS = 30_000L
 
 private enum class WizardStep { WELCOME, NAME, CONTACTS, LOCATION, BACKGROUND_LOCATION, ACCESSIBILITY, BATTERY, PLACE, TEST }
 
-private fun WizardStep.applies(): Boolean =
-    this != WizardStep.BACKGROUND_LOCATION || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+private fun WizardStep.applies(): Boolean = when (this) {
+    WizardStep.BACKGROUND_LOCATION -> Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    WizardStep.ACCESSIBILITY -> Features.ACESSIBILIDADE
+    else -> true
+}
 
 private fun WizardStep.isDone(state: AppState, status: SetupStatus): Boolean = when (this) {
     WizardStep.WELCOME, WizardStep.TEST -> false

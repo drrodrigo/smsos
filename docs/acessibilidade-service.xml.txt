@@ -1,0 +1,23 @@
+Trecho do AndroidManifest.xml que liga o gesto do botão de volume (serviço de Acessibilidade).
+Foi REMOVIDO na 1ª versão da Play Store (maior motivo de recusa do Google).
+
+Para religar numa versão futura:
+1. Cole este <service> dentro de <application> no app/src/main/AndroidManifest.xml
+   (no lugar do comentário "Servico de Acessibilidade ... REMOVIDO").
+2. Mude br.com.alertasilencioso.core.Features.ACESSIBILIDADE para true.
+3. Rode ./gradlew test assembleDebug bundleRelease.
+
+--- cole daqui ---
+        <service
+            android:name=".trigger.GuardianService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+--- até aqui ---

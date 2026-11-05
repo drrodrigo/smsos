@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import br.com.alertasilencioso.core.Features
 import br.com.alertasilencioso.trigger.GuardianService
 
 /** O que já foi liberado no celular. Lido de novo sempre que a pessoa volta para o app. */
@@ -20,7 +21,7 @@ data class SetupStatus(
     val batteryUnrestricted: Boolean,
     val fullScreen: Boolean,
 ) {
-    val essentialsOk: Boolean get() = location && accessibility
+    val essentialsOk: Boolean get() = location && (!Features.ACESSIBILIDADE || accessibility)
 
     companion object {
         fun read(context: Context): SetupStatus = SetupStatus(

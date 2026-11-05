@@ -61,6 +61,7 @@ import br.com.alertasilencioso.data.Profile
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.AlertManager
 import br.com.alertasilencioso.alert.TriggerSource
+import br.com.alertasilencioso.core.Features
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.RecipientResolver
@@ -84,6 +85,8 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val running by GuardianService.running.collectAsStateWithLifecycle()
+    // Sem o gesto de volume (Acessibilidade desligada p/ a loja), a proteção não depende do serviço rodando.
+    val protegido = !Features.ACESSIBILIDADE || running
     val diagnostics by Diagnostics.state.collectAsStateWithLifecycle()
     val recipients = remember(state.alwaysContacts, state.places) {
         RecipientResolver.distinctByPhone(state.alwaysContacts + state.places.flatMap { it.contacts }).size
@@ -93,11 +96,11 @@ fun HomeScreen(
     }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { StatusCard(state.settings, status, running, recipients) }
+        item { StatusCard(state.settings, status, protegido, recipients) }
         if (state.settings.testMode) {
             item { TestModeBanner() }
         }
-        if (!status.essentialsOk || !running || recipients == 0) {
+        if (!status.essentialsOk || !protegido || recipients == 0) {
             item {
                 Button(onClick = onOpenWizard, Modifier.fillMaxWidth()) {
                     Text("Configurar passo a passo", style = MaterialTheme.typography.titleMedium)
@@ -132,7 +135,12 @@ private fun StatusCard(settings: Settings, status: SetupStatus, running: Boolean
         !status.essentialsOk || !running -> Triple("Proteção DESLIGADA", "Termine a configuração logo abaixo.", danger)
         recipients == 0 -> Triple("Falta cadastrar contatos", "Cadastre quem deve ser avisado.", warning)
         settings.testMode -> Triple("MODO TESTE", "O botão funciona, mas nenhum SMS é enviado.", warning)
-        else -> Triple("Proteção ATIVA", settings.triggerDescription(), ok)
+        else -> Triple(
+            "Proteção ATIVA",
+            if (Features.ACESSIBILIDADE) settings.triggerDescription()
+            else "Toque e segure o botão Segurança ou Saúde por ${settings.holdSeconds}s para pedir ajuda.",
+            ok,
+        )
     }
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.14f))) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -406,7 +414,7 @@ private fun SetupCard(
         status.location,
         if (isQ) status.backgroundLocation else true,
         status.notifications,
-        status.accessibility,
+        (!Features.ACESSIBILIDADE || status.accessibility),
         status.batteryUnrestricted,
         status.fullScreen,
     )
@@ -491,18 +499,20 @@ private fun SetupCard(
                 onHelp = abrirAjuda,
             ) { dialog = SetupDialog.BACKGROUND_LOCATION }
         }
-        SetupRow(
-            done = status.accessibility,
-            title = "Perceber o botão de volume",
-            description = "Liga o serviço que observa o botão, mesmo com o app fechado.",
-            action = "Ativar",
-            help = "Liga o serviço que percebe quando você segura o botão de volume, mesmo com o app fechado. " +
-                "Toque em \"Ativar\" e ligue o GuardiõesSOS na lista de Acessibilidade. No Samsung, se aparecer " +
-                "\"Configuração restrita\": Informações do app > 3 pontinhos (⋮) > \"Permitir configurações " +
-                "restritas\". Não está funcionando? Confira se o serviço está ligado e, no Samsung, se o " +
-                "Bloqueador automático está desligado.",
-            onHelp = abrirAjuda,
-        ) { dialog = SetupDialog.ACCESSIBILITY }
+        if (Features.ACESSIBILIDADE) {
+            SetupRow(
+                done = status.accessibility,
+                title = "Perceber o botão de volume",
+                description = "Liga o serviço que observa o botão, mesmo com o app fechado.",
+                action = "Ativar",
+                help = "Liga o serviço que percebe quando você segura o botão de volume, mesmo com o app fechado. " +
+                    "Toque em \"Ativar\" e ligue o GuardiõesSOS na lista de Acessibilidade. No Samsung, se aparecer " +
+                    "\"Configuração restrita\": Informações do app > 3 pontinhos (⋮) > \"Permitir configurações " +
+                    "restritas\". Não está funcionando? Confira se o serviço está ligado e, no Samsung, se o " +
+                    "Bloqueador automático está desligado.",
+                onHelp = abrirAjuda,
+            ) { dialog = SetupDialog.ACCESSIBILITY }
+        }
         SetupRow(
             done = status.batteryUnrestricted,
             title = "Sem economia de bateria",

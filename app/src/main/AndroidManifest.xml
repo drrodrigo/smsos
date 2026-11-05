@@ -49,18 +49,9 @@
             android:turnScreenOn="true"
             android:theme="@style/Theme.AlertaSilencioso" />
 
-        <service
-            android:name=".trigger.GuardianService"
-            android:exported="true"
-            android:label="@string/accessibility_service_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
+        <!-- Servico de Acessibilidade (gesto do botao de volume) REMOVIDO da 1a versao da Play
+             (maior motivo de recusa do Google). Para religar numa versao futura: cole de volta o
+             trecho de docs/acessibilidade-service.xml.txt e mude Features.ACESSIBILIDADE para true. -->
 
         <service
             android:name=".push.MessagingService"
