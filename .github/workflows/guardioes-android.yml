@@ -1,11 +1,18 @@
 name: fábrica do Android (APK de teste)
 
 # Gera um APK de TESTE (debug) do GuardiõesSOS para instalar no celular (sideload).
-# Dispara sozinho a cada push nesta branch; o APK fica em Actions -> esta execução -> Artifacts.
+#
+# ATENÇÃO (06/11): os runners da nuvem do GitHub NÃO encontram o SDK Android 37
+# (platforms;android-37) no repositório público do Google — o projeto usa compileSdk = 37, que
+# por enquanto só existe pré-instalado no ambiente de desenvolvimento, não nos runners hospedados.
+# Por isso esta fábrica está em modo MANUAL (não roda a cada push). Enquanto o android-37 não
+# estiver disponível nos runners, os APKs de teste são compilados no ambiente de dev e entregues
+# direto. Quando o runner tiver o android-37 (ou quando o compileSdk baixar para uma versão
+# pública), é só religar o gatilho de push abaixo.
 on:
-  push:
-    branches: [feat/botao-sem-acessibilidade]
   workflow_dispatch:
+  # push:
+  #   branches: [feat/botao-sem-acessibilidade]
 
 jobs:
   apk:
@@ -19,8 +26,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # O runner já vem com o SDK do Android em $ANDROID_HOME. Só aceitamos as licenças e
-      # garantimos o platform/build-tools 37 (compileSdk = 37). Não usamos a ação setup-android:
+      # O runner já vem com o SDK do Android em $ANDROID_HOME. Não usamos a ação setup-android:
       # ela tenta instalar o pacote obsoleto "tools" e falha.
       - name: Preparar o SDK do Android
         run: |
