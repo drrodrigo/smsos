@@ -9,7 +9,7 @@ struct InicioView: View {
 
     @State private var loc = Localizacao()
     @State private var resultado: ResultadoAlerta?
-    @State private var localizacaoOk = Localizacao.autorizado
+    @State private var localizacaoOk = Demo.ativo || Localizacao.autorizado
     @Environment(\.openURL) private var openURL
 
     private var ehTeste: Bool { app.modoTeste || !Gateway.configurado }
@@ -91,8 +91,8 @@ struct InicioView: View {
             }
         }
         .onAppear {
-            loc.pedirPermissao()
-            localizacaoOk = Localizacao.autorizado
+            if !Demo.ativo { loc.pedirPermissao() }
+            localizacaoOk = Demo.ativo || Localizacao.autorizado
         }
         .sheet(item: $resultado) { r in ResultadoAlertaView(resultado: r) }
     }
