@@ -13,3 +13,5 @@ keystore/release.properties
 # Chave do gateway de SMS (nunca versionar)
 gateway.properties
 app/google-services.json
+app/src/debug/google-services.json
+prints-appstore/
