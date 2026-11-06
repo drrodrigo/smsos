@@ -8,7 +8,7 @@ enum Aba: Hashable {
 /// Primeira vez → cadastro. Depois → as abas do app (igual ao Android).
 struct ContentView: View {
     @EnvironmentObject var app: AppState
-    @State private var aba: Aba = .inicio
+    @State private var aba: Aba = Demo.abaInicial
 
     var body: some View {
         if app.configurado {

@@ -3,7 +3,7 @@ import Foundation
 /// Envia o alerta pela NOSSA estrutura (função smsos-alerta -> SMS Market), pela internet.
 /// Igual ao GatewaySender do Android.
 enum Gateway {
-    static var configurado: Bool { Backend.configurado }
+    static var configurado: Bool { Demo.ativo || Backend.configurado }
 
     /// Manda o mesmo texto para vários telefones (até 15 por chamada). true se a função aceitou.
     static func enviar(telefones: [String], texto: String) async -> Bool {

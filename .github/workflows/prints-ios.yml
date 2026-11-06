@@ -1,0 +1,62 @@
+# Gera os prints do iPhone para a App Store (iPhone grande, 6.9"), no simulador do Mac do GitHub.
+# Roda pelo botão. Os prints saem como "artifact" (zip) para baixar e subir na App Store Connect.
+name: prints do iPhone (App Store)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prints:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode 26
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26*.app | grep -vi beta | sort -V | tail -1)"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Gerar o projeto (XcodeGen)
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Compilar para o simulador
+        run: |
+          xcodebuild -project ios/GuardioesSOS.xcodeproj -scheme GuardioesSOS -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath dd -quiet CODE_SIGNING_ALLOWED=NO build
+
+      - name: Tirar os prints (iPhone Pro Max)
+        run: |
+          set -e
+          APP="$(find dd/Build/Products -name 'GuardioesSOS.app' -type d | head -1)"
+          echo "app: $APP"
+
+          LINE="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9] Pro Max' | head -1)"
+          [ -z "$LINE" ] && LINE="$(xcrun simctl list devices available | grep 'Pro Max' | head -1)"
+          DEV="$(echo "$LINE" | grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)"
+          echo "dispositivo: $LINE -> $DEV"
+
+          xcrun simctl boot "$DEV" || true
+          sleep 10
+          xcrun simctl install "$DEV" "$APP"
+
+          mkdir -p prints
+          for TAB in inicio contatos guardioes ajustes; do
+            xcrun simctl launch "$DEV" br.com.guardioessos -demo -tab "$TAB"
+            sleep 7
+            xcrun simctl io "$DEV" screenshot "prints/$TAB.png"
+            xcrun simctl terminate "$DEV" br.com.guardioessos || true
+            sleep 2
+          done
+          echo "--- prints gerados ---"
+          ls -la prints
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prints-appstore
+          path: prints/*.png
+          if-no-files-found: error

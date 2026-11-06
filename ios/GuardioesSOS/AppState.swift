@@ -25,6 +25,19 @@ final class AppState: ObservableObject {
     }
 
     init() {
+        if Demo.ativo {
+            nome = "Ana Souza"
+            meuTelefone = "11988887777"
+            perfil = .seguranca
+            configurado = true
+            modoTeste = false
+            dispositivo = "demo"
+            contatos = [
+                Contato(nome: "Vizinho (Casa)", telefone: "11988880001"),
+                Contato(nome: "Meu irmão", telefone: "11988880002"),
+            ]
+            return
+        }
         let def = UserDefaults.standard
         nome = def.string(forKey: K.nome) ?? ""
         meuTelefone = def.string(forKey: K.meuTelefone) ?? ""
