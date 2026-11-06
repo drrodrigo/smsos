@@ -10,7 +10,7 @@ extension View {
     /// Dá ao teclado um botão "Concluído" e fecha ao rolar — pros campos de telefone não prenderem o usuário.
     func tecladoFechavel() -> some View {
         self
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboard(.immediately)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()

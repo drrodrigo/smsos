@@ -4,6 +4,12 @@ import SwiftUI
 struct AjustesView: View {
     @EnvironmentObject var app: AppState
 
+    private var versaoApp: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "GuardiõesSOS \(v) (build \(b)) • iPhone"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -35,7 +41,7 @@ struct AjustesView: View {
                 Section {
                     LabeledContent("ID do aparelho", value: String(app.dispositivo.prefix(8)))
                 } footer: {
-                    Text("GuardiõesSOS • iPhone")
+                    Text(versaoApp)
                 }
             }
             .navigationTitle("Ajustes")
