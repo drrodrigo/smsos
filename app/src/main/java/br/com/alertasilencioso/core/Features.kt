@@ -14,4 +14,12 @@ package br.com.alertasilencioso.core
  */
 object Features {
     const val ACESSIBILIDADE = false
+
+    /**
+     * Gesto do botão de volume SEM a Acessibilidade: o motor de TELA APAGADA (que usa uma sessão de
+     * mídia, não a Acessibilidade) roda num serviço de primeiro plano (MonitorService), com uma
+     * notificação fixa. Entrega o pega-e-segurar sem o maior motivo de recusa da Play. Só vale com a
+     * tela apagada — tela ligada continua dependendo da ACESSIBILIDADE acima.
+     */
+    const val GESTO_SEM_ACESSIBILIDADE = true
 }

@@ -49,7 +49,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.Backup
+import br.com.alertasilencioso.core.Features
 import br.com.alertasilencioso.data.Repository
+import br.com.alertasilencioso.trigger.MonitorService
 
 enum class Tab(val label: String, val icon: ImageVector) {
     HOME("Início", Icons.Filled.Home),
@@ -62,6 +64,10 @@ enum class Tab(val label: String, val icon: ImageVector) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Liga o motor do gesto de TELA APAGADA (sem Acessibilidade) se a pessoa deixou ligado em Ajustes.
+        if (Features.GESTO_SEM_ACESSIBILIDADE && Repository.state.value.settings.screenOffDetection) {
+            MonitorService.start(this)
+        }
         enableEdgeToEdge()
         setContent {
             AlertaTheme { AppRoot() }

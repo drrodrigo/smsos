@@ -3,7 +3,13 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.gms.google-services")
+}
+
+// O plugin do Firebase (google-services) só entra quando o google-services.json existe. Na fábrica
+// de APK de teste (CI) esse arquivo não está no git, então o app compila SEM o Firebase: o push não
+// funciona nesse APK de teste, mas o gesto e o SOS sim. No build local (com o json) funciona igual.
+if (rootProject.file("app/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 // Dados da chave de produção. Ficam fora do projeto (keystore/release.properties, no .gitignore).
@@ -31,6 +37,9 @@ android {
         versionCode = 47
         versionName = "0.29.2"
 
+        // Nome do app mostrado no celular (o debug troca para "GuardiõesSOS teste" lá embaixo).
+        manifestPlaceholders["appLabel"] = "GuardiõesSOS"
+
         buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
         buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")
     }
@@ -55,6 +64,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Instala LADO A LADO com o app da Play (que é release-assinado) porque tem outro
+            // applicationId. Assim você testa o gesto sem desinstalar o app de verdade nem perder
+            // seus dados. Em Ajustes a versão aparece como "0.29.2-gesto".
+            applicationIdSuffix = ".teste"
+            versionNameSuffix = "-gesto"
+            manifestPlaceholders["appLabel"] = "GuardiõesSOS teste"
+        }
         release {
             isMinifyEnabled = false
             if (releaseProps != null) signingConfig = signingConfigs.getByName("release")

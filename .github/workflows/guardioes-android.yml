@@ -1,0 +1,43 @@
+name: fábrica do Android (APK de teste)
+
+# Gera um APK de TESTE (debug) do GuardiõesSOS para instalar no celular (sideload).
+# Dispara sozinho a cada push nesta branch; o APK fica em Actions -> esta execução -> Artifacts.
+on:
+  push:
+    branches: [feat/botao-sem-acessibilidade]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: SDK do Android
+        uses: android-actions/setup-android@v3
+
+      - name: Aceitar licenças do SDK
+        run: yes | sdkmanager --licenses || true
+
+      - name: Permissão do gradlew
+        run: chmod +x ./gradlew
+
+      - name: Montar o APK de teste (debug)
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Guardar o APK (Artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GuardioesSOS-teste-gesto
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Testes unitários
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

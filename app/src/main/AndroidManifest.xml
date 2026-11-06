@@ -25,6 +25,13 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Serviço de primeiro plano que percebe o botão de volume com a TELA APAGADA, SEM a
+         Acessibilidade (ver MonitorService). A notificação fixa é exigência do Android para esse
+         serviço. RECEIVE_BOOT_COMPLETED religa o motor depois de reiniciar o celular. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Tira a permissao de ID de publicidade (AD_ID) que a firebase-messaging adiciona de brinde:
          o app NAO tem anuncios e NAO usa o Advertising ID. Com ela fora, a declaracao de "ID de
          publicidade" na Play fica como "Nao usa", sem aviso de permissao sobrando. -->
@@ -35,7 +42,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="@string/app_name"
+        android:label="${appLabel}"
         android:supportsRtl="true"
         android:theme="@style/Theme.AlertaSilencioso">
 
@@ -63,6 +70,25 @@
         <!-- Servico de Acessibilidade (gesto do botao de volume) REMOVIDO da 1a versao da Play
              (maior motivo de recusa do Google). Para religar numa versao futura: cole de volta o
              trecho de docs/acessibilidade-service.xml.txt e mude Features.ACESSIBILIDADE para true. -->
+
+        <!-- Gesto do botao de volume SEM Acessibilidade (so tela apagada): servico de primeiro plano.
+             Veja MonitorService / Features.GESTO_SEM_ACESSIBILIDADE. -->
+        <service
+            android:name=".trigger.MonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Botao de panico pessoal: percebe o botao de volume com a tela apagada para disparar o SOS mesmo com o app fechado." />
+        </service>
+
+        <receiver
+            android:name=".trigger.MonitorBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".push.MessagingService"

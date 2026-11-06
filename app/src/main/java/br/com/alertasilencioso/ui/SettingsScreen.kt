@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.alert.Otp
 import br.com.alertasilencioso.core.GeoPoint
@@ -37,6 +38,8 @@ import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
 import br.com.alertasilencioso.data.TriggerKey
 import br.com.alertasilencioso.data.TriggerMode
+import br.com.alertasilencioso.trigger.Diagnostics
+import br.com.alertasilencioso.trigger.MonitorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -158,6 +161,7 @@ fun SettingsScreen(settings: Settings) {
     var templateSau by remember { mutableStateOf(settings.messageTemplateSaude) }
     var testPhone by rememberSaveable { mutableStateOf("") }
     val save: ((Settings) -> Settings) -> Unit = Repository::updateSettings
+    val diag by Diagnostics.state.collectAsStateWithLifecycle()
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Ajustes", style = MaterialTheme.typography.headlineSmall) }
@@ -296,11 +300,28 @@ fun SettingsScreen(settings: Settings) {
             }
         }
         item {
-            SectionCard("Tela apagada (experimental)") {
+            SectionCard("Botão com a tela apagada (experimental)") {
                 SwitchRow("Perceber o botão com a tela apagada", settings.screenOffDetection) { on ->
                     save { it.copy(screenOffDetection = on) }
+                    if (on) MonitorService.start(context) else MonitorService.stop(context)
                 }
-                HelpText("Funciona na maioria dos celulares, mas não em todos. Use o modo teste, na tela Início, para conferir no seu.")
+                HelpText("Sem precisar de Acessibilidade. Funciona na maioria dos celulares, mas não em todos — confira no seu, abaixo.")
+                if (settings.screenOffDetection) {
+                    Text(
+                        if (MonitorService.running) "Motor do gesto: ligado ✓" else "Motor do gesto: desligado (abra o app de novo)",
+                        color = if (MonitorService.running) StatusColors.ok else StatusColors.warning,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Text(
+                        "Apertos percebidos com a tela apagada: ${diag.screenOffPresses}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    HelpText(
+                        "Teste no seu celular: bloqueie a tela e segure o botão de volume por ${settings.holdSeconds}s — " +
+                            "o celular deve vibrar (ligue o Modo teste na tela Início para não enviar nada). " +
+                            "Depois volte aqui: se o contador acima subiu, seu aparelho aceita o recurso. Se ficou em 0, ele bloqueia.",
+                    )
+                }
             }
         }
         item {
