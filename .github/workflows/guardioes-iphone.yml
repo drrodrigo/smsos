@@ -40,6 +40,14 @@ jobs:
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
 
+      - name: Chave do gateway de SMS (segredo -> Secrets.swift, fica so no build)
+        env:
+          GATEWAY_KEY: ${{ secrets.GUARDIOES_GATEWAY_KEY }}
+        run: |
+          B64=$(printf '%s' "$GATEWAY_KEY" | base64 | tr -d '\n')
+          printf 'import Foundation\nenum Secrets {\n    static let gatewayKey = String(data: Data(base64Encoded: "%s") ?? Data(), encoding: .utf8) ?? ""\n}\n' "$B64" > ios/GuardioesSOS/Secrets.swift
+          if [ -n "$GATEWAY_KEY" ]; then echo "chave do gateway: presente"; else echo "chave do gateway: vazia (modo teste)"; fi
+
       - name: Gerar o projeto do Xcode (XcodeGen)
         run: |
           brew install xcodegen
