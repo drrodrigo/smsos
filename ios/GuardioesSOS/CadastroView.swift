@@ -26,7 +26,7 @@ struct CadastroView: View {
                         .font(.headline)
                         .foregroundStyle(.white)
                         .padding(.top, 6)
-                    campo("Nome (ex.: Fernanda)", $app.contatoNome, .contatoNome, .default)
+                    campo("Nome do contato (ex.: Maria)", $app.contatoNome, .contatoNome, .default)
                     campo("Telefone com DDD", $app.contatoTelefone, .contatoTel, .phonePad)
 
                     Button {

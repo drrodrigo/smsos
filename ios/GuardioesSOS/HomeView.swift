@@ -1,14 +1,12 @@
 import SwiftUI
 import CoreLocation
 
-/// Tela principal: o botão de pânico.
+/// Tela principal: o botão de pânico. Segure para disparar (igual ao Android).
 /// - Modo teste (padrão): captura a localização e MOSTRA a mensagem, sem enviar.
 /// - Envio real (modo teste desligado, com a chave configurada): manda o SMS pelo gateway (SMS Market).
 struct HomeView: View {
     @EnvironmentObject var app: AppState
     @State private var loc = Localizacao()
-    @State private var enviando = false
-    @State private var confirmar = false
     @State private var resultado: ResultadoAlerta?
 
     /// É teste quando o usuário deixou o modo teste ligado, OU quando a chave não está configurada.
@@ -30,26 +28,11 @@ struct HomeView: View {
 
                 Spacer()
 
-                Text(enviando ? "Enviando o alerta..." : "Toque para pedir socorro")
+                Text("Segure o botão para pedir socorro")
                     .font(.headline).foregroundStyle(Color(white: 0.85))
+                    .multilineTextAlignment(.center)
 
-                Button { confirmar = true } label: {
-                    ZStack {
-                        Circle().fill(Color(red: 0.85, green: 0.12, blue: 0.14))
-                        if enviando {
-                            ProgressView().tint(.white).scaleEffect(1.6)
-                        } else {
-                            VStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 52))
-                                Text("SOS").font(.system(size: 40, weight: .black))
-                            }
-                            .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 230, height: 230)
-                    .shadow(color: .red.opacity(0.4), radius: 20)
-                }
-                .disabled(enviando)
+                BotaoPanico(disparar: executar)
 
                 Text("Vai avisar \(app.contatoExibicao).")
                     .font(.footnote).foregroundStyle(Color(white: 0.6))
@@ -70,19 +53,11 @@ struct HomeView: View {
             .padding(24)
         }
         .onAppear { loc.pedirPermissao() }
-        .alert(ehTeste ? "Testar alerta?" : "Pedir socorro agora?", isPresented: $confirmar) {
-            Button("Cancelar", role: .cancel) {}
-            Button(ehTeste ? "Testar" : "Pedir socorro", role: .destructive) { Task { await disparar() } }
-        } message: {
-            Text(ehTeste
-                 ? "Vamos pegar sua localização e montar o alerta (sem enviar)."
-                 : "Vamos pegar sua localização e ENVIAR o alerta para \(app.contatoExibicao).")
-        }
         .sheet(item: $resultado) { r in ResultadoAlertaView(resultado: r) }
     }
 
-    private func disparar() async {
-        enviando = true
+    /// Captura a localização, monta a mensagem e (se não for teste) envia pelo gateway.
+    private func executar() async {
         let posicao = await loc.pegar()
         let msg = Mensagem.alerta(
             nome: app.nome,
@@ -100,8 +75,86 @@ struct HomeView: View {
             status = ok ? .enviado : .falhou
         }
 
-        enviando = false
-        resultado = ResultadoAlerta(mensagem: msg, destino: destino, temLocal: temLocal, status: status)
+        await MainActor.run {
+            resultado = ResultadoAlerta(mensagem: msg, destino: destino, temLocal: temLocal, status: status)
+        }
+    }
+}
+
+/// Botão redondo de SOS: segure ~1,4s (um anel vai enchendo) para disparar. Soltar antes cancela.
+struct BotaoPanico: View {
+    let disparar: () async -> Void
+
+    @State private var progresso: CGFloat = 0
+    @State private var segurando = false
+    @State private var enviando = false
+    @State private var tarefa: Task<Void, Never>?
+
+    private let duracao: TimeInterval = 1.4
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color(red: 0.85, green: 0.12, blue: 0.14))
+
+            Circle()
+                .trim(from: 0, to: progresso)
+                .stroke(Color.white, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .padding(7)
+
+            if enviando {
+                ProgressView().tint(.white).scaleEffect(1.6)
+            } else {
+                VStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 50))
+                    Text(segurando ? "Segure…" : "SOS")
+                        .font(.system(size: segurando ? 24 : 40, weight: .black))
+                }
+                .foregroundStyle(.white)
+            }
+        }
+        .frame(width: 230, height: 230)
+        .shadow(color: .red.opacity(0.4), radius: 20)
+        .contentShape(Circle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in if !segurando && !enviando { iniciar() } }
+                .onEnded { _ in soltar() }
+        )
+        .accessibilityElement()
+        .accessibilityLabel("Botão de pânico. Segure para pedir socorro.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { Task { await fazerEnvio() } }
+    }
+
+    private func iniciar() {
+        segurando = true
+        withAnimation(.linear(duration: duracao)) { progresso = 1 }
+        tarefa = Task {
+            try? await Task.sleep(nanoseconds: UInt64(duracao * 1_000_000_000))
+            if Task.isCancelled { return }
+            await fazerEnvio()
+        }
+    }
+
+    private func soltar() {
+        if enviando { return }
+        tarefa?.cancel()
+        tarefa = nil
+        segurando = false
+        withAnimation(.easeOut(duration: 0.2)) { progresso = 0 }
+    }
+
+    private func fazerEnvio() async {
+        await MainActor.run {
+            segurando = false
+            enviando = true
+            progresso = 0
+        }
+        await disparar()
+        await MainActor.run {
+            enviando = false
+        }
     }
 }
 
