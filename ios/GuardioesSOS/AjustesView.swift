@@ -39,6 +39,7 @@ struct AjustesView: View {
                 }
             }
             .navigationTitle("Ajustes")
+            .tecladoFechavel()
             .onDisappear { app.registrarLead() }
         }
     }

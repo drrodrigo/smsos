@@ -1,16 +1,32 @@
 import SwiftUI
 import CoreLocation
+import UIKit
 
-/// Aba Início: o botão de pânico. Segure para disparar (igual ao Android). Manda para TODOS os contatos.
+/// Aba Início: banner de status + botão de pânico + checklist de Configuração (com a cara do Android).
 struct InicioView: View {
     @EnvironmentObject var app: AppState
+    let irPara: (Aba) -> Void
+
     @State private var loc = Localizacao()
     @State private var resultado: ResultadoAlerta?
+    @State private var localizacaoOk = Localizacao.autorizado
+    @Environment(\.openURL) private var openURL
 
     private var ehTeste: Bool { app.modoTeste || !Gateway.configurado }
 
+    private var nomeOk: Bool { !app.nome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var telefoneOk: Bool { Telefone.limpar(app.meuTelefone).count >= 10 }
+    private var contatosOk: Bool { !app.contatos.isEmpty }
+    private var pendentes: Int { [nomeOk, telefoneOk, contatosOk, localizacaoOk].filter { !$0 }.count }
+
+    private var banner: (titulo: String, sub: String, cor: Color) {
+        if !contatosOk { return ("Falta cadastrar contato", "Adicione quem deve ser avisado.", .orange) }
+        if ehTeste { return ("MODO TESTE", "O botão funciona, mas nada é enviado.", .yellow) }
+        return ("Proteção ATIVA", "Segure o botão para pedir socorro.", .green)
+    }
+
     private var avisa: String {
-        if app.contatos.isEmpty { return "Nenhum contato ainda — adicione na aba Contatos." }
+        if app.contatos.isEmpty { return "Ninguém cadastrado ainda." }
         if app.contatos.count == 1 { return "Vai avisar \(app.contatos[0].exibicao)." }
         return "Vai avisar \(app.contatos.count) contatos."
     }
@@ -18,48 +34,98 @@ struct InicioView: View {
     var body: some View {
         ZStack {
             Fundo()
-            VStack(spacing: 18) {
-                HStack {
-                    Text("GuardiõesSOS").font(.system(size: 22, weight: .heavy)).foregroundStyle(.white)
-                    Spacer()
-                    if ehTeste {
-                        Text("TESTE").font(.caption.bold())
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(Color.yellow.opacity(0.25)).foregroundStyle(.yellow).clipShape(Capsule())
+            ScrollView {
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("GuardiõesSOS").font(.system(size: 22, weight: .heavy)).foregroundStyle(.white)
+                        Spacer()
+                        if ehTeste {
+                            Text("TESTE").font(.caption.bold())
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(Color.yellow.opacity(0.25)).foregroundStyle(.yellow).clipShape(Capsule())
+                        }
+                    }
+
+                    VStack(spacing: 4) {
+                        Text(banner.titulo).font(.headline).foregroundStyle(banner.cor)
+                        Text(banner.sub).font(.caption).foregroundStyle(Color(white: 0.75))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(banner.cor.opacity(0.14))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                    BotaoPanico(disparar: executar).padding(.top, 6)
+
+                    Text(avisa).font(.footnote).foregroundStyle(Color(white: 0.6)).multilineTextAlignment(.center)
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack {
+                            Text("Configuração").font(.subheadline.bold()).foregroundStyle(.white)
+                            Spacer()
+                            Text(pendentes == 0 ? "Tudo pronto ✓" : "Falta \(pendentes) ajuste(s)")
+                                .font(.caption).foregroundStyle(pendentes == 0 ? .green : .orange)
+                        }
+                        .padding(.bottom, 12)
+
+                        item("Seu nome", "Aparece na mensagem, pra saberem quem pediu ajuda.", nomeOk) { irPara(.ajustes) }
+                        divisor
+                        item("Seu telefone", "Sua identidade na rede de guardiões.", telefoneOk) { irPara(.ajustes) }
+                        divisor
+                        item("Contatos", "Quem recebe o seu SOS.", contatosOk) { irPara(.contatos) }
+                        divisor
+                        item("Localização", "Para mandar o link do mapa no alerta.", localizacaoOk) { pedirLocalizacao() }
+                    }
+                    .padding(16)
+                    .background(Color.white.opacity(0.07))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                    if Gateway.configurado {
+                        Toggle(isOn: $app.modoTeste) {
+                            Text("Modo teste (não envia de verdade)").font(.footnote).foregroundStyle(.white)
+                        }
+                        .tint(.yellow)
                     }
                 }
+                .padding(20)
+            }
+        }
+        .onAppear {
+            loc.pedirPermissao()
+            localizacaoOk = Localizacao.autorizado
+        }
+        .sheet(item: $resultado) { r in ResultadoAlertaView(resultado: r) }
+    }
 
-                Spacer()
+    private var divisor: some View {
+        Divider().overlay(Color.white.opacity(0.12)).padding(.vertical, 10)
+    }
 
-                if app.perfil == .saude {
-                    Text("Modo Saúde").font(.subheadline.bold()).foregroundStyle(Color(red: 1, green: 0.6, blue: 0.6))
+    private func item(_ titulo: String, _ desc: String, _ ok: Bool, _ acao: @escaping () -> Void) -> some View {
+        Button(action: acao) {
+            HStack(spacing: 12) {
+                Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .foregroundStyle(ok ? .green : .orange).font(.title3)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(titulo).font(.subheadline.bold()).foregroundStyle(.white)
+                    Text(desc).font(.caption).foregroundStyle(Color(white: 0.6))
                 }
-
-                Text("Segure o botão para pedir socorro")
-                    .font(.headline).foregroundStyle(Color(white: 0.85)).multilineTextAlignment(.center)
-
-                BotaoPanico(disparar: executar)
-
-                Text(avisa)
-                    .font(.footnote).foregroundStyle(Color(white: 0.6)).multilineTextAlignment(.center)
-
                 Spacer()
-
-                if Gateway.configurado {
-                    Toggle(isOn: $app.modoTeste) {
-                        Text("Modo teste (não envia de verdade)").font(.footnote).foregroundStyle(.white)
-                    }
-                    .tint(.yellow)
-                    .padding(.horizontal)
-                } else {
-                    Text("Envio real ainda não configurado nesta versão.")
-                        .font(.caption).foregroundStyle(Color(white: 0.5)).multilineTextAlignment(.center)
+                if !ok {
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(Color(white: 0.5))
                 }
             }
-            .padding(24)
         }
-        .onAppear { loc.pedirPermissao() }
-        .sheet(item: $resultado) { r in ResultadoAlertaView(resultado: r) }
+        .buttonStyle(.plain)
+    }
+
+    private func pedirLocalizacao() {
+        if Localizacao.statusAtual() == .notDetermined {
+            loc.pedirPermissao()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { localizacaoOk = Localizacao.autorizado }
+        } else if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
+        }
     }
 
     private func executar() async {
@@ -112,14 +178,14 @@ struct BotaoPanico: View {
                 ProgressView().tint(.white).scaleEffect(1.6)
             } else {
                 VStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 50))
-                    Text(segurando ? "Segure…" : "SOS").font(.system(size: segurando ? 24 : 40, weight: .black))
+                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 48))
+                    Text(segurando ? "Segure…" : "SOS").font(.system(size: segurando ? 22 : 38, weight: .black))
                 }
                 .foregroundStyle(.white)
             }
         }
-        .frame(width: 220, height: 220)
-        .shadow(color: .red.opacity(0.4), radius: 20)
+        .frame(width: 200, height: 200)
+        .shadow(color: .red.opacity(0.4), radius: 18)
         .contentShape(Circle())
         .gesture(
             DragGesture(minimumDistance: 0)

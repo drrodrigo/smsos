@@ -55,6 +55,7 @@ struct ProtejoView: View {
                 }
             }
             .navigationTitle("Protejo")
+            .tecladoFechavel()
             .refreshable { await carregar() }
             .task { await carregar() }
         }

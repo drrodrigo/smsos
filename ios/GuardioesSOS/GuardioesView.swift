@@ -44,6 +44,7 @@ struct GuardioesView: View {
                 }
             }
             .navigationTitle("Guardiões")
+            .tecladoFechavel()
         }
     }
 

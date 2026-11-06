@@ -12,6 +12,17 @@ final class Localizacao: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Status atual da permissão (para o checklist).
+    static func statusAtual() -> CLAuthorizationStatus {
+        CLLocationManager().authorizationStatus
+    }
+
+    /// true se a localização já está liberada (ao usar ou sempre).
+    static var autorizado: Bool {
+        let s = CLLocationManager().authorizationStatus
+        return s == .authorizedWhenInUse || s == .authorizedAlways
+    }
+
     func pegar(timeout: TimeInterval = 12) async -> CLLocation? {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest

@@ -49,6 +49,7 @@ struct CadastroView: View {
                 }
                 .padding(24)
             }
+            .tecladoFechavel()
         }
     }
 

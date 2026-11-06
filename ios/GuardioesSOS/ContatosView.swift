@@ -40,6 +40,7 @@ struct ContatosView: View {
                 }
             }
             .navigationTitle("Contatos")
+            .tecladoFechavel()
         }
     }
 }
