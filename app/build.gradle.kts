@@ -124,6 +124,10 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.4.1")
     implementation("androidx.camera:camera-video:1.4.1")
 
+    // Cobrança: assinatura dentro do app (Google Play Billing). O produto (assinatura R$19/mês) é
+    // criado na Play Console; sem ele, a tela do plano aparece mas a compra fica indisponível.
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
+
     testImplementation("junit:junit:4.13.2")
     // Abre as telas num Android simulado, sem precisar de celular.
     testImplementation(composeBom)

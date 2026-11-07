@@ -1,6 +1,7 @@
 package br.com.alertasilencioso.ui
 
 import android.Manifest
+import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.alert.Otp
+import br.com.alertasilencioso.billing.Billing
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.PhoneNumbers
@@ -171,6 +174,39 @@ fun SettingsScreen(settings: Settings) {
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Ajustes", style = MaterialTheme.typography.headlineSmall) }
+        item {
+            val plano by Billing.estado.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { Billing.iniciar(context) }
+            SectionCard("Plano Guardião+") {
+                if (plano.assinante) {
+                    Text(
+                        "✓ Você é Guardião+ 💙",
+                        color = StatusColors.ok,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    HelpText("Obrigado! Todos os recursos estão liberados.")
+                } else {
+                    HelpText(
+                        "O Guardião+ libera: vídeo no SOS, sessão ao vivo (mapa), histórico na nuvem e " +
+                            "mais guardiões. O SOS básico é sempre grátis.",
+                    )
+                    if (plano.disponivel) {
+                        Button(
+                            onClick = { (context as? Activity)?.let { Billing.assinar(it) } },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Assinar" + if (plano.preco.isNotBlank()) " — ${plano.preco}/mês" else " Guardião+")
+                        }
+                    } else {
+                        Text(
+                            "Plano em configuração — disponível em breve.",
+                            color = StatusColors.warning,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+        }
         item {
             SectionCard("Seu nome") {
                 // Mostra o nome salvo com um "Editar"; só grava quando toca "Salvar". Assim a pessoa
