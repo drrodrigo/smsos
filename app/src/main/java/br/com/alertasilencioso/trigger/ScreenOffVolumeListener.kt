@@ -4,11 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.media.VolumeProvider
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
+import br.com.alertasilencioso.R
 import br.com.alertasilencioso.data.Repository
 
 /**
@@ -25,6 +28,10 @@ class ScreenOffVolumeListener(
     private val power = context.getSystemService(PowerManager::class.java)
     private val session = MediaSession(context, "AlertaSilencioso")
     private var registered = false
+    // Som MUDO em loop. Vários aparelhos (Samsung) só mandam o volume para a sessão de mídia quando
+    // acham que há mídia tocando. Manter este silêncio tocando enquanto a tela está apagada deixa a
+    // sessão "ativa" o tempo todo, para o aperto do botão chegar sempre (não só de vez em quando).
+    private var silencio: MediaPlayer? = null
 
     private val volumeProvider = object : VolumeProvider(VOLUME_CONTROL_RELATIVE, 100, 50) {
         override fun onAdjustVolume(direction: Int) = onVolume(direction)
@@ -64,10 +71,39 @@ class ScreenOffVolumeListener(
         session.setPlaybackToRemote(volumeProvider)
         session.setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_PLAYING, 0L, 1f).build())
         session.isActive = true
+        iniciarSilencio()
     }
 
     private fun deactivate() {
+        pararSilencio()
         session.setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_STOPPED, 0L, 0f).build())
         session.isActive = false
+    }
+
+    /** Toca o silêncio em loop, MUDO (volume 0), só para manter a sessão de mídia ativa. */
+    private fun iniciarSilencio() {
+        if (silencio != null) return
+        runCatching {
+            context.resources.openRawResourceFd(R.raw.silencio).use { afd ->
+                silencio = MediaPlayer().apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build(),
+                    )
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    isLooping = true
+                    setVolume(0f, 0f) // mudo: não atrapalha nada, nem a música de quem estiver ouvindo
+                    prepare()
+                    start()
+                }
+            }
+        }
+    }
+
+    private fun pararSilencio() {
+        runCatching { silencio?.let { if (it.isPlaying) it.stop(); it.release() } }
+        silencio = null
     }
 }
