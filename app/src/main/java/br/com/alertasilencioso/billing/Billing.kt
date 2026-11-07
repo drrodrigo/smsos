@@ -18,27 +18,32 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Assinatura "Guardião+" pela loja (Google Play Billing). A pessoa paga a loja (a Apple/Google fica
- * com a taxa), que é o jeito mais simples e confiável — e zero risco de recusa.
+ * Assinaturas pela loja (Google Play Billing). A pessoa paga a loja (que fica com a taxa) — o jeito
+ * mais simples e confiável, zero risco de recusa, e a loja faz o preço local de cada país sozinha.
  *
- * Sem o produto configurado na Play Console, a tela do plano aparece, mas a compra fica indisponível.
- * 🔴 O socorro (SOS) NUNCA depende disto — o que é pago são só os EXTRAS.
+ * Dois planos pagos; o SOS básico é sempre GRÁTIS (só os extras são pagos).
+ * Sem os produtos configurados na Play Console, a tela do plano aparece, mas a compra fica indisponível.
  */
 object Billing {
-    const val PRODUTO_MENSAL = "guardioes_plus_mensal"
+    // Os preços ($5 e $10) são definidos na Play Console / App Store Connect, não aqui.
+    const val PROTECAO = "guardioes_protecao_mensal" // ~$5: SMS garantido + mais guardiões + histórico
+    const val COMPLETO = "guardioes_completo_mensal" // ~$10: tudo + GPS ao vivo + vídeo + microfone
 
     data class Estado(
-        val disponivel: Boolean = false, // o produto foi encontrado na loja
-        val assinante: Boolean = false,  // a assinatura está ativa
-        val preco: String = "",          // ex.: "R$ 19,90"
+        /** productId -> preço já formatado na moeda do país (ex.: "R$ 29,90"). Só os achados na loja. */
+        val precos: Map<String, String> = emptyMap(),
+        /** productId da assinatura ativa, ou null (grátis). */
+        val ativo: String? = null,
         val erro: String? = null,
-    )
+    ) {
+        fun disponivel(id: String) = precos.containsKey(id)
+    }
 
     private val _estado = MutableStateFlow(Estado())
     val estado: StateFlow<Estado> = _estado.asStateFlow()
 
     private var client: BillingClient? = null
-    private var produto: ProductDetails? = null
+    private val produtos = mutableMapOf<String, ProductDetails>()
 
     private val purchasesListener = PurchasesUpdatedListener { result, purchases ->
         if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -50,15 +55,13 @@ object Billing {
         if (client != null) return
         val c = BillingClient.newBuilder(context.applicationContext)
             .setListener(purchasesListener)
-            .enablePendingPurchases(
-                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
-            )
+            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build()
         client = c
         c.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    carregarProduto()
+                    carregarProdutos()
                     verificarAssinatura()
                 } else {
                     _estado.value = _estado.value.copy(erro = "Loja indisponível (${result.responseCode})")
@@ -66,36 +69,38 @@ object Billing {
             }
 
             override fun onBillingServiceDisconnected() {
-                // Tenta reconectar na próxima vez que a tela do plano abrir.
                 client = null
             }
         })
     }
 
-    private fun carregarProduto() {
+    private fun carregarProdutos() {
         val c = client ?: return
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
-                listOf(
+                listOf(PROTECAO, COMPLETO).map { id ->
                     QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(PRODUTO_MENSAL)
+                        .setProductId(id)
                         .setProductType(BillingClient.ProductType.SUBS)
                         .build()
-                )
+                }
             )
             .build()
         c.queryProductDetailsAsync(params) { result, lista ->
-            val p = lista.firstOrNull()
-            if (result.responseCode == BillingClient.BillingResponseCode.OK && p != null) {
-                produto = p
-                val preco = p.subscriptionOfferDetails
-                    ?.firstOrNull()
-                    ?.pricingPhases?.pricingPhaseList?.firstOrNull()
-                    ?.formattedPrice
-                    .orEmpty()
-                _estado.value = _estado.value.copy(disponivel = true, preco = preco, erro = null)
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                val precos = mutableMapOf<String, String>()
+                lista.forEach { p ->
+                    produtos[p.productId] = p
+                    val preco = p.subscriptionOfferDetails
+                        ?.firstOrNull()
+                        ?.pricingPhases?.pricingPhaseList?.firstOrNull()
+                        ?.formattedPrice
+                        .orEmpty()
+                    if (preco.isNotBlank()) precos[p.productId] = preco
+                }
+                _estado.value = _estado.value.copy(precos = precos, erro = if (precos.isEmpty()) "Planos ainda não configurados na loja" else null)
             } else {
-                _estado.value = _estado.value.copy(disponivel = false, erro = "Plano ainda não configurado na loja")
+                _estado.value = _estado.value.copy(erro = "Planos ainda não configurados na loja")
             }
         }
     }
@@ -105,16 +110,16 @@ object Billing {
         c.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()
         ) { _, compras ->
-            val ativo = compras.any { it.purchaseState == Purchase.PurchaseState.PURCHASED }
-            _estado.value = _estado.value.copy(assinante = ativo)
+            val ativa = compras.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+            _estado.value = _estado.value.copy(ativo = ativa?.products?.firstOrNull())
             compras.forEach { confirmar(it) }
         }
     }
 
-    /** Abre o diálogo de compra da Play. Precisa da Activity atual. */
-    fun assinar(activity: Activity) {
+    /** Abre o diálogo de compra da Play para o plano escolhido. */
+    fun assinar(activity: Activity, productId: String) {
         val c = client ?: return
-        val p = produto ?: return
+        val p = produtos[productId] ?: return
         val offerToken = p.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return
         val params = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
@@ -131,7 +136,7 @@ object Billing {
 
     private fun confirmar(compra: Purchase) {
         if (compra.purchaseState != Purchase.PurchaseState.PURCHASED) return
-        _estado.value = _estado.value.copy(assinante = true)
+        _estado.value = _estado.value.copy(ativo = compra.products.firstOrNull())
         if (!compra.isAcknowledged) {
             client?.acknowledgePurchase(
                 AcknowledgePurchaseParams.newBuilder().setPurchaseToken(compra.purchaseToken).build()

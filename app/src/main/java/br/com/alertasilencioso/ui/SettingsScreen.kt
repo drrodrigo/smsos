@@ -177,32 +177,33 @@ fun SettingsScreen(settings: Settings) {
         item {
             val plano by Billing.estado.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) { Billing.iniciar(context) }
-            SectionCard("Plano Guardião+") {
-                if (plano.assinante) {
-                    Text(
-                        "✓ Você é Guardião+ 💙",
-                        color = StatusColors.ok,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    HelpText("Obrigado! Todos os recursos estão liberados.")
+            SectionCard("Planos") {
+                val ativo = plano.ativo
+                if (ativo == Billing.COMPLETO) {
+                    Text("✓ Você é Guardião+ Completo 💙", color = StatusColors.ok, style = MaterialTheme.typography.titleMedium)
+                    HelpText("Todos os recursos liberados. Obrigado!")
                 } else {
-                    HelpText(
-                        "O Guardião+ libera: vídeo no SOS, sessão ao vivo (mapa), histórico na nuvem e " +
-                            "mais guardiões. O SOS básico é sempre grátis.",
-                    )
-                    if (plano.disponivel) {
-                        Button(
-                            onClick = { (context as? Activity)?.let { Billing.assinar(it) } },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Assinar" + if (plano.preco.isNotBlank()) " — ${plano.preco}/mês" else " Guardião+")
-                        }
+                    HelpText("O SOS básico (botão + aviso por push) é sempre GRÁTIS. Os planos liberam mais:")
+                    if (ativo == Billing.PROTECAO) {
+                        Text("✓ Você tem o Proteção+ 💙", color = StatusColors.ok)
                     } else {
-                        Text(
-                            "Plano em configuração — disponível em breve.",
-                            color = StatusColors.warning,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        Text("📍 Proteção+ — localização AO VIVO no mapa (GPS) durante o SOS.")
+                        if (plano.disponivel(Billing.PROTECAO)) {
+                            Button(
+                                onClick = { (context as? Activity)?.let { Billing.assinar(it, Billing.PROTECAO) } },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Assinar Proteção+ — ${plano.precos[Billing.PROTECAO]}/mês") }
+                        }
+                    }
+                    Text("🎥 Completo — tudo do Proteção+ e ainda VÍDEO e ÁUDIO no SOS.")
+                    if (plano.disponivel(Billing.COMPLETO)) {
+                        Button(
+                            onClick = { (context as? Activity)?.let { Billing.assinar(it, Billing.COMPLETO) } },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Assinar Completo — ${plano.precos[Billing.COMPLETO]}/mês") }
+                    }
+                    if (plano.precos.isEmpty()) {
+                        HelpText("Planos em configuração — ficam disponíveis quando os produtos forem criados na loja.")
                     }
                 }
             }
