@@ -183,7 +183,7 @@ fun SettingsScreen(settings: Settings) {
                     Text("✓ Você é Guardião+ Completo 💙", color = StatusColors.ok, style = MaterialTheme.typography.titleMedium)
                     HelpText("Todos os recursos liberados. Obrigado!")
                 } else {
-                    HelpText("O SOS básico (botão + aviso por push) é sempre GRÁTIS. Os planos liberam mais:")
+                    HelpText("O pânico pra sua FAMÍLIA (guardiões que te avisam em qualquer lugar) é sempre GRÁTIS. Os planos liberam mais:")
                     if (ativo == Billing.PROTECAO) {
                         Text("✓ Você tem o Proteção+ 💙", color = StatusColors.ok)
                     } else {
