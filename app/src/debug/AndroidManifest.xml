@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- SÓ no APK de TESTE (debug). Liga o botão lateral pela Acessibilidade. Este arquivo NÃO entra
+         no build da loja (release): lá continua sem Acessibilidade e sem localização em 2º plano,
+         até a atualização aprovada. A permissão de 2º plano deixa o alerta pegar a localização mesmo
+         com o app fechado (o assistente de configuração guia a liberar "Permitir o tempo todo"). -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <application>
+        <service
+            android:name=".trigger.GuardianService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+    </application>
+</manifest>

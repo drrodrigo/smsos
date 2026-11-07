@@ -1,25 +1,29 @@
 package br.com.alertasilencioso.core
 
+import br.com.alertasilencioso.BuildConfig
+
 /**
  * Liga/desliga recursos sensíveis de aprovação na loja, num lugar só.
  *
- * ACESSIBILIDADE = false: a PRIMEIRA versão da Play sai SEM o gesto do botão de volume (que usa o
- * serviço de Acessibilidade, o maior motivo de recusa do Google). O app funciona pelo botão na tela.
- * Pra tentar o gesto de volume numa versão futura: volte para true E descomente o `<service>` do
- * GuardianService no AndroidManifest.xml (está comentado com a marca ACESSIBILIDADE) E recoloque a
- * permissão ACCESS_BACKGROUND_LOCATION (também removida junto, por depender do app fechado).
+ * REGRA: no build da LOJA (release) a Acessibilidade fica DESLIGADA (maior motivo de recusa do
+ * Google) e o gesto de tela apagada usa o MonitorService (sem Acessibilidade). No APK de TESTE
+ * (debug, fora da loja) a gente LIGA a Acessibilidade — ela entrega o botão lateral com a tela
+ * LIGADA e APAGADA — e desliga o MonitorService pra não rodar os dois motores juntos. Por isso os
+ * dois flags saem de BuildConfig.DEBUG: o release continua EXATAMENTE como está na Play.
  *
- * Com ACESSIBILIDADE = false o SOS só dispara com o app aberto, então a localização de primeiro
- * plano basta — a de 2º plano (que o Google revisa com vídeo e é motivo comum de recusa) fica fora.
+ * O <service> da Acessibilidade e a permissão ACCESS_BACKGROUND_LOCATION moram só no manifesto de
+ * debug (app/src/debug/AndroidManifest.xml), então NÃO entram no APK/AAB da loja. Pra levar a
+ * Acessibilidade pra LOJA numa versão futura, ela precisa de declaração + vídeo de demonstração pro
+ * Google (e aí o <service> e a permissão migram pro manifesto principal).
  */
 object Features {
-    const val ACESSIBILIDADE = false
+    /** true só no APK de teste (debug). No release (loja) é false: sem serviço de Acessibilidade. */
+    val ACESSIBILIDADE = BuildConfig.DEBUG
 
     /**
-     * Gesto do botão de volume SEM a Acessibilidade: o motor de TELA APAGADA (que usa uma sessão de
-     * mídia, não a Acessibilidade) roda num serviço de primeiro plano (MonitorService), com uma
-     * notificação fixa. Entrega o pega-e-segurar sem o maior motivo de recusa da Play. Só vale com a
-     * tela apagada — tela ligada continua dependendo da ACESSIBILIDADE acima.
+     * Gesto do botão de volume SEM Acessibilidade (motor de TELA APAGADA via sessão de mídia, no
+     * MonitorService). Vale no RELEASE (loja), onde a Acessibilidade está desligada. No debug fica
+     * desligado porque a Acessibilidade já cobre tela ligada E apagada (não duplicar os motores).
      */
-    const val GESTO_SEM_ACESSIBILIDADE = true
+    val GESTO_SEM_ACESSIBILIDADE = !BuildConfig.DEBUG
 }
