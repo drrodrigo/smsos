@@ -340,6 +340,18 @@ fun SettingsScreen(settings: Settings) {
                     }
                     save { it.copy(capturarMidia = on) }
                 }
+                if (settings.capturarMidia) {
+                    Text(
+                        "Duração do vídeo: ${settings.capturaSegundos} segundos",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Slider(
+                        value = settings.capturaSegundos.toFloat(),
+                        onValueChange = { v -> save { it.copy(capturaSegundos = v.roundToInt()) } },
+                        valueRange = 5f..30f,
+                        steps = 24,
+                    )
+                }
                 HelpText(
                     "Ao acionar o SOS, o app grava um VÍDEO curto (câmera frontal, COM áudio do ambiente), " +
                         "sem abrir a tela — uma prova pra mandar aos guardiões. Precisa liberar câmera e " +

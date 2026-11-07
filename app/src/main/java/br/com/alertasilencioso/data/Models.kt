@@ -61,8 +61,10 @@ data class Settings(
     val followUpIntervalMinutes: Int = 3,
     val followUpAudience: FollowUpAudience = FollowUpAudience.ALWAYS_ONLY,
     val screenOffDetection: Boolean = true,
-    /** Captura foto (câmera frontal) + áudio do ambiente ao acionar o SOS. Opt-in, experimental. */
+    /** Grava um vídeo (câmera frontal + áudio) ao acionar o SOS. Opt-in, experimental. */
     val capturarMidia: Boolean = false,
+    /** Duração do vídeo do SOS, em segundos. */
+    val capturaSegundos: Int = 10,
     val testMode: Boolean = false,
     /** Depois de quantos dias o histórico some sozinho deste aparelho. 0 = nunca apagar. */
     val historyRetentionDays: Int = 7,

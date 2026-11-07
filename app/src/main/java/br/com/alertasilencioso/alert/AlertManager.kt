@@ -69,7 +69,7 @@ object AlertManager {
         if (testMode || Repository.state.value.settings.vibrateOnSend) Feedback.vibrateFired(appContext)
         // Captura foto + áudio da cena (opt-in). Roda em paralelo ao envio; não atrasa o alerta.
         if (Repository.state.value.settings.capturarMidia && Captura.temCamera(appContext)) {
-            Captura.capturar(appContext, CAPTURE_VIDEO_SEGUNDOS) { resultado ->
+            Captura.capturar(appContext, Repository.state.value.settings.capturaSegundos) { resultado ->
                 Feedback.mostrarCaptura(appContext, resultado)
             }
         }
