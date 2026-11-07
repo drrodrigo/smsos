@@ -53,6 +53,14 @@ class TriggerController(
                 Diagnostics.recordPress(screenOff = false)
                 // Durante ligações o volume tem outras funções (silenciar o toque, volume da chamada).
                 if (!matchesTriggerKey(direction) || audio.mode != AudioManager.MODE_NORMAL) return false
+                // Alguns aparelhos (ex.: Samsung M54) não entregam o ACTION_UP de forma confiável pela
+                // acessibilidade. Sem a soltura, o aperto anterior ficava "preso" e os toques seguintes
+                // não contavam (o gesto nunca completava). Se ainda houver um aperto pendente, solta ele
+                // antes de registrar o novo — assim cada ACTION_DOWN conta como um toque.
+                if (detector.isPressed) {
+                    detector.release(now)
+                    consumedKeyCode = null
+                }
                 consumedKeyCode = event.keyCode
                 press(now, TriggerSource.SCREEN_ON, profileFor(direction))
                 return true
