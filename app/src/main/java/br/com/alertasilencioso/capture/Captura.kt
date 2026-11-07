@@ -1,46 +1,51 @@
 package br.com.alertasilencioso.capture
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
-import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import java.io.File
-import java.util.concurrent.Executors
 
-/** O que a captura conseguiu juntar quando o SOS foi acionado. */
+/** O que a captura juntou ao acionar o SOS. */
 data class CapturaResultado(
-    val fotoUri: String? = null,
-    val audioPath: String? = null,
-    val audioSegundos: Int = 0,
+    val videoUri: String? = null,
+    val segundos: Int = 0,
+    val comAudio: Boolean = false,
     val erros: List<String> = emptyList(),
 ) {
-    val temFoto get() = fotoUri != null
-    val temAudio get() = audioPath != null
+    val temVideo get() = videoUri != null
 }
 
 /**
- * Ao acionar o SOS, tira uma FOTO (câmera frontal, sem abrir tela) e grava um ÁUDIO curto do ambiente —
- * prova do que estava acontecendo, para mandar aos guardiões. A localização já vem pelo LocationFetcher.
+ * Ao acionar o SOS, grava um VÍDEO curto (câmera frontal, COM áudio do ambiente), sem abrir a tela —
+ * prova do que estava acontecendo pra mandar aos guardiões. A localização já vem pelo LocationFetcher.
  *
- * Experimental e OPT-IN (desligado por padrão). Câmera/microfone são permissões sensíveis: por isso
- * esse recurso entra como ATUALIZAÇÃO depois da aprovação nas lojas, nunca na 1ª versão.
+ * Experimental e OPT-IN (desligado por padrão). Câmera/microfone são permissões sensíveis: entra como
+ * ATUALIZAÇÃO depois da aprovação nas lojas, nunca na 1ª versão.
  */
 object Captura {
     private const val TAG = "Captura"
+
+    private var recording: Recording? = null
 
     fun temCamera(context: Context) =
         ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -48,96 +53,34 @@ object Captura {
     fun temAudio(context: Context) =
         ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
-    /** Faz foto + áudio em paralelo e chama [onResult] UMA vez, na thread principal, quando os dois terminam. */
-    fun capturar(context: Context, audioMs: Long, onResult: (CapturaResultado) -> Unit) {
+    @SuppressLint("MissingPermission")
+    fun capturar(context: Context, segundos: Int, onResult: (CapturaResultado) -> Unit) {
         val main = Handler(Looper.getMainLooper())
-        val erros = mutableListOf<String>()
-        var fotoUri: String? = null
-        var audioPath: String? = null
-        var audioSeg = 0
-        var pendentes = 2
-        var entregue = false
-        val terminarUm = {
-            pendentes--
-            if (pendentes <= 0 && !entregue) {
-                entregue = true
-                main.post { onResult(CapturaResultado(fotoUri, audioPath, audioSeg, erros.toList())) }
-            }
-        }
-
-        if (temAudio(context)) {
-            gravarAudio(context, audioMs) { path, seg, erro ->
-                audioPath = path
-                audioSeg = seg
-                if (erro != null) erros.add(erro)
-                terminarUm()
-            }
-        } else {
-            erros.add("Sem permissão de microfone")
-            terminarUm()
-        }
-
-        if (temCamera(context)) {
-            tirarFoto(context, main) { uri, erro ->
-                fotoUri = uri
-                if (erro != null) erros.add(erro)
-                terminarUm()
-            }
-        } else {
-            erros.add("Sem permissão de câmera")
-            terminarUm()
-        }
-    }
-
-    private fun gravarAudio(context: Context, audioMs: Long, onDone: (String?, Int, String?) -> Unit) {
-        val dir = File(context.getExternalFilesDir(null), "sos").apply { mkdirs() }
-        val file = File(dir, "audio_${System.currentTimeMillis()}.m4a")
-        val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MediaRecorder(context)
-        } else {
-            @Suppress("DEPRECATION")
-            MediaRecorder()
-        }
-        try {
-            rec.setAudioSource(MediaRecorder.AudioSource.MIC)
-            rec.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            rec.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            rec.setOutputFile(file.absolutePath)
-            rec.prepare()
-            rec.start()
-        } catch (e: Exception) {
-            Log.w(TAG, "Falha ao iniciar áudio", e)
-            runCatching { rec.release() }
-            onDone(null, 0, "Áudio falhou: ${e.message}")
+        if (!temCamera(context)) {
+            main.post { onResult(CapturaResultado(erros = listOf("Sem permissão de câmera"))) }
             return
         }
-        Handler(Looper.getMainLooper()).postDelayed({
-            val ok = runCatching { rec.stop() }.isSuccess
-            runCatching { rec.release() }
-            if (ok && file.exists() && file.length() > 0) {
-                onDone(file.absolutePath, (audioMs / 1000).toInt(), null)
-            } else {
-                onDone(null, 0, "Áudio não gravou (aparelho recusou)")
-            }
-        }, audioMs)
-    }
+        var entregue = false
+        val entregar = { r: CapturaResultado ->
+            if (!entregue) { entregue = true; main.post { onResult(r) } }
+        }
 
-    private fun tirarFoto(context: Context, main: Handler, onDone: (String?, String?) -> Unit) {
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             val provider = try {
                 future.get()
             } catch (e: Exception) {
                 Log.w(TAG, "Câmera não abriu", e)
-                onDone(null, "Câmera não abriu: ${e.message}")
+                entregar(CapturaResultado(erros = listOf("Câmera não abriu: ${e.message}")))
                 return@addListener
             }
             main.post {
                 val lifecycle = CameraLifecycle()
                 try {
-                    val imageCapture = ImageCapture.Builder()
-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    val recorder = Recorder.Builder()
+                        .setQualitySelector(QualitySelector.fromOrderedList(listOf(Quality.SD, Quality.LOWEST)))
                         .build()
+                    val videoCapture = VideoCapture.withOutput(recorder)
                     val selector = if (provider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
                         CameraSelector.DEFAULT_FRONT_CAMERA
                     } else {
@@ -145,42 +88,44 @@ object Captura {
                     }
                     lifecycle.resume()
                     provider.unbindAll()
-                    provider.bindToLifecycle(lifecycle, selector, imageCapture)
+                    provider.bindToLifecycle(lifecycle, selector, videoCapture)
 
                     val valores = ContentValues().apply {
-                        put(MediaStore.Images.Media.DISPLAY_NAME, "SOS_${System.currentTimeMillis()}.jpg")
-                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put(MediaStore.Video.Media.DISPLAY_NAME, "SOS_${System.currentTimeMillis()}.mp4")
+                        put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GuardioesSOS")
+                            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/GuardioesSOS")
                         }
                     }
-                    val saida = ImageCapture.OutputFileOptions.Builder(
+                    val output = MediaStoreOutputOptions.Builder(
                         context.contentResolver,
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        valores,
-                    ).build()
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    ).setContentValues(valores).build()
 
-                    imageCapture.takePicture(
-                        saida,
-                        Executors.newSingleThreadExecutor(),
-                        object : ImageCapture.OnImageSavedCallback {
-                            override fun onImageSaved(results: ImageCapture.OutputFileResults) {
-                                main.post { runCatching { provider.unbindAll() }; lifecycle.destroy() }
-                                onDone(results.savedUri?.toString(), null)
+                    val comAudio = temAudio(context)
+                    var pending = videoCapture.output.prepareRecording(context, output)
+                    if (comAudio) pending = pending.withAudioEnabled()
+                    recording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
+                        if (event is VideoRecordEvent.Finalize) {
+                            runCatching { provider.unbindAll() }
+                            lifecycle.destroy()
+                            recording = null
+                            val uri = event.outputResults.outputUri
+                            if (!event.hasError() && uri != Uri.EMPTY) {
+                                entregar(CapturaResultado(uri.toString(), segundos, comAudio))
+                            } else {
+                                Log.w(TAG, "Vídeo falhou: erro ${event.error}")
+                                entregar(CapturaResultado(erros = listOf("Vídeo falhou (erro ${event.error})")))
                             }
-
-                            override fun onError(exc: ImageCaptureException) {
-                                Log.w(TAG, "Falha na foto", exc)
-                                main.post { runCatching { provider.unbindAll() }; lifecycle.destroy() }
-                                onDone(null, "Foto falhou: ${exc.message}")
-                            }
-                        },
-                    )
+                        }
+                    }
+                    // Para a gravação depois de [segundos].
+                    main.postDelayed({ runCatching { recording?.stop() } }, segundos * 1000L)
                 } catch (e: Exception) {
-                    Log.w(TAG, "Câmera indisponível", e)
+                    Log.w(TAG, "Vídeo indisponível", e)
                     runCatching { provider.unbindAll() }
                     lifecycle.destroy()
-                    onDone(null, "Câmera indisponível: ${e.message}")
+                    entregar(CapturaResultado(erros = listOf("Câmera indisponível: ${e.message}")))
                 }
             }
         }, ContextCompat.getMainExecutor(context))

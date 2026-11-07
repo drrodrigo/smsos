@@ -80,18 +80,19 @@ object Feedback {
         manager.createNotificationChannel(
             NotificationChannel(TEST_CHANNEL, "Resultados do modo teste", NotificationManager.IMPORTANCE_DEFAULT)
         )
-        val partes = listOf(
-            if (r.temFoto) "📷 Foto capturada" else "📷 Foto: falhou",
-            if (r.temAudio) "🎤 Áudio ${r.audioSegundos}s" else "🎤 Áudio: falhou",
-        )
+        val resumo = if (r.temVideo) {
+            "🎥 Vídeo de ${r.segundos}s" + (if (r.comAudio) " com áudio" else " (sem áudio)")
+        } else {
+            "🎥 Vídeo: falhou"
+        }
         val corpo = buildString {
-            append(partes.joinToString(" · "))
-            if (r.temFoto) append("\nToque para ver a foto (salva na galeria, em GuardiõesSOS).")
+            append(resumo)
+            if (r.temVideo) append("\nToque para ver (salvo na galeria, em Movies/GuardiõesSOS).")
             if (r.erros.isNotEmpty()) append("\n\nDetalhes: " + r.erros.joinToString("; "))
         }
-        val intent = if (r.fotoUri != null) {
+        val intent = if (r.videoUri != null) {
             Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(Uri.parse(r.fotoUri), "image/*")
+                setDataAndType(Uri.parse(r.videoUri), "video/*")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
             }
         } else {
@@ -102,8 +103,8 @@ object Feedback {
         )
         val notification = NotificationCompat.Builder(context, TEST_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_alert)
-            .setContentTitle("SOS capturou a cena")
-            .setContentText(partes.joinToString(" · "))
+            .setContentTitle(if (r.temVideo) "SOS gravou um vídeo da cena" else "SOS: não gravou o vídeo")
+            .setContentText(resumo)
             .setStyle(NotificationCompat.BigTextStyle().bigText(corpo))
             .setContentIntent(pending)
             .setAutoCancel(true)

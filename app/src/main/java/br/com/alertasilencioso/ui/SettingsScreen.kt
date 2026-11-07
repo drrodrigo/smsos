@@ -331,8 +331,8 @@ fun SettingsScreen(settings: Settings) {
             }
         }
         item {
-            SectionCard("Capturar foto e áudio no SOS (experimental)") {
-                SwitchRow("Ao acionar, capturar foto + áudio da cena", settings.capturarMidia) { on ->
+            SectionCard("Gravar vídeo no SOS (experimental)") {
+                SwitchRow("Ao acionar, gravar um vídeo curto da cena", settings.capturarMidia) { on ->
                     if (on) {
                         permissaoCaptura.launch(
                             arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
@@ -341,10 +341,10 @@ fun SettingsScreen(settings: Settings) {
                     save { it.copy(capturarMidia = on) }
                 }
                 HelpText(
-                    "Ao acionar o SOS, o app tira uma FOTO (câmera frontal, sem abrir a tela) e grava " +
-                        "alguns segundos de ÁUDIO do ambiente — uma prova pra mandar aos guardiões. " +
-                        "Precisa liberar câmera e microfone. Teste com o Modo teste ligado (tela Início): " +
-                        "a foto é salva na sua galeria, em \"GuardiõesSOS\", e chega um aviso do que foi capturado.",
+                    "Ao acionar o SOS, o app grava um VÍDEO curto (câmera frontal, COM áudio do ambiente), " +
+                        "sem abrir a tela — uma prova pra mandar aos guardiões. Precisa liberar câmera e " +
+                        "microfone. Teste com o Modo teste ligado (tela Início): o vídeo é salvo na sua " +
+                        "galeria, em \"Movies/GuardiõesSOS\", e chega um aviso quando terminar.",
                 )
             }
         }

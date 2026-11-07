@@ -40,7 +40,7 @@ object AlertManager {
     private const val TAG = "AlertManager"
     private const val COOLDOWN_MILLIS = 30_000L
     private const val TEST_COOLDOWN_MILLIS = 5_000L
-    private const val CAPTURE_AUDIO_MILLIS = 5_000L
+    private const val CAPTURE_VIDEO_SEGUNDOS = 6
     private const val LOCATION_TIMEOUT_MILLIS = 20_000L
     private const val WAKE_MARGIN_MILLIS = 2 * 60_000L
 
@@ -68,10 +68,8 @@ object AlertManager {
         // real respeita o ajuste de vibração (ligado por padrão).
         if (testMode || Repository.state.value.settings.vibrateOnSend) Feedback.vibrateFired(appContext)
         // Captura foto + áudio da cena (opt-in). Roda em paralelo ao envio; não atrasa o alerta.
-        if (Repository.state.value.settings.capturarMidia &&
-            (Captura.temCamera(appContext) || Captura.temAudio(appContext))
-        ) {
-            Captura.capturar(appContext, CAPTURE_AUDIO_MILLIS) { resultado ->
+        if (Repository.state.value.settings.capturarMidia && Captura.temCamera(appContext)) {
+            Captura.capturar(appContext, CAPTURE_VIDEO_SEGUNDOS) { resultado ->
                 Feedback.mostrarCaptura(appContext, resultado)
             }
         }
