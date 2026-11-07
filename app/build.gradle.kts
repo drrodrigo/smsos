@@ -71,12 +71,14 @@ android {
             applicationIdSuffix = ".teste"
             versionNameSuffix = "-gesto"
             manifestPlaceholders["appLabel"] = "GuardiõesSOS teste"
-            // APK de teste do gesto é INERTE DE PROPÓSITO: sem a estrutura de SMS (gateway vazio).
-            // Assim ele NÃO manda SMS de verdade (mesmo com o Modo teste desligado) e NÃO toca no
-            // backup da nuvem — que é identificado pelo telefone, o mesmo do app da Play. O que
-            // importa pro segundo round (o gesto do botão com a tela apagada) funciona igual.
-            buildConfigField("String", "GATEWAY_URL", "\"\"")
-            buildConfigField("String", "GATEWAY_KEY", "\"\"")
+            // APK de teste é INERTE por padrão: sem a estrutura de SMS (gateway vazio) — não envia nem
+            // toca no backup, pra proteger seus dados durante o desenvolvimento.
+            // Com -Preal, o gateway de gateway.properties é embutido e o app ENVIA DE VERDADE — é o
+            // APK pra distribuir aos testadores (fora da loja). Use com gente conhecida: gasta SMS.
+            if (!project.hasProperty("real")) {
+                buildConfigField("String", "GATEWAY_URL", "\"\"")
+                buildConfigField("String", "GATEWAY_KEY", "\"\"")
+            }
         }
         release {
             isMinifyEnabled = false
