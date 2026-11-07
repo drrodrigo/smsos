@@ -57,7 +57,7 @@ data class Settings(
     /** Texto do alerta de Saúde (o de Segurança é o messageTemplate acima). */
     val messageTemplateSaude: String = MessageBuilder.HEALTH_TEMPLATE,
     val vibrateOnSend: Boolean = true,
-    val followUpCount: Int = 3,
+    val followUpCount: Int = 1,
     val followUpIntervalMinutes: Int = 3,
     val followUpAudience: FollowUpAudience = FollowUpAudience.ALWAYS_ONLY,
     val screenOffDetection: Boolean = true,

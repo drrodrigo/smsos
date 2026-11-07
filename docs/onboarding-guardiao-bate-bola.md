@@ -47,6 +47,20 @@
 6. O protegido vê **"✓ [Nome] recebeu e está pronto — você está protegido"** → checklist fica
    verde. Só aqui o setup é considerado concluído.
 
+## Atrito visto no teste (07/11): não fazer digitar o contato DE NOVO pra convidar
+
+Observação do Rodrigo testando com um amigo: o amigo já tinha cadastrado o Rodrigo como
+**contato** (nome + telefone, pegos da agenda) pra receber o SMS. Quando foi na aba de guardiões
+pra **convidar**, teve que **digitar o nome e o número outra vez**. Não devia.
+
+- 🔴 **Quem já está na lista de contatos aparece com um botão "Convidar como guardião" do lado** —
+  um toque, sem redigitar nada. O app já tem o nome e o número.
+- "Adicionar/digitar guardião" continua existindo, mas é o caminho secundário (pra quem ainda
+  não está na lista).
+- Ou seja: **contato ⇄ guardião são a mesma pessoa** na cabeça do usuário. A tela tem que tratar
+  assim: lista única, e o convite é uma ação em cima de quem já está lá.
+- Isso encurta o bate‑bola: escolher da lista que já existe → "Convidar" → o teste dispara.
+
 ## Status
 
 Ideia registrada. **Não implementado ainda** (mexe no onboarding/SetupWizard e no fluxo de

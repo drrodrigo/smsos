@@ -34,8 +34,8 @@ android {
         applicationId = "br.com.guardioessos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 47
-        versionName = "0.29.2"
+        versionCode = 48
+        versionName = "0.29.3"
 
         // Nome do app mostrado no celular (o debug troca para "GuardiõesSOS teste" lá embaixo).
         manifestPlaceholders["appLabel"] = "GuardiõesSOS"

@@ -151,6 +151,9 @@ fun ContactListEditor(
     onRemove: (Contact) -> Unit,
     onUpdate: (Contact) -> Unit,
     max: Int = Limits.MAX_CONTACTS,
+    // Quando passado, cada contato ganha um botão "Convidar" (um toque, sem redigitar nada): o app
+    // já tem o nome e o número. Só a tela de guardiões usa; as outras listas passam nulo.
+    onInvite: ((Contact) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
@@ -196,6 +199,9 @@ fun ContactListEditor(
                 if (aviso != null) {
                     Text("⚠ $aviso", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
+            }
+            if (onInvite != null) {
+                TextButton(onClick = { onInvite(contact) }) { Text("Convidar") }
             }
             IconButton(onClick = { editing = contact }) {
                 Icon(Icons.Filled.Edit, contentDescription = "Editar ${contact.name}")

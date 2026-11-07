@@ -122,6 +122,7 @@ fun HomeScreen(
                 },
             )
         }
+        item { DemonstracaoCard(state.settings) }
         item { HistoryCard(state.history, state.settings.historyRetentionDays) }
     }
 }
