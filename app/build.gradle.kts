@@ -117,6 +117,12 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
 
+    // Captura de foto no SOS sem abrir a tela (câmera frontal). O áudio usa o MediaRecorder do próprio
+    // Android. CameraX só é usada quando o recurso de captura está ligado (opt-in, experimental).
+    implementation("androidx.camera:camera-core:1.4.1")
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+
     testImplementation("junit:junit:4.13.2")
     // Abre as telas num Android simulado, sem precisar de celular.
     testImplementation(composeBom)

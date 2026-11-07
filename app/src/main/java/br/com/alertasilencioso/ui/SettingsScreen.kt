@@ -1,5 +1,8 @@
 package br.com.alertasilencioso.ui
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -162,6 +165,9 @@ fun SettingsScreen(settings: Settings) {
     var testPhone by rememberSaveable { mutableStateOf("") }
     val save: ((Settings) -> Settings) -> Unit = Repository::updateSettings
     val diag by Diagnostics.state.collectAsStateWithLifecycle()
+    val permissaoCaptura = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { /* o estado das permissões é lido na hora do SOS; nada a fazer aqui */ }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Ajustes", style = MaterialTheme.typography.headlineSmall) }
@@ -322,6 +328,24 @@ fun SettingsScreen(settings: Settings) {
                             "Depois volte aqui: se o contador acima subiu, seu aparelho aceita o recurso. Se ficou em 0, ele bloqueia.",
                     )
                 }
+            }
+        }
+        item {
+            SectionCard("Capturar foto e áudio no SOS (experimental)") {
+                SwitchRow("Ao acionar, capturar foto + áudio da cena", settings.capturarMidia) { on ->
+                    if (on) {
+                        permissaoCaptura.launch(
+                            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+                        )
+                    }
+                    save { it.copy(capturarMidia = on) }
+                }
+                HelpText(
+                    "Ao acionar o SOS, o app tira uma FOTO (câmera frontal, sem abrir a tela) e grava " +
+                        "alguns segundos de ÁUDIO do ambiente — uma prova pra mandar aos guardiões. " +
+                        "Precisa liberar câmera e microfone. Teste com o Modo teste ligado (tela Início): " +
+                        "a foto é salva na sua galeria, em \"GuardiõesSOS\", e chega um aviso do que foi capturado.",
+                )
             }
         }
         item {

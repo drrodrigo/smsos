@@ -7,6 +7,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
+import br.com.alertasilencioso.capture.Captura
 import br.com.alertasilencioso.core.MessageBuilder
 import br.com.alertasilencioso.core.RecipientResolver
 import br.com.alertasilencioso.data.ActiveAlert
@@ -39,6 +40,7 @@ object AlertManager {
     private const val TAG = "AlertManager"
     private const val COOLDOWN_MILLIS = 30_000L
     private const val TEST_COOLDOWN_MILLIS = 5_000L
+    private const val CAPTURE_AUDIO_MILLIS = 5_000L
     private const val LOCATION_TIMEOUT_MILLIS = 20_000L
     private const val WAKE_MARGIN_MILLIS = 2 * 60_000L
 
@@ -65,6 +67,14 @@ object AlertManager {
         // levar até 20 s. É o aviso que a pessoa sente para saber que acionou. No teste vibra sempre; no modo
         // real respeita o ajuste de vibração (ligado por padrão).
         if (testMode || Repository.state.value.settings.vibrateOnSend) Feedback.vibrateFired(appContext)
+        // Captura foto + áudio da cena (opt-in). Roda em paralelo ao envio; não atrasa o alerta.
+        if (Repository.state.value.settings.capturarMidia &&
+            (Captura.temCamera(appContext) || Captura.temAudio(appContext))
+        ) {
+            Captura.capturar(appContext, CAPTURE_AUDIO_MILLIS) { resultado ->
+                Feedback.mostrarCaptura(appContext, resultado)
+            }
+        }
         acquireWakeLock(LOCATION_TIMEOUT_MILLIS + WAKE_MARGIN_MILLIS)
         val startedAt = System.currentTimeMillis()
         LocationFetcher(appContext).fetch(LOCATION_TIMEOUT_MILLIS) { location ->

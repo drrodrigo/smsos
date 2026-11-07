@@ -32,6 +32,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Captura no SOS (foto + áudio do ambiente como prova). OPT-IN, experimental, desligado por
+         padrão. Como são permissões sensíveis, este recurso entra como ATUALIZAÇÃO depois da
+         aprovação nas lojas, com justificativa. A câmera NÃO é obrigatória (required=false) para não
+         excluir aparelhos sem câmera. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <!-- Tira a permissao de ID de publicidade (AD_ID) que a firebase-messaging adiciona de brinde:
          o app NAO tem anuncios e NAO usa o Advertising ID. Com ela fora, a declaracao de "ID de
          publicidade" na Play fica como "Nao usa", sem aviso de permissao sobrando. -->
