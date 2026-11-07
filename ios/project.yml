@@ -34,6 +34,10 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "O GuardiõesSOS usa sua localização para enviar o link do mapa no alerta de emergência."
+        # Captura no SOS (experimental, opt-in) — entra numa atualização futura, não na 1ª versão.
+        INFOPLIST_KEY_NSCameraUsageDescription: "O GuardiõesSOS tira uma foto no momento do SOS para enviar como prova aos seus guardiões."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "O GuardiõesSOS grava alguns segundos de áudio do ambiente no momento do SOS para enviar aos seus guardiões."
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "O GuardiõesSOS salva a foto do SOS no seu rolo da câmera como prova."
         TARGETED_DEVICE_FAMILY: "1"   # só iPhone (iPad exigiria TODAS as orientacoes; app de panico e so retrato)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
