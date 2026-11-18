@@ -25,7 +25,16 @@ data class Place(
 
 enum class TriggerKey { VOLUME_DOWN, VOLUME_UP, ANY }
 
-enum class TriggerMode { HOLD, TAPS }
+/** Como o botão dispara: segurando, apertando várias vezes, ou os dois (qualquer um dos gestos vale). */
+enum class TriggerMode {
+    HOLD, TAPS, BOTH;
+
+    /** Segurar o botão pelo tempo escolhido dispara o alerta. */
+    val usesHold: Boolean get() = this != TAPS
+
+    /** Apertar o botão o número de vezes escolhido dispara o alerta. */
+    val usesTaps: Boolean get() = this != HOLD
+}
 
 enum class FollowUpAudience { ALWAYS_ONLY, EVERYONE }
 

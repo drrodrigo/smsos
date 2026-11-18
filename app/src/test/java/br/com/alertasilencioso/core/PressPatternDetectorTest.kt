@@ -15,6 +15,10 @@ class PressPatternDetectorTest {
     private fun taps(count: Int = 5) =
         PressPatternDetector(PressPatternDetector.Config(mode = TriggerMode.TAPS, tapCount = count, tapWindowMillis = 4_000))
 
+    private fun both(seconds: Long = 10, count: Int = 5) = PressPatternDetector(
+        PressPatternDetector.Config(mode = TriggerMode.BOTH, holdMillis = seconds * 1_000, tapCount = count, tapWindowMillis = 4_000),
+    )
+
     @Test
     fun `segurar dispara so depois do tempo configurado`() {
         val d = hold()
@@ -119,6 +123,69 @@ class PressPatternDetectorTest {
     @Test
     fun `no modo toques cada sinal conta como um toque`() {
         val d = taps(3)
+        assertFalse(d.pulse(0))
+        assertFalse(d.pulse(1_500))
+        assertTrue(d.pulse(3_000))
+    }
+
+    // --- Modo "os dois": segurar OU apertar várias vezes, o que vier primeiro dispara ---
+
+    @Test
+    fun `os dois - segurar dispara depois do tempo`() {
+        val d = both(seconds = 10, count = 5)
+        assertFalse(d.press(0))
+        assertFalse(d.poll(9_999))
+        assertTrue(d.poll(10_000))
+    }
+
+    @Test
+    fun `os dois - apertar varias vezes dispara no ultimo toque`() {
+        val d = both(seconds = 10, count = 5)
+        for (i in 0 until 4) {
+            assertFalse(d.press(i * 500L))
+            d.release(i * 500L + 100)
+        }
+        assertTrue(d.press(2_000))
+    }
+
+    @Test
+    fun `os dois - toque rapido sozinho nao dispara`() {
+        val d = both()
+        assertFalse(d.press(0))
+        d.release(200)
+        assertFalse(d.poll(60_000))
+        assertFalse(d.firedThisGesture)
+    }
+
+    @Test
+    fun `os dois - continuar segurando o ultimo toque nao dispara de novo`() {
+        val d = both(seconds = 10, count = 3)
+        d.press(0); d.release(100)
+        d.press(500); d.release(600)
+        assertTrue(d.press(1_000))
+        assertFalse(d.poll(11_000))
+        assertFalse(d.poll(30_000))
+    }
+
+    @Test
+    fun `os dois - toques que nao completam e depois segurar ainda disparam pelo tempo`() {
+        val d = both(seconds = 10, count = 5)
+        d.press(0); d.release(100)
+        d.press(500)
+        assertFalse(d.poll(10_499))
+        assertTrue(d.poll(10_500))
+    }
+
+    @Test
+    fun `os dois - sinais continuos disparam uma vez so`() {
+        val d = both(seconds = 10, count = 5)
+        val fired = pulses(d, from = 0, to = 15_000).count { it }
+        assertEquals(1, fired)
+    }
+
+    @Test
+    fun `os dois - sinais espacados contam como toques`() {
+        val d = both(seconds = 10, count = 3)
         assertFalse(d.pulse(0))
         assertFalse(d.pulse(1_500))
         assertTrue(d.pulse(3_000))

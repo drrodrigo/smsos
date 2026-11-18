@@ -12,7 +12,6 @@ import br.com.alertasilencioso.core.PressPatternDetector
 import br.com.alertasilencioso.data.Profile
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.TriggerKey
-import br.com.alertasilencioso.data.TriggerMode
 
 /**
  * Liga os sinais dos botões de volume ao [PressPatternDetector] e chama [onTrigger] quando o gesto se completa.
@@ -121,18 +120,21 @@ class TriggerController(
         pressSource = source
         pressProfile = profile
         handler.removeCallbacks(flushVolumeRunnable)
+        // Um aperto anterior que ficou "preso" (sem soltura) não pode deixar um timer de segurar duplicado.
+        handler.removeCallbacks(pollRunnable)
         wakeLock.acquire(detector.config.holdMillis + WAKE_MARGIN_MILLIS)
         if (detector.press(now)) {
             fire(source)
             return
         }
-        if (detector.config.mode == TriggerMode.HOLD) handler.postDelayed(pollRunnable, detector.config.holdMillis)
+        if (detector.config.mode.usesHold) handler.postDelayed(pollRunnable, detector.config.holdMillis)
     }
 
     private fun release(now: Long): Long? {
         handler.removeCallbacks(pollRunnable)
         val heldFor = detector.release(now)
-        if (detector.config.mode == TriggerMode.HOLD && wakeLock.isHeld) wakeLock.release()
+        // Quando toques também contam, mantém o aparelho acordado (com prazo) para contar os próximos.
+        if (!detector.config.mode.usesTaps && wakeLock.isHeld) wakeLock.release()
         return heldFor
     }
 
@@ -152,12 +154,13 @@ class TriggerController(
         if (wakeLock.isHeld) wakeLock.release()
     }
 
-    // No modo de toques, espera um pouco antes de mudar o volume: se vierem mais toques, pode ser o alerta.
+    // Quando toques contam (modo de toques ou "os dois"), espera um pouco antes de mudar o volume: se vierem
+    // mais toques, pode ser o alerta.
     private fun queueVolumeStep(direction: Int) {
         pendingVolumeDirection = direction
         pendingVolumeSteps++
         handler.removeCallbacks(flushVolumeRunnable)
-        val delay = if (detector.config.mode == TriggerMode.TAPS) TAPS_VOLUME_DELAY_MILLIS else 0L
+        val delay = if (detector.config.mode.usesTaps) TAPS_VOLUME_DELAY_MILLIS else 0L
         handler.postDelayed(flushVolumeRunnable, delay)
     }
 
