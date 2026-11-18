@@ -16,6 +16,8 @@ import br.com.alertasilencioso.data.AppState
 import br.com.alertasilencioso.data.Contact
 import br.com.alertasilencioso.data.Repository
 import br.com.alertasilencioso.data.Settings
+import br.com.alertasilencioso.testutil.RobolectricJarLeak
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,6 +45,10 @@ class AppSmokeTest {
         }
         Repository.update { AppState(settings = Settings(onboardingDone = true, registroVisto = true)) }
     }
+
+    // Ver RobolectricJarLeak: sem isso, o próximo Android simulado (outra versão de SDK) quebra ao abrir.
+    @After
+    fun fechaJarVazadoDoRobolectric() = RobolectricJarLeak.fechar()
 
     private fun openTab(label: String) = compose.onNode(hasText(label) and hasClickAction()).performClick()
 
