@@ -3,7 +3,8 @@ package br.com.alertasilencioso.core
 import br.com.alertasilencioso.data.TriggerMode
 
 /**
- * Reconhece o gesto que dispara o alerta: segurar o botão por um tempo, ou apertá-lo várias vezes seguidas.
+ * Reconhece o gesto que dispara o alerta: segurar o botão por um tempo, apertá-lo várias vezes seguidas,
+ * ou os dois ([TriggerMode.BOTH]: o que a pessoa fizer primeiro dispara).
  *
  * Não depende do Android: recebe os horários (em ms) de quando o botão desce e sobe, e quem usa chama
  * [poll] por um timer enquanto o botão continua pressionado.
@@ -35,7 +36,7 @@ class PressPatternDetector(var config: Config = Config()) {
         if (pressedAt != null) return false
         pressedAt = now
         firedThisGesture = false
-        return config.mode == TriggerMode.TAPS && registerTap(now)
+        return config.mode.usesTaps && registerTap(now)
     }
 
     /** O botão subiu. Retorna quanto tempo ele ficou pressionado, ou null se não estava pressionado. */
@@ -48,7 +49,7 @@ class PressPatternDetector(var config: Config = Config()) {
     /** Verificação enquanto o botão está pressionado. Retorna true quando o tempo de segurar foi atingido. */
     fun poll(now: Long): Boolean {
         val start = pressedAt ?: return false
-        if (config.mode != TriggerMode.HOLD || firedThisGesture) return false
+        if (!config.mode.usesHold || firedThisGesture) return false
         return now - start >= config.holdMillis && fire()
     }
 
@@ -65,9 +66,13 @@ class PressPatternDetector(var config: Config = Config()) {
         } else {
             pulseStartedAt ?: now
         }
+        val heldLongEnough = now - start >= config.holdMillis
         return when (config.mode) {
             TriggerMode.TAPS -> registerTap(now)
-            TriggerMode.HOLD -> !firedThisGesture && now - start >= config.holdMillis && fire()
+            TriggerMode.HOLD -> !firedThisGesture && heldLongEnough && fire()
+            // Os dois: cada sinal conta como toque e os sinais seguidos contam como segurar. Dispara uma vez
+            // só por gesto (até uma pausa entre os sinais), pelo que completar primeiro.
+            TriggerMode.BOTH -> !firedThisGesture && (registerTap(now) || (heldLongEnough && fire()))
         }
     }
 

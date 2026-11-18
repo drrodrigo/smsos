@@ -24,6 +24,7 @@ val TriggerMode.label: String
     get() = when (this) {
         TriggerMode.HOLD -> "Segurar"
         TriggerMode.TAPS -> "Apertar várias vezes"
+        TriggerMode.BOTH -> "Os dois"
     }
 
 val Profile.label: String
@@ -49,10 +50,14 @@ fun Settings.triggerDescription(): String {
         return when (triggerMode) {
             TriggerMode.HOLD -> "Segure Volume − (Segurança) ou Volume + (Saúde) por $holdSeconds segundos."
             TriggerMode.TAPS -> "Aperte Volume − (Segurança) ou Volume + (Saúde) $tapCount vezes, rápido."
+            TriggerMode.BOTH ->
+                "Segure Volume − (Segurança) ou Volume + (Saúde) por $holdSeconds segundos, ou aperte $tapCount vezes, rápido."
         }
     }
     return when (triggerMode) {
         TriggerMode.HOLD -> "Segure o botão ${triggerKey.buttonName} por $holdSeconds segundos."
         TriggerMode.TAPS -> "Aperte o botão ${triggerKey.buttonName} $tapCount vezes seguidas, rápido."
+        TriggerMode.BOTH ->
+            "Segure o botão ${triggerKey.buttonName} por $holdSeconds segundos, ou aperte $tapCount vezes seguidas, rápido."
     }
 }

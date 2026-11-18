@@ -265,25 +265,26 @@ fun SettingsScreen(settings: Settings) {
                 ChipRow(TriggerKey.entries, settings.triggerKey, { it.label }) { key -> save { it.copy(triggerKey = key) } }
                 Text("Como acionar", style = MaterialTheme.typography.labelLarge)
                 ChipRow(TriggerMode.entries, settings.triggerMode, { it.label }) { mode -> save { it.copy(triggerMode = mode) } }
-                when (settings.triggerMode) {
-                    TriggerMode.HOLD -> {
-                        Text("Segurar por ${settings.holdSeconds} segundos")
-                        Slider(
-                            value = settings.holdSeconds.toFloat(),
-                            onValueChange = { v -> save { it.copy(holdSeconds = v.roundToInt()) } },
-                            valueRange = 3f..30f,
-                            steps = 26,
-                        )
-                    }
-                    TriggerMode.TAPS -> {
-                        Text("Apertar ${settings.tapCount} vezes (em até 4 segundos)")
-                        Slider(
-                            value = settings.tapCount.toFloat(),
-                            onValueChange = { v -> save { it.copy(tapCount = v.roundToInt()) } },
-                            valueRange = 3f..10f,
-                            steps = 6,
-                        )
-                    }
+                if (settings.triggerMode == TriggerMode.BOTH) {
+                    HelpText("Qualquer um dos dois dispara: segurar o botão OU apertar várias vezes.")
+                }
+                if (settings.triggerMode.usesHold) {
+                    Text("Segurar por ${settings.holdSeconds} segundos")
+                    Slider(
+                        value = settings.holdSeconds.toFloat(),
+                        onValueChange = { v -> save { it.copy(holdSeconds = v.roundToInt()) } },
+                        valueRange = 3f..30f,
+                        steps = 26,
+                    )
+                }
+                if (settings.triggerMode.usesTaps) {
+                    Text("Apertar ${settings.tapCount} vezes (em até 4 segundos)")
+                    Slider(
+                        value = settings.tapCount.toFloat(),
+                        onValueChange = { v -> save { it.copy(tapCount = v.roundToInt()) } },
+                        valueRange = 3f..10f,
+                        steps = 6,
+                    )
                 }
                 HelpText("Toques rápidos no botão continuam mudando o volume normalmente.")
             }
