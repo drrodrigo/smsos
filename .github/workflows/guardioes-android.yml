@@ -1,22 +1,33 @@
 name: fábrica do Android (APK de teste)
 
-# Gera um APK de TESTE (debug) do GuardiõesSOS para instalar no celular (sideload).
+# Gera o APK de TESTE do GuardiõesSOS (o "GuardiõesSOS teste", pacote br.com.guardioessos.teste, que
+# instala do lado do app da Play) a cada push na branch do 2º round. Assim o APK não depende de
+# nenhum computador: os arquivos secretos vêm dos segredos do repositório.
 #
-# ATENÇÃO (06/11): os runners da nuvem do GitHub NÃO encontram o SDK Android 37
-# (platforms;android-37) no repositório público do Google — o projeto usa compileSdk = 37, que
-# por enquanto só existe pré-instalado no ambiente de desenvolvimento, não nos runners hospedados.
-# Por isso esta fábrica está em modo MANUAL (não roda a cada push). Enquanto o android-37 não
-# estiver disponível nos runners, os APKs de teste são compilados no ambiente de dev e entregues
-# direto. Quando o runner tiver o android-37 (ou quando o compileSdk baixar para uma versão
-# pública), é só religar o gatilho de push abaixo.
+#   GUARDIOES_GATEWAY_KEY_ANDROID  (opcional) a chave do app Android. Se não existir, usa
+#   GUARDIOES_GATEWAY_KEY          a chave que o iPhone já usa (o passo "Qual chave" diz qual entrou).
+#   GOOGLE_SERVICES_JSON           (opcional) o conteúdo do app/google-services.json (Firebase qrbio,
+#                                  com o br.com.guardioessos.teste). Sem ele o APK sai SEM o aviso
+#                                  com sirene (push) — o resto funciona.
+#
+# O APK sai como "Artifact" da execução (Actions > a execução > Artifacts). Ele carrega a chave do
+# app, como o da Play: os limites de sms.limites protegem o pacote mesmo se ela vazar.
+#
+# 18/11: o SDK do compileSdk 37 se chama "platforms;android-37.0" no repositório do Google (o nome
+# "android-37" não existe — era por isso que a fábrica falhava em 06/11).
 on:
+  push:
+    branches: [feat/captura-sos]
   workflow_dispatch:
-  # push:
-  #   branches: [feat/botao-sem-acessibilidade]
+
+concurrency:
+  group: fabrica-android-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -26,28 +37,58 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # O runner já vem com o SDK do Android em $ANDROID_HOME. Não usamos a ação setup-android:
-      # ela tenta instalar o pacote obsoleto "tools" e falha.
-      - name: Preparar o SDK do Android
+      # O runner já vem com o SDK do Android em $ANDROID_HOME (não usar a ação setup-android).
+      - name: SDK do Android 37
         run: |
           set -e
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-          "$SDKMANAGER" "platform-tools" "platforms;android-37" "build-tools;37.0.0"
+          "$SDKMANAGER" "platform-tools" "platforms;android-37.0" "build-tools;37.0.0" | tail -2
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Permissão do gradlew
-        run: chmod +x ./gradlew
+      - name: Qual chave (gateway.properties, fora do git)
+        env:
+          CHAVE_ANDROID: ${{ secrets.GUARDIOES_GATEWAY_KEY_ANDROID }}
+          CHAVE_GERAL: ${{ secrets.GUARDIOES_GATEWAY_KEY }}
+        run: |
+          CHAVE="${CHAVE_ANDROID:-$CHAVE_GERAL}"
+          if [ -z "$CHAVE" ]; then echo "::warning::Sem chave: o APK sai INERTE (não envia)."; exit 0; fi
+          H=$(printf '%s' "$CHAVE" | sha256sum | cut -d' ' -f1)
+          case "$H" in
+            2307d2a6e56b1f1003660cfe233737bf01d1027a8130481c19b2417e7ebb7ec1) echo "chave: a do Android" ;;
+            e3004feb3be97c3f3e92cdc0b93096198efb9fb92156696a64b76173925e5b32) echo "chave: a do iPhone" ;;
+            *) echo "::warning::chave desconhecida pelo servidor (vai dar nao_autorizado)" ;;
+          esac
+          {
+            echo "gatewayUrl=https://ymszgqpgxtprkqxjhtwb.supabase.co/functions/v1/smsos-alerta"
+            echo "gatewayKey=$CHAVE"
+          } > gateway.properties
 
-      - name: Montar o APK de teste (debug)
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+      - name: Firebase (google-services.json, opcional)
+        env:
+          GS: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GS" ]; then printf '%s' "$GS" > app/google-services.json; echo "Firebase: sim (push com sirene)";
+          else echo "::warning::Sem GOOGLE_SERVICES_JSON: o APK sai sem o aviso com sirene (push)."; fi
+
+      - name: Testes
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Montar o APK de teste (envia de verdade)
+        run: ./gradlew :app:assembleDebug -Preal --no-daemon --stacktrace
+
+      - name: Nome com a versão
+        id: nome
+        run: |
+          V=$(grep -m1 'versionName = ' app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
+          mkdir -p saida && cp app/build/outputs/apk/debug/*.apk "saida/GuardioesSOS-teste-v$V.apk"
+          echo "versao=$V" >> "$GITHUB_OUTPUT"
+          echo "### APK de teste v$V pronto" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Guardar o APK (Artifact)
-        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GuardioesSOS-teste-gesto
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
-
-      - name: Testes unitários
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+          name: GuardioesSOS-teste-v${{ steps.nome.outputs.versao }}
+          path: saida/*.apk
+          retention-days: 30
+          if-no-files-found: error
