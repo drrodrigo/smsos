@@ -45,7 +45,7 @@ jobs:
           xcrun simctl install "$DEV" "$APP"
 
           mkdir -p prints
-          for TAB in inicio contatos guardioes ajustes; do
+          for TAB in inicio guardioes lugares protejo ajustes; do
             xcrun simctl launch "$DEV" br.com.guardioessos -demo -tab "$TAB"
             sleep 7
             xcrun simctl io "$DEV" screenshot "prints/$TAB.png"

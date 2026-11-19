@@ -1,0 +1,109 @@
+# Compila o app do iPhone no simulador (sem assinatura, sem chave, sem Apple) e tira os prints de
+# cada tela no modo demonstração (-demo), para conferir que está com a cara do Android.
+# Roda a cada push na branch feat/ios-cara-android e pelo botão. Os prints saem no artifact
+# "telas-iphone". NÃO manda nada para a Apple: isso é só o guardioes-iphone.yml, pelo botão.
+name: iPhone compila (cara do Android)
+
+on:
+  push:
+    branches: [feat/ios-cara-android]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-compila-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compila:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode 26
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26*.app | grep -vi beta | sort -V | tail -1)"
+          echo "Xcode escolhido: $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Gerar o projeto (XcodeGen)
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Compilar para o simulador (sem assinatura)
+        run: |
+          xcodebuild -project ios/GuardioesSOS.xcodeproj -scheme GuardioesSOS -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || true
+          echo "--- erros ---"
+          grep -E "error:" build.log | sort -u | head -80 || true
+          echo "--- avisos ($(grep -c 'warning:' build.log || true)) ---"
+          grep -E "warning:" build.log | grep -v "appintentsmetadataprocessor" | sort -u | head -80 || true
+          tail -5 build.log
+          if ! grep -q "BUILD SUCCEEDED" build.log; then
+            echo "::error::A compilação falhou (veja os erros acima)."
+            exit 1
+          fi
+
+      - name: Tirar os prints (iPhone Pro Max)
+        run: |
+          set -e
+          APP="$(find dd/Build/Products -name 'GuardioesSOS.app' -type d | head -1)"
+          echo "app: $APP"
+
+          LINE="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9] Pro Max' | head -1)"
+          [ -z "$LINE" ] && LINE="$(xcrun simctl list devices available | grep 'Pro Max' | head -1)"
+          DEV="$(echo "$LINE" | grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)"
+          echo "dispositivo: $LINE -> $DEV"
+
+          xcrun simctl boot "$DEV" || true
+          xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl ui "$DEV" appearance light || true
+          xcrun simctl status_bar "$DEV" override --time "9:41" --batteryState charged --batteryLevel 100 \
+            --cellularMode active --cellularBars 4 --wifiBars 3 || true
+          xcrun simctl install "$DEV" "$APP"
+
+          mkdir -p telas
+          PRIMEIRA=1
+          tirar() {
+            NOME="$1"; shift
+            xcrun simctl launch "$DEV" br.com.guardioessos -demo "$@"
+            if [ "$PRIMEIRA" = 1 ]; then sleep 15; PRIMEIRA=0; else sleep 6; fi
+            xcrun simctl io "$DEV" screenshot "telas/$NOME.png"
+            xcrun simctl terminate "$DEV" br.com.guardioessos || true
+            sleep 1
+          }
+
+          tirar 01-inicio -tab inicio
+          tirar 02-inicio-config-historico -tab inicio -abrir configuracao,testar,historico -rolar
+          tirar 03-inicio-modo-teste -tab inicio -teste
+          tirar 04-inicio-vazio -tab inicio -vazio
+          tirar 05-sem-guardioes -tab inicio -vazio -mostrar sem-guardioes
+          tirar 06-como-chega -tab inicio -mostrar como-chega
+          tirar 07-tela-do-guardiao -tab inicio -mostrar sirene
+          tirar 10-guardioes -tab guardioes
+          tirar 11-novo-guardiao -tab guardioes -mostrar novo-guardiao
+          tirar 12-lugares -tab lugares
+          tirar 13-editar-lugar -tab lugares -mostrar lugar
+          tirar 14-protejo -tab protejo
+          tirar 15-ajustes -tab ajustes
+          tirar 16-ajustes-fim -tab ajustes -rolar
+
+          xcrun simctl ui "$DEV" appearance dark || true
+          sleep 2
+          tirar 20-inicio-escuro -tab inicio
+          tirar 21-guardioes-escuro -tab guardioes
+          tirar 22-como-chega-escuro -tab inicio -mostrar como-chega
+          tirar 23-ajustes-escuro -tab ajustes
+          xcrun simctl ui "$DEV" appearance light || true
+
+          echo "--- prints ---"
+          ls -la telas
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: telas-iphone
+          path: telas/*.png
+          if-no-files-found: error

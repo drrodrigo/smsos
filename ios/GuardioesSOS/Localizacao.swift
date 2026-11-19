@@ -1,10 +1,26 @@
 import CoreLocation
 
-/// Pega UMA localização, com timeout. Sem permissão ou sem sinal, devolve nil (o alerta vai sem o mapa).
+/// A localização do aparelho: a permissão (para o checklist) e UMA leitura do GPS, com tempo limite.
+/// Sem permissão ou sem sinal, devolve nil (o alerta vai sem o mapa).
+/// Tudo o que mexe no CLLocationManager roda na thread principal (onde ele foi criado).
 final class Localizacao: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var cont: CheckedContinuation<CLLocation?, Never>?
-    private var resolvido = false
+    private var pedido = 0
+
+    /// Chamado quando a pessoa muda a permissão (para a tela Início se atualizar).
+    var aoMudarPermissao: (() -> Void)?
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    var status: CLAuthorizationStatus { manager.authorizationStatus }
+    var autorizado: Bool { status == .authorizedWhenInUse || status == .authorizedAlways }
+    var negado: Bool { status == .denied || status == .restricted }
+    var naoPerguntou: Bool { status == .notDetermined }
 
     func pedirPermissao() {
         if manager.authorizationStatus == .notDetermined {
@@ -12,43 +28,28 @@ final class Localizacao: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    /// Status atual da permissão (para o checklist).
-    static func statusAtual() -> CLAuthorizationStatus {
-        CLLocationManager().authorizationStatus
-    }
-
-    /// true se a localização já está liberada (ao usar ou sempre).
-    static var autorizado: Bool {
-        let s = CLLocationManager().authorizationStatus
-        return s == .authorizedWhenInUse || s == .authorizedAlways
-    }
-
+    /// Pega UMA posição. Se ainda não perguntou a permissão, pergunta e espera a resposta.
     func pegar(timeout: TimeInterval = 12) async -> CLLocation? {
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
-
-        switch manager.authorizationStatus {
-        case .denied, .restricted:
-            return nil
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        default:
-            break
-        }
-
-        resolvido = false
-        return await withCheckedContinuation { c in
-            self.cont = c
-            self.manager.requestLocation()
-            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
-                self?.resolver(nil)
+        if negado { return nil }
+        return await withCheckedContinuation { (c: CheckedContinuation<CLLocation?, Never>) in
+            DispatchQueue.main.async {
+                self.resolver(nil)
+                self.pedido += 1
+                let meu = self.pedido
+                self.cont = c
+                if self.manager.authorizationStatus == .notDetermined {
+                    self.manager.requestWhenInUseAuthorization()
+                } else {
+                    self.manager.requestLocation()
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
+                    if self.pedido == meu { self.resolver(nil) }
+                }
             }
         }
     }
 
     private func resolver(_ loc: CLLocation?) {
-        guard !resolvido else { return }
-        resolvido = true
         let c = cont
         cont = nil
         c?.resume(returning: loc)
@@ -59,6 +60,18 @@ final class Localizacao: NSObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        // "Posição ainda desconhecida" é passageiro: espera até o tempo limite.
+        if let e = error as? CLError, e.code == .locationUnknown { return }
         resolver(nil)
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        aoMudarPermissao?()
+        guard cont != nil else { return }
+        if autorizado {
+            manager.requestLocation()
+        } else if negado {
+            resolver(nil)
+        }
     }
 }
