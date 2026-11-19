@@ -1,5 +1,7 @@
 # Resposta à rejeição da Apple (Guideline 2.1 — Information Needed)
 
+> **19/11:** vídeo gravado pelo Rodrigo no iPhone dele (app já configurado, Modo teste ligado, passa pelas abas e segura o SOS); texto abaixo é o que foi colado na Apple.
+>
 > **Corrigido em 18/11:** a versão anterior descrevia o app de **Android** (aba "Guardiões" para
 > cadastrar contato, notificação no teste). O build enviado à Apple é o **iPhone build 11**
 > (`feat/ios-fabrica`, commit `914e95a`): lá o contato é cadastrado na aba **Contatos** e o teste
@@ -15,7 +17,7 @@ nem mandar build novo: responde a mensagem e reenvia o mesmo build 11.
 GuardiõesSOS — App Review Notes
 
 1) DEMO VIDEO
-A screen recording made on a physical iPhone is attached. It shows the Home screen, the Contacts tab (adding an emergency contact), turning on Test Mode, holding the SOS button and the result screen, and the other tabs.
+A screen recording made on a physical iPhone is attached. It shows the Home screen, the "Contatos" (contacts), "Guardiões", "Protejo" and "Ajustes" tabs, and then holding the SOS button in Test Mode, with the result screen showing who would receive the alert and the message.
 
 2) PURPOSE AND TARGET AUDIENCE
 GuardiõesSOS is a free personal-safety panic button for individuals and families in Brazil. When a person is in danger (for example, a robbery) or has a medical emergency, they press and hold the SOS button and the app sends an SMS with their location (a map link) to the emergency contacts they chose.
