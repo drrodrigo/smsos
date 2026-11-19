@@ -12,25 +12,48 @@ struct CadastroView: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            // A setinha de voltar no topo (regra de toda tela). Aqui é a primeira tela: não há para onde voltar.
+            HStack {
+                Button {} label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Cor.onSurface)
+                        .frame(width: 48, height: 48)
+                }
+                .buttonStyle(.plain)
+                .disabled(true)
+                .opacity(0.38)
+                .accessibilityLabel("Voltar")
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+            .frame(height: 64)
+            formulario
+        }
+        .background(Cor.fundo.ignoresSafeArea())
+    }
+
+    private var formulario: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Spacer()
-                    Image("Escudo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 96, height: 96)
-                    Spacer()
-                }
-                .padding(.top, 24)
+                Image("Escudo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 84, height: 84)
+                    .frame(maxWidth: .infinity)
 
                 Text("Bem-vindo ao GuardiõesSOS")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(Cor.onSurface)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Pra começar, me diga seu nome e seu WhatsApp. É a sua conta — sem senha, sem complicação.")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Cor.onSurfaceVariant)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Cor.onSurface)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
                     .fixedSize(horizontal: false, vertical: true)
 
                 CampoM3("Seu nome", texto: $nome, palavras: true)
@@ -63,9 +86,9 @@ struct CadastroView: View {
                 TextoAjuda("Usamos seus dados só pra criar sua conta e te avisar — nada de spam. Política de privacidade em guardioessos.com.br/privacidade.")
                 Rodape()
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
         }
         .scrollDismissesKeyboard(.immediately)
-        .background(Cor.fundo.ignoresSafeArea())
     }
 }
