@@ -17,8 +17,16 @@ Chat: **Guardiões SOS**. Repositório do app: `drrodrigo/smsos` (namespace inte
   contornado em `app/src/test/.../testutil/RobolectricJarLeak.kt`. Pra compilar fora do ambiente antigo,
   o SDK é `platforms;android-37.0` (o nome `android-37` não existe no repositório do Google — por isso a
   fábrica do CI falhava).
-- Ideia em aberto (aguardando OK do Rodrigo): página **guardioessos.com.br/app** igual ao app (como no
-  Aviso de Entrega), sem expor a chave do gateway no navegador.
+- ✅ **guardioessos.com.br/app NO AR (19/11, com o "sim" dele):** o GuardiõesSOS no navegador, com a cara
+  do Android (5 abas, SOS dividido, modo teste, lugares, demonstração com sirene, setinha de voltar).
+  Código no repo do SITE (`drrodrigo/guardioessos`, pasta `app/` + `app-sw.js`); a Vercel publica a `main`.
+  - Servidor: Edge Function **`guardioes-web`** (fonte em `supabase/functions/guardioes-web/`, publicada
+    `verify_jwt: false`). Número confirmado por código de SMS → chave do aparelho ASSINADA (HMAC); texto do
+    SOS montado no servidor; até 10 contatos por chamada. Nenhuma chave do sistema na página.
+  - Teto próprio em `sms.limites` (para um abuso pela página nunca gastar a cota do app `smsos`):
+    `guardioes-web-otp` 20/h · 60/dia · 5 por número; `guardioes-web` 40/h · 100/dia · 20 por número.
+  - Plano B: sem número confirmado ou sem internet, abre o SMS do próprio celular já com texto e números.
+  - Ainda não tem: sirene para guardião pelo navegador (push), botão de volume, atualização de localização.
 - Agora que a Apple aprovou: decidir quando subir o 2º round como ATUALIZAÇÃO (pendência 10).
 
 ## Onde está (resumo rápido)
