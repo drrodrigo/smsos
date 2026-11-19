@@ -1,89 +1,125 @@
 import SwiftUI
 
-/// Aba Protejo: aceite convites (por código ou da lista) e veja quem você protege.
+/// Aba Protejo, igual à do Android: os convites para você ser guardião de alguém (da lista ou por
+/// código) e as pessoas que você protege.
 struct ProtejoView: View {
     @EnvironmentObject var app: AppState
-    @State private var codigo = ""
-    @State private var carregando = false
-    @State private var mensagem: String?
+    @EnvironmentObject var camada: Camada
+    @State private var carregando = true
     @State private var pendentes: [GuardioesConvite.Pendente] = []
     @State private var protegidos: [GuardioesConvite.Protegido] = []
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Text("Recebeu um convite para ser guardião? Digite o código.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                    TextField("Código do convite", text: $codigo)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.characters)
-                    Button {
-                        Task { await aceitar(codigo) }
-                    } label: {
-                        if carregando { ProgressView() } else { Text("Aceitar") }
-                    }
-                    .disabled(carregando || codigo.trimmingCharacters(in: .whitespaces).isEmpty)
-                } header: {
-                    Text("Tenho um código")
+        ScrollView {
+            VStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    TituloTela("Protejo")
+                    TextoAjuda("As pessoas que você protege como guardião. Quando elas acionarem o SOS, você recebe o alerta com a localização.")
                 }
 
                 if !pendentes.isEmpty {
-                    Section("Convites para você") {
+                    Cartao("Convites pra você") {
                         ForEach(pendentes) { p in
-                            HStack {
-                                Text(p.usuarioNome.isEmpty ? "Alguém" : p.usuarioNome)
-                                Spacer()
-                                Button("Aceitar") { Task { await aceitar(p.codigo) } }
-                                    .buttonStyle(.borderless)
+                            HStack(spacing: 12) {
+                                Text("\(p.usuarioNome.isEmpty ? "Alguém" : p.usuarioNome) quer você como guardião")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Cor.onSurface)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                BotaoM3("Aceitar", tipo: .cheio) { aceitar(p.codigo) }
                             }
                         }
                     }
                 }
 
-                Section("Quem eu protejo") {
-                    if protegidos.isEmpty {
-                        Text("Ninguém ainda.").foregroundStyle(.secondary)
-                    }
-                    ForEach(protegidos) { p in
-                        Label(p.usuarioNome.isEmpty ? "Alguém" : p.usuarioNome, systemImage: "shield.lefthalf.filled")
+                Cartao("Tenho um código") {
+                    TextoAjuda("Recebeu um convite com um código? Digite aqui pra aceitar.")
+                    BotaoM3("Aceitar com código", tipo: .cheio, largo: true) { digitarCodigo() }
+                }
+
+                Cartao("Quem eu protejo") {
+                    if carregando && protegidos.isEmpty {
+                        TextoAjuda("Carregando...")
+                    } else if protegidos.isEmpty {
+                        TextoAjuda("Você ainda não protege ninguém. Aceite um convite para começar.")
+                    } else {
+                        ForEach(protegidos) { p in
+                            Text("🛡️ \(p.usuarioNome.isEmpty ? "Alguém" : p.usuarioNome)")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Cor.onSurface)
+                        }
                     }
                 }
 
-                if let m = mensagem {
-                    Section { Text(m) }
-                }
+                Rodape()
             }
-            .navigationTitle("Protejo")
-            .tecladoFechavel()
-            .refreshable { await carregar() }
-            .task { await carregar() }
+            .padding(16)
         }
+        .refreshable { await carregar() }
+        .task { await carregar() }
     }
 
     private func carregar() async {
-        let pend = await GuardioesConvite.pendentes(telefone: app.meuTelefone)
+        carregando = true
+        if Demo.ativo {
+            pendentes = Demo.vazio ? [] : [GuardioesConvite.Pendente(codigo: "215F67", usuarioNome: "Dona Lúcia")]
+            protegidos = Demo.vazio ? [] : [GuardioesConvite.Protegido(usuarioNome: "Pedro Souza")]
+            carregando = false
+            return
+        }
+        var pend: [GuardioesConvite.Pendente] = []
+        if app.telefoneOk {
+            pend = await GuardioesConvite.pendentes(telefone: app.meuTelefone)
+        }
         let prot = await GuardioesConvite.quemProtejo(guardiaoDispositivo: app.dispositivo)
-        await MainActor.run {
-            pendentes = pend
-            protegidos = prot
+        pendentes = pend
+        protegidos = prot
+        carregando = false
+    }
+
+    private func digitarCodigo() {
+        camada.abrir {
+            DialogoCodigo { codigo in aceitar(codigo) }
         }
     }
 
-    private func aceitar(_ cod: String) async {
-        carregando = true
-        mensagem = nil
-        let r = await GuardioesConvite.aceitar(codigo: cod, guardiaoDispositivo: app.dispositivo)
-        await MainActor.run {
-            carregando = false
-            if let r = r, r.ok || r.jaAceito {
-                let quem = r.usuarioNome?.isEmpty == false ? r.usuarioNome! : "essa pessoa"
-                mensagem = r.jaAceito ? "Você já protegia \(quem)." : "Pronto! Agora você protege \(quem)."
-                codigo = ""
+    private func aceitar(_ codigo: String) {
+        camada.toast("Aceitando convite...")
+        Task {
+            let r = await GuardioesConvite.aceitar(codigo: codigo, guardiaoDispositivo: app.dispositivo)
+            let quem = (r?.usuarioNome).flatMap { $0.isEmpty ? nil : $0 } ?? "essa pessoa"
+            if let r {
+                if !r.ok && !r.jaAceito {
+                    camada.toast("Código inválido ou convite indisponível.")
+                } else if r.jaAceito {
+                    camada.toast("Você já protege \(quem).")
+                } else {
+                    camada.toast("Pronto! Agora você protege \(quem).")
+                }
             } else {
-                mensagem = "Código inválido ou já usado."
+                camada.toast("Não consegui aceitar. Confira a internet e tente de novo.")
             }
+            await carregar()
         }
-        await carregar()
+    }
+}
+
+/// O diálogo "Aceitar convite": o código que veio no convite.
+struct DialogoCodigo: View {
+    @EnvironmentObject var camada: Camada
+    let aoAceitar: (String) -> Void
+    @State private var codigo = ""
+
+    init(aoAceitar: @escaping (String) -> Void) {
+        self.aoAceitar = aoAceitar
+    }
+
+    var body: some View {
+        let limpo = codigo.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return CaixaDialogo("Aceitar convite", acoes: [
+            AcaoDialogo("Cancelar"),
+            AcaoDialogo("Aceitar", ativo: !limpo.isEmpty) { aoAceitar(limpo) },
+        ]) {
+            CampoM3("Código do convite", texto: $codigo, placeholder: "Ex.: 215F67", maiusculas: true, autoFoco: true)
+        }
     }
 }

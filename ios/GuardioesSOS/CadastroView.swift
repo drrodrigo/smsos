@@ -1,65 +1,94 @@
 import SwiftUI
 
-/// Primeira abertura: nome e telefone da pessoa + o primeiro contato de emergência.
+/// Primeira abertura: o nome e o WhatsApp da pessoa (a conta, sem senha) — igual ao RegistroScreen
+/// do Android. Os guardiões ela cadastra depois, guiada pela tela Início.
 struct CadastroView: View {
     @EnvironmentObject var app: AppState
-    @State private var contatoNome = ""
-    @State private var contatoTelefone = ""
-    @FocusState private var foco: Campo?
-    enum Campo { case nome, tel, cNome, cTel }
+    @State private var nome = ""
+    @State private var fone = ""
 
     private var valido: Bool {
-        app.cadastroValido && Telefone.limpar(contatoTelefone).count >= 10
+        !nome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && Telefone.celularValido(fone)
     }
 
     var body: some View {
-        ZStack {
-            Fundo()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Image(systemName: "shield.lefthalf.filled").font(.system(size: 54)).foregroundStyle(.white)
-                    Text("Vamos configurar").font(.system(size: 28, weight: .heavy)).foregroundStyle(.white)
-                    Text("Leva 1 minuto. Seu nome vai no alerta; o contato é quem recebe o pedido de socorro.")
-                        .foregroundStyle(Color(white: 0.8))
-
-                    campo("Seu nome", $app.nome, .nome, .default)
-                    campo("Seu telefone (WhatsApp)", $app.meuTelefone, .tel, .phonePad)
-
-                    Text("Contato de emergência")
-                        .font(.headline).foregroundStyle(.white).padding(.top, 6)
-                    campo("Nome do contato (ex.: Maria)", $contatoNome, .cNome, .default)
-                    campo("Telefone com DDD", $contatoTelefone, .cTel, .phonePad)
-
-                    Button {
-                        foco = nil
-                        app.adicionarContato(Contato(nome: contatoNome, telefone: contatoTelefone))
-                        app.configurado = true
-                        app.registrarLead()
-                    } label: {
-                        Text("Continuar")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(valido ? Color.white : Color.white.opacity(0.2))
-                            .foregroundStyle(valido ? Color(red: 0.04, green: 0.11, blue: 0.21) : Color(white: 0.6))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-                    .disabled(!valido)
-                    .padding(.top, 8)
+        VStack(spacing: 0) {
+            // A setinha de voltar no topo (regra de toda tela). Aqui é a primeira tela: não há para onde voltar.
+            HStack {
+                Button {} label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Cor.onSurface)
+                        .frame(width: 48, height: 48)
                 }
-                .padding(24)
+                .buttonStyle(.plain)
+                .disabled(true)
+                .opacity(0.38)
+                .accessibilityLabel("Voltar")
+                Spacer()
             }
-            .tecladoFechavel()
+            .padding(.horizontal, 4)
+            .frame(height: 64)
+            formulario
         }
+        .background(Cor.fundo.ignoresSafeArea())
     }
 
-    private func campo(_ titulo: String, _ texto: Binding<String>, _ qual: Campo, _ teclado: UIKeyboardType) -> some View {
-        TextField("", text: texto, prompt: Text(titulo).foregroundColor(Color(white: 0.5)))
-            .focused($foco, equals: qual)
-            .keyboardType(teclado)
-            .foregroundStyle(.white)
-            .padding()
-            .background(Color.white.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+    private var formulario: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Image("Escudo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 84, height: 84)
+                    .frame(maxWidth: .infinity)
+
+                Text("Bem-vindo ao GuardiõesSOS")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Cor.onSurface)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Pra começar, me diga seu nome e seu WhatsApp. É a sua conta — sem senha, sem complicação.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Cor.onSurface)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                CampoM3("Seu nome", texto: $nome, palavras: true)
+                CampoM3("Seu WhatsApp (com DDD)", texto: $fone, placeholder: "(31) 99999-8888", teclado: .phonePad,
+                        erro: Telefone.aviso(fone))
+                if Telefone.celularValido(fone) && Telefone.formatar(fone) != fone.trimmingCharacters(in: .whitespaces) {
+                    Text("Vai salvar como: \(Telefone.formatar(fone))")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Cor.primary)
+                }
+
+                BotaoM3("Continuar", tipo: .cheio, largo: true, alto: 48, fonte: 16) {
+                    esconderTeclado()
+                    app.nome = String(nome.trimmingCharacters(in: .whitespacesAndNewlines).prefix(30))
+                    app.meuTelefone = Telefone.nacional(fone)
+                    app.configurado = true
+                    app.registrarLead()
+                }
+                .disabled(!valido)
+                .padding(.top, 8)
+
+                BotaoM3("Pular por enquanto", tipo: .texto, largo: true) {
+                    esconderTeclado()
+                    app.nome = String(nome.trimmingCharacters(in: .whitespacesAndNewlines).prefix(30))
+                    if Telefone.celularValido(fone) { app.meuTelefone = Telefone.nacional(fone) }
+                    app.configurado = true
+                    app.registrarLead()
+                }
+
+                TextoAjuda("Usamos seus dados só pra criar sua conta e te avisar — nada de spam. Política de privacidade em guardioessos.com.br/privacidade.")
+                Rodape()
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+        .scrollDismissesKeyboard(.immediately)
     }
 }

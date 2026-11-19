@@ -1,13 +1,20 @@
 import SwiftUI
 
-/// O GuardiõesSOS no iPhone. Milestone 1: cadastro + botão de pânico (modo teste).
-/// As telas do lado guardião, o envio real e o alerta que toca como ligação vêm nas próximas versões.
+/// O GuardiõesSOS no iPhone, com a mesma cara e o mesmo jeito do app Android.
 @main
 struct GuardioesSOSApp: App {
     @StateObject private var app = AppState()
+    @StateObject private var camada = Camada()
+
     var body: some Scene {
         WindowGroup {
-            ContentView().environmentObject(app)
+            NavigationStack {
+                ContentView()
+                    .toolbar(.hidden, for: .navigationBar)
+            }
+            .environmentObject(app)
+            .environmentObject(camada)
+            .tint(Cor.primary)
         }
     }
 }
