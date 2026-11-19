@@ -476,8 +476,8 @@ struct BotaoSegurar: View {
     let aoCompletar: () -> Void
     let aoTocar: () -> Void
 
-    @State private var progresso: CGFloat = 0
-    @State private var segurando = false
+    @State private var progresso: CGFloat = Demo.segurando ? 0.6 : 0
+    @State private var segurando = Demo.segurando
 
     var body: some View {
         conteudo
@@ -504,6 +504,14 @@ struct BotaoSegurar: View {
                 .font(.system(size: 14))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(.white)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(cor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(alignment: .bottom) {
+            // A barra branca que enche enquanto segura (o LinearProgressIndicator do Android).
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.white.opacity(0.3))
@@ -511,29 +519,26 @@ struct BotaoSegurar: View {
                 }
             }
             .frame(height: 4)
-            .padding(.top, 12)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 9)
             .opacity(segurando ? 1 : 0)
         }
-        .foregroundStyle(.white)
-        .padding(.vertical, 20)
-        .padding(.horizontal, 12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(cor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .brightness(segurando ? 0.04 : 0)
         .scaleEffect(segurando ? 0.985 : 1)
-        .animation(.easeOut(duration: 0.1), value: segurando)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func mudou(_ apertando: Bool) {
         if apertando {
-            segurando = true
+            withAnimation(.easeOut(duration: 0.1)) { segurando = true }
             progresso = 0
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             withAnimation(.linear(duration: Double(segundos))) { progresso = 1 }
         } else {
-            segurando = false
-            withAnimation(.easeOut(duration: 0.15)) { progresso = 0 }
+            withAnimation(.easeOut(duration: 0.15)) {
+                segurando = false
+                progresso = 0
+            }
         }
     }
 

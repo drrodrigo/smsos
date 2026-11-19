@@ -143,72 +143,84 @@ struct EditorDeLugar: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                HStack(spacing: 4) {
-                    Button(action: fechar) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(Cor.onSurface)
-                            .frame(width: 40, height: 40)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Voltar para a lista de lugares")
-                    TituloTela("Editar lugar")
+        ScrollViewReader { rolagem in
+            ScrollView {
+                conteudo
+            }
+            .task {
+                if Demo.rolar {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    rolagem.scrollTo("fim", anchor: .bottom)
                 }
+            }
+        }
+    }
 
-                CampoM3("Nome do lugar (ex.: Casa, Escritório)", texto: nome, palavras: true)
-
-                Cartao("Onde fica") {
-                    if let lat = lugar.latitude, let lng = lugar.longitude {
-                        Text(String(format: "%.5f, %.5f", locale: Locale(identifier: "en_US_POSIX"), lat, lng))
-                            .font(.system(size: 16))
-                            .foregroundStyle(Cor.onSurface)
-                        if let p = lugar.precisao {
-                            TextoAjuda("Marcado ✓ (precisão de uns \(p) m)")
-                        }
-                        if let url = URL(string: Mensagem.linkMapa(lat, lng)) {
-                            BotaoM3("Ver no mapa", tipo: .texto) { openURL(url) }
-                                .padding(.leading, -12)
-                        }
-                    } else {
-                        Text("Localização ainda não marcada")
-                            .font(.system(size: 16))
-                            .foregroundStyle(Cor.warning)
-                    }
-                    BotaoM3(procurando ? "Procurando o GPS..." : "Usar minha localização atual", tipo: .cheio, largo: true) {
-                        Task { await marcarAqui() }
-                    }
-                    .disabled(procurando)
-                    TextoAjuda("Faça isso estando no lugar (por exemplo, dentro de casa).")
-                    CampoM3("Ou cole as coordenadas", texto: $coordenadas, placeholder: "-19.46830, -42.53670",
-                            teclado: .numbersAndPunctuation)
-                    TextoAjuda("No Google Maps, segure o dedo em cima do lugar e copie os números que aparecem.")
-                    BotaoM3("Usar estas coordenadas", tipo: .contorno) { usarCoordenadas() }
-                        .disabled(coordenadas.trimmingCharacters(in: .whitespaces).isEmpty)
+    private var conteudo: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 4) {
+                Button(action: fechar) {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Cor.onSurface)
+                        .frame(width: 40, height: 40)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Voltar para a lista de lugares")
+                TituloTela("Editar lugar")
+            }
 
-                Cartao("Tamanho da área") {
-                    Text("Área de \(lugar.raio) m")
+            CampoM3("Nome do lugar (ex.: Casa, Escritório)", texto: nome, palavras: true)
+
+            Cartao("Onde fica") {
+                if let lat = lugar.latitude, let lng = lugar.longitude {
+                    Text(String(format: "%.5f, %.5f", locale: Locale(identifier: "en_US_POSIX"), lat, lng))
                         .font(.system(size: 16))
                         .foregroundStyle(Cor.onSurface)
-                    Slider(value: raio, in: 50...1000, step: 50)
-                    TextoAjuda("Se o alerta sair a até esta distância do ponto marcado, as pessoas deste lugar são avisadas.")
+                    if let p = lugar.precisao {
+                        TextoAjuda("Marcado ✓ (precisão de uns \(p) m)")
+                    }
+                    if let url = URL(string: Mensagem.linkMapa(lat, lng)) {
+                        BotaoM3("Ver no mapa", tipo: .texto) { openURL(url) }
+                            .padding(.leading, -12)
+                    }
+                } else {
+                    Text("Localização ainda não marcada")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Cor.warning)
                 }
-
-                Cartao("Quem avisar neste lugar") {
-                    ListaDeContatos(
-                        contatos: contatos,
-                        vazio: "Nenhum contato. Adicione seus vizinhos ou quem estiver perto deste lugar."
-                    )
+                BotaoM3(procurando ? "Procurando o GPS..." : "Usar minha localização atual", tipo: .cheio, largo: true) {
+                    Task { await marcarAqui() }
                 }
-
-                BotaoM3("Excluir este lugar", tipo: .contorno, largo: true) { confirmarExcluir() }
-                Rodape()
+                .disabled(procurando)
+                TextoAjuda("Faça isso estando no lugar (por exemplo, dentro de casa).")
+                CampoM3("Ou cole as coordenadas", texto: $coordenadas, placeholder: "-19.46830, -42.53670",
+                        teclado: .numbersAndPunctuation)
+                TextoAjuda("No Google Maps, segure o dedo em cima do lugar e copie os números que aparecem.")
+                BotaoM3("Usar estas coordenadas", tipo: .contorno) { usarCoordenadas() }
+                    .disabled(coordenadas.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-            .padding(16)
+
+            Cartao("Tamanho da área") {
+                Text("Área de \(lugar.raio) m")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Cor.onSurface)
+                Slider(value: raio, in: 50...1000, step: 50)
+                TextoAjuda("Se o alerta sair a até esta distância do ponto marcado, as pessoas deste lugar são avisadas.")
+            }
+
+            Cartao("Quem avisar neste lugar") {
+                ListaDeContatos(
+                    contatos: contatos,
+                    vazio: "Nenhum contato. Adicione seus vizinhos ou quem estiver perto deste lugar."
+                )
+            }
+
+            BotaoM3("Excluir este lugar", tipo: .contorno, largo: true) { confirmarExcluir() }
+            Rodape().id("fim")
         }
+        .padding(16)
     }
 
     private func marcarAqui() async {

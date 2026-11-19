@@ -66,7 +66,10 @@ struct ProtejoView: View {
             carregando = false
             return
         }
-        let pend = await GuardioesConvite.pendentes(telefone: app.meuTelefone)
+        var pend: [GuardioesConvite.Pendente] = []
+        if app.telefoneOk {
+            pend = await GuardioesConvite.pendentes(telefone: app.meuTelefone)
+        }
         let prot = await GuardioesConvite.quemProtejo(guardiaoDispositivo: app.dispositivo)
         pendentes = pend
         protegidos = prot

@@ -10,6 +10,9 @@ import Foundation
 ///   -rolar                                            rola a tela até o fim
 ///   -teste                                            liga o modo teste
 ///   -vazio                                            sem guardiões, sem lugares e sem localização
+///   -segurando                                        os botões de SOS com a barra enchendo
+///   -ativo                                            com um alerta que acabou de sair
+///   -cadastro                                         a tela do primeiro uso
 enum Demo {
     private static let args = ProcessInfo.processInfo.arguments
 
@@ -17,6 +20,9 @@ enum Demo {
     static let teste = ativo && args.contains("-teste")
     static let vazio = ativo && args.contains("-vazio")
     static let rolar = ativo && args.contains("-rolar")
+    static let segurando = ativo && args.contains("-segurando")
+    static let alertaAtivo = ativo && args.contains("-ativo")
+    static let cadastro = ativo && args.contains("-cadastro")
 
     private static func valor(_ chave: String) -> String? {
         guard ativo, let i = args.firstIndex(of: chave), i + 1 < args.count else { return nil }

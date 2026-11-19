@@ -58,13 +58,15 @@ final class AppState: ObservableObject {
             dualSos = true
             segundos = 5
             retencao = 7
-            configurado = true
+            configurado = !Demo.cadastro
             modoTeste = Demo.teste
             dispositivo = "demo"
             guardioes = demo.guardioes
             lugares = demo.lugares
             historico = demo.historico
-            ativo = nil
+            ativo = Demo.alertaAtivo
+                ? AlertaAtivo(em: Date().addingTimeInterval(-300), telefones: ["11988880001", "11988880002"])
+                : nil
             localOk = !Demo.vazio
             return
         }

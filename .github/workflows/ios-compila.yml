@@ -83,13 +83,18 @@ jobs:
           tirar 05-sem-guardioes -tab inicio -vazio -mostrar sem-guardioes
           tirar 06-como-chega -tab inicio -mostrar como-chega
           tirar 07-tela-do-guardiao -tab inicio -mostrar sirene
+          tirar 08-inicio-segurando -tab inicio -segurando
+          tirar 09-inicio-alerta-ativo -tab inicio -ativo
           tirar 10-guardioes -tab guardioes
           tirar 11-novo-guardiao -tab guardioes -mostrar novo-guardiao
           tirar 12-lugares -tab lugares
+          tirar 12b-lugares-vazio -tab lugares -vazio
           tirar 13-editar-lugar -tab lugares -mostrar lugar
+          tirar 13b-editar-lugar-fim -tab lugares -mostrar lugar -rolar
           tirar 14-protejo -tab protejo
           tirar 15-ajustes -tab ajustes
           tirar 16-ajustes-fim -tab ajustes -rolar
+          tirar 17-cadastro -cadastro
 
           xcrun simctl ui "$DEV" appearance dark || true
           sleep 2
