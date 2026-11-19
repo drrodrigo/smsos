@@ -3,6 +3,24 @@
 Chat: **Guardiões SOS**. Repositório do app: `drrodrigo/smsos` (namespace interno
 `br.com.alertasilencioso`). Site: `drrodrigo/guardioessos` (guardioessos.com.br).
 
+## Atualização 19/11/2026
+
+- ✅ **iOS v1.0 APROVADO pela Apple** — "Ready for Distribution" (19/11, 11:24). Build aprovado: iPhone
+  **0.1.0 (11)**, branch `feat/ios-fabrica`, commit `914e95a`. Link (aparece em até ~24h):
+  https://apps.apple.com/br/app/id6831396615
+- Como passou: resposta à 2.1 com o texto de `docs/apple-review-notes.md` (na `feat/captura-sos`,
+  corrigido para as telas do iPhone) + vídeo gravado pelo Rodrigo no iPhone dele (Modo teste ligado).
+- ✅ Pendência 2 feita: opção **"Os dois"** em "Como acionar" (segurar OU apertar) — v0.32.0, mesclada na
+  `feat/captura-sos` (PR #2). Falta gerar o APK `-Preal` e distribuir no App Distribution (precisa do
+  `gateway.properties` + `google-services.json`, que ficam fora do git).
+- Testes: o `AppSmokeTest` quebrava por vazamento do Robolectric 4.17 (jar do runtime nativo aberto);
+  contornado em `app/src/test/.../testutil/RobolectricJarLeak.kt`. Pra compilar fora do ambiente antigo,
+  o SDK é `platforms;android-37.0` (o nome `android-37` não existe no repositório do Google — por isso a
+  fábrica do CI falhava).
+- Ideia em aberto (aguardando OK do Rodrigo): página **guardioessos.com.br/app** igual ao app (como no
+  Aviso de Entrega), sem expor a chave do gateway no navegador.
+- Agora que a Apple aprovou: decidir quando subir o 2º round como ATUALIZAÇÃO (pendência 10).
+
 ## Onde está (resumo rápido)
 
 - **Android:** v1.0 **no ar na Play** (1º round aprovado).
