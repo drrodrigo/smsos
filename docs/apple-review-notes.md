@@ -15,7 +15,7 @@ nem mandar build novo: responde a mensagem e reenvia o mesmo build 11.
 GuardiõesSOS — App Review Notes
 
 1) DEMO VIDEO
-A screen recording made on a physical iPhone is attached. It shows the first launch and setup, adding an emergency contact, Test Mode, and holding the SOS button.
+A screen recording made on a physical iPhone is attached. It shows the Home screen, the Contacts tab (adding an emergency contact), turning on Test Mode, holding the SOS button and the result screen, and the other tabs.
 
 2) PURPOSE AND TARGET AUDIENCE
 GuardiõesSOS is a free personal-safety panic button for individuals and families in Brazil. When a person is in danger (for example, a robbery) or has a medical emergency, they press and hold the SOS button and the app sends an SMS with their location (a map link) to the emergency contacts they chose.
@@ -60,14 +60,14 @@ There is no password-based account, only name and phone number. Users can reques
 6. **Área regulada:** não é; não é serviço oficial de emergência e não substitui o 190/192.
    **Conta:** não tem senha; os dados podem ser apagados pelo site.
 
-## 2) Vídeo (num iPhone de verdade, ~1 minuto)
+## 2) Vídeo (no iPhone do Rodrigo, que já tem o app instalado e configurado — ~1 minuto)
 
 Gravar a tela do iPhone (Central de Controle → botão de gravar) mostrando, nesta ordem:
-1. Abrir o GuardiõesSOS (instalado pelo TestFlight).
-2. Tela "Vamos configurar": nome, telefone, um contato → "Continuar".
-3. Aba "Contatos": mostrar o contato (e "Adicionar contato").
-4. Aba "Início": ligar "Modo teste".
-5. Segurar o botão SOS → aparece a tela com "Para:" e "Mensagem:" → "Fechar".
+1. Aba **Início** (checklist "Tudo pronto").
+2. Aba **Contatos** → adicionar um contato (nome + telefone) → **Adicionar**.
+3. Volta no **Início** → ligar **"Modo teste"** (ANTES de segurar o SOS, senão envia SMS de verdade).
+4. Segurar o botão **SOS** → aparece a tela com "Para:" e "Mensagem:" → **Fechar**.
+5. Passar pelas abas **Guardiões**, **Protejo** e **Ajustes**.
 
 ## 3) Onde colar e reenviar (App Store Connect)
 
