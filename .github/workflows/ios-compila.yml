@@ -6,7 +6,7 @@ name: iPhone compila (cara do Android)
 
 on:
   push:
-    branches: [feat/ios-cara-android]
+    branches: [feat/ios-cara-android, feat/ios-botoes]
   workflow_dispatch:
 
 concurrency:
