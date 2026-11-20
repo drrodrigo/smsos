@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,10 +53,10 @@ fun DemonstracaoCard(settings: Settings) {
 
     SectionCard("Demonstração e teste") {
         HelpText("Pra mostrar como funciona pra alguém, ou conferir no seu aparelho. Nada é enviado — ninguém é avisado.")
-        OutlinedButton(onClick = { vendoMensagem = true }, modifier = Modifier.fillMaxWidth()) {
+        BotaoRelevo(onClick = { vendoMensagem = true }, modifier = Modifier.fillMaxWidth()) {
             Text("Ver como a mensagem chega")
         }
-        OutlinedButton(
+        BotaoRelevo(
             onClick = {
                 // Toca a sirene e abre a tela cheia de alerta recebido (a experiência do guardião).
                 // A própria tela tem "Silenciar/Fechar" que para tudo; e para sozinha em 2 min.

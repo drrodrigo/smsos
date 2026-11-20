@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -304,7 +303,7 @@ private fun AccessibilityStep(done: Boolean, onNext: () -> Unit) {
             "Volte aqui e toque de novo em \"Abrir Acessibilidade\".",
         )
         HelpText("Quando o app estiver na Play Store, nada disso é necessário.")
-        OutlinedButton(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
+        BotaoRelevo(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
             Text("Abrir informações do app")
         }
     }
@@ -440,7 +439,7 @@ private fun AppSettingsHelp(howTo: String) {
     val context = LocalContext.current
     HelpCard("Não apareceu a janela?") {
         HelpText("Libere pelas configurações do app. $howTo Depois volte aqui.")
-        OutlinedButton(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
+        BotaoRelevo(onClick = { context.openAppDetails() }, Modifier.fillMaxWidth()) {
             Text("Abrir configurações do app")
         }
     }

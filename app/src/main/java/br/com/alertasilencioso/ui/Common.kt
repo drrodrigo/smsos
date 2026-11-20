@@ -35,7 +35,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -215,12 +214,12 @@ fun ContactListEditor(
         HelpText("Você chegou ao limite de $max contatos nesta lista.")
     } else {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = pickContact) {
+            BotaoRelevo(onClick = pickContact) {
                 Icon(Icons.Filled.Person, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Da agenda")
             }
-            OutlinedButton(onClick = { typing = true }) {
+            BotaoRelevo(onClick = { typing = true }) {
                 Icon(Icons.Filled.Add, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Digitar")
