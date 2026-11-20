@@ -49,6 +49,10 @@ enum Cor {
     static let onSurfaceVariant = Color(claro: 0x49454F, escuro: 0xCAC4D0)
     static let outline = Color(claro: 0x79747E, escuro: 0x938F99)
     static let outlineVariant = Color(claro: 0xCAC4D0, escuro: 0x49454F)
+    // Botão em relevo (o secundário, que era só contorno): fundo claro em degradê + borda fina + sombra.
+    static let relevoTopo = Color(claro: 0xFFFFFF, escuro: 0x423F49)
+    static let relevoBase = Color(claro: 0xF3EBEF, escuro: 0x302D36)
+    static let relevoBorda = Color(claro: 0xE2D8DF, escuro: 0x55515C)
 
     static let ok = Color(claro: 0x2E7D32, escuro: 0x81C784)
     static let warning = Color(claro: 0xE65100, escuro: 0xFFB74D)
@@ -203,17 +207,24 @@ struct EstiloM3: ButtonStyle {
         }
     }
 
-    private var fundo: Color {
+    private var fundo: AnyShapeStyle {
         switch tipo {
-        case .cheio: return Cor.primary
-        case .tonal: return Cor.secondaryContainer
-        case .contorno, .texto: return Color.clear
+        case .cheio: return AnyShapeStyle(Cor.primary)
+        case .tonal: return AnyShapeStyle(Cor.secondaryContainer)
+        // 20/11, o Rodrigo: o botão só de contorno "não ficou parecendo um botão mesmo". Agora é em relevo
+        // (degradê claro + borda fina + sombra embaixo), igual ao BotaoRelevo do Android e ao /app.
+        case .contorno: return AnyShapeStyle(LinearGradient(colors: [Cor.relevoTopo, Cor.relevoBase], startPoint: .top, endPoint: .bottom))
+        case .texto: return AnyShapeStyle(Color.clear)
         }
     }
 
+    /// Todo botão que não é só texto tem cara de botão: sombra embaixo e "afunda" ao apertar.
+    private var temRelevo: Bool { tipo != .texto }
+
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: fonte, weight: .medium))
+        let apertado = configuration.isPressed && ativo
+        return configuration.label
+            .font(.system(size: fonte, weight: tipo == .contorno ? .semibold : .medium))
             .lineLimit(1)
             .minimumScaleFactor(0.75)
             .padding(.horizontal, tipo == .texto ? 12 : 24)
@@ -221,9 +232,13 @@ struct EstiloM3: ButtonStyle {
             .frame(maxWidth: largo ? .infinity : nil)
             .foregroundStyle(frente)
             .background(fundo, in: Capsule())
-            .overlay(Capsule().stroke(tipo == .contorno ? Cor.outline : Color.clear, lineWidth: 1))
+            .overlay(Capsule().stroke(tipo == .contorno ? Cor.relevoBorda : Color.clear, lineWidth: 1))
             .contentShape(Capsule())
-            .opacity(ativo ? (configuration.isPressed ? 0.8 : 1) : 0.38)
+            .shadow(color: Color.black.opacity(temRelevo && ativo ? (apertado ? 0.12 : 0.26) : 0),
+                    radius: apertado ? 1 : 3, x: 0, y: apertado ? 1 : 2.5)
+            .offset(y: temRelevo && apertado ? 1.5 : 0)
+            .opacity(ativo ? (apertado && !temRelevo ? 0.8 : 1) : 0.38)
+            .animation(.easeOut(duration: 0.08), value: apertado)
     }
 }
 
