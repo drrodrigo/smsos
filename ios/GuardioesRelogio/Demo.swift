@@ -10,6 +10,7 @@ import Foundation
 ///   -teste                                                 o iPhone está no modo teste
 ///   -vazio                                                 sem guardiões (o iPhone ainda não mandou)
 ///   -rolar                                                 rola a tela até o fim
+///   -ate <contagem|discreto|tipo|fim>                      rola os Ajustes até essa parte
 ///   -contagem <0|3|5>                                      a contagem escolhida
 ///   -saude                                                 o SOS rápido é o de Saúde
 enum Demo {
@@ -28,6 +29,8 @@ enum Demo {
     }
 
     static var tela: String { valor("-tela") ?? "menu" }
+
+    static var ate: String? { valor("-ate") }
 
     static var contagem: Int {
         let n = Int(valor("-contagem") ?? "") ?? 3

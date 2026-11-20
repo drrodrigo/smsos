@@ -89,7 +89,8 @@ final class PonteComOIPhone: NSObject, WCSessionDelegate {
 }
 
 /// Garante que a espera termina UMA vez só (a resposta, o erro ou o tempo limite: o que vier antes).
-private final class UmaVez<T> {
+/// (A trava cuida do acesso de várias threads: por isso pode ir para o tempo limite e a resposta.)
+private final class UmaVez<T>: @unchecked Sendable {
     private var continuacao: CheckedContinuation<T, Error>?
     private let trava = NSLock()
 

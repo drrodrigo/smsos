@@ -163,9 +163,10 @@ struct TelaDoSOS: View {
         case let .contando(perfil, restante):
             contandoVisivel(perfil, restante)
         case let .enviando(perfil):
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
                 ProgressView()
                     .tint(.white)
+                    .frame(height: 44)
                 Text("Enviando o SOS…")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
@@ -213,7 +214,7 @@ struct TelaDoSOS: View {
     private func saiuVisivel(_ r: Disparo.Resultado) -> some View {
         VStack(spacing: 5) {
             Image(systemName: r.teste ? "checkmark.circle" : "checkmark.circle.fill")
-                .font(.system(size: 36))
+                .font(.system(size: 30))
                 .foregroundColor(r.teste ? CorDoRelogio.aviso : CorDoRelogio.ok)
             Text(r.teste ? "Teste: funcionou" : "Alerta enviado")
                 .font(.system(size: 16, weight: .bold))
@@ -228,16 +229,17 @@ struct TelaDoSOS: View {
             Text(r.caminho == .iphone ? "pelo iPhone" : "pela internet do relógio")
                 .font(.system(size: 11))
                 .foregroundColor(.gray)
-            Button("OK") { estado.irParaOMenu() }
+            BotaoPequeno(titulo: "OK", cor: Color(white: 0.22)) { estado.irParaOMenu() }
                 .padding(.top, 2)
         }
         .frame(maxWidth: .infinity)
+        .padding(.horizontal, 6)
     }
 
     private func naoSaiuVisivel(_ r: Disparo.Resultado) -> some View {
         VStack(spacing: 6) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 28))
+                .font(.system(size: 24))
                 .foregroundColor(CorDoRelogio.aviso)
             Text("Não saiu")
                 .font(.system(size: 17, weight: .bold))
@@ -249,20 +251,19 @@ struct TelaDoSOS: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            BotaoPequeno(titulo: "Tentar de novo", cor: CorDoRelogio.seguranca) { estado.tentarDeNovo() }
             Button {
-                estado.tentarDeNovo()
+                estado.irParaOMenu()
             } label: {
-                Text("Tentar de novo")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(CorDoRelogio.seguranca))
+                Text("Voltar")
+                    .font(.system(size: 13))
+                    .foregroundColor(.gray)
+                    .padding(.vertical, 4)
             }
             .buttonStyle(.plain)
-            Button("Voltar") { estado.irParaOMenu() }
         }
         .frame(maxWidth: .infinity)
+        .padding(.horizontal, 6)
     }
 }
 
@@ -311,8 +312,29 @@ struct BotaoGrande: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .padding(.horizontal, 6)
-                .frame(maxWidth: .infinity, minHeight: 60)
+                .frame(maxWidth: .infinity, minHeight: 52)
                 .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(cor))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Um botão em pílula, largo e baixo (cabe junto do texto na tela pequena).
+struct BotaoPequeno: View {
+    let titulo: String
+    let cor: Color
+    let acao: () -> Void
+
+    var body: some View {
+        Button(action: acao) {
+            Text(titulo)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 9)
+                .background(Capsule().fill(cor))
         }
         .buttonStyle(.plain)
     }
@@ -373,12 +395,14 @@ struct AjustesDoRelogioView: View {
                         }
                     }
                 }
+                .id("contagem")
                 Section(header: Text("Modo discreto"),
                         footer: Text(estado.discreto
                                      ? "Tela preta, sem número e sem “SOS”: parece apagada. Você sente pela vibração."
                                      : "Tela acesa, com o número grande e o CANCELAR vermelho.")) {
                     Toggle(estado.discreto ? "Ligado" : "Desligado", isOn: $estado.discreto)
                 }
+                .id("discreto")
                 Section(header: Text("Tipo do SOS rápido"),
                         footer: Text("O que dispara ao abrir o app, pela complicação, pela Siri e pelo Botão de Ação.")) {
                     LinhaDeEscolha(texto: "🛡️ Segurança", escolhida: estado.tipoRapido == .seguranca) {
@@ -388,6 +412,7 @@ struct AjustesDoRelogioView: View {
                         estado.tipoRapido = .saude
                     }
                 }
+                .id("tipo")
                 Section(header: Text("Do iPhone"),
                         footer: Text("Para mudar o nome e os guardiões, use o app do iPhone.")) {
                     if let ctx = estado.contexto {
@@ -406,9 +431,9 @@ struct AjustesDoRelogioView: View {
                 .id("fim")
             }
             .task {
-                if Demo.rolar {
+                if let alvo = Demo.ate ?? (Demo.rolar ? "fim" : nil) {
                     try? await Task.sleep(nanoseconds: 600_000_000)
-                    rolagem.scrollTo("fim", anchor: .bottom)
+                    rolagem.scrollTo(alvo, anchor: alvo == "fim" ? .bottom : .top)
                 }
             }
         }

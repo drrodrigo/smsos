@@ -191,7 +191,9 @@ jobs:
           tirar_no "$GRANDE" 10-menu-modo-teste -tela menu -teste
           tirar_no "$GRANDE" 11-menu-sem-iphone -tela menu -vazio
           tirar_no "$GRANDE" 12-ajustes -tela ajustes
-          tirar_no "$GRANDE" 13-ajustes-fim -tela ajustes -rolar
+          tirar_no "$GRANDE" 13-ajustes-discreto -tela ajustes -ate discreto
+          tirar_no "$GRANDE" 14-ajustes-discreto-desligado -tela ajustes -ate discreto -visivel
+          tirar_no "$GRANDE" 15-ajustes-fim -tela ajustes -rolar
           xcrun simctl shutdown "$GRANDE" || true
 
           if [ -n "$PEQUENO" ]; then
@@ -200,6 +202,7 @@ jobs:
             tirar_no "$PEQUENO" 21-pequeno-nao-saiu-discreto -tela nao-saiu
             tirar_no "$PEQUENO" 22-pequeno-menu -tela menu
             tirar_no "$PEQUENO" 23-pequeno-saiu-visivel -tela saiu -visivel
+            tirar_no "$PEQUENO" 24-pequeno-nao-saiu-visivel -tela nao-saiu -visivel
             xcrun simctl shutdown "$PEQUENO" || true
           fi
           if [ -n "$ULTRA" ]; then
