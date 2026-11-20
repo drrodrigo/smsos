@@ -1,12 +1,13 @@
-# Compila o app do iPhone no simulador (sem assinatura, sem chave, sem Apple) e tira os prints de
-# cada tela no modo demonstração (-demo), para conferir que está com a cara do Android.
-# Roda a cada push na branch feat/ios-cara-android e pelo botão. Os prints saem no artifact
-# "telas-iphone". NÃO manda nada para a Apple: isso é só o guardioes-iphone.yml, pelo botão.
+# Compila o app do iPhone E o do Apple Watch no simulador (sem assinatura, sem chave, sem Apple) e
+# tira os prints de cada tela no modo demonstração (-demo): os do iPhone (para conferir que está com
+# a cara do Android) e os do relógio (num simulador de Apple Watch).
+# Roda a cada push nas branches abaixo e pelo botão. Os prints saem nos artifacts "telas-iphone" e
+# "telas-relogio". NÃO manda nada para a Apple: isso é só o guardioes-iphone.yml, pelo botão.
 name: iPhone compila (cara do Android)
 
 on:
   push:
-    branches: [feat/ios-cara-android]
+    branches: [feat/ios-cara-android, feat/relogio-apple]
   workflow_dispatch:
 
 concurrency:
@@ -16,7 +17,7 @@ concurrency:
 jobs:
   compila:
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -32,25 +33,47 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
-      - name: Compilar para o simulador (sem assinatura)
+      # Sem "-sdk": o app do relógio, que vai dentro do app do iPhone, compila com o SDK do watchOS
+      # (o -sdk iphonesimulator forçaria o SDK do iPhone também no relógio).
+      - name: Compilar o iPhone e o relógio para o simulador (sem assinatura)
         run: |
           xcodebuild -project ios/GuardioesSOS.xcodeproj -scheme GuardioesSOS -configuration Release \
-            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || true
           echo "--- erros ---"
           grep -E "error:" build.log | sort -u | head -80 || true
           echo "--- avisos ($(grep -c 'warning:' build.log || true)) ---"
           grep -E "warning:" build.log | grep -v "appintentsmetadataprocessor" | sort -u | head -80 || true
+          echo "--- metadados dos App Intents ---"
+          grep -E "appintentsmetadataprocessor" build.log | sort -u | head -20 || true
           tail -5 build.log
           if ! grep -q "BUILD SUCCEEDED" build.log; then
             echo "::error::A compilação falhou (veja os erros acima)."
+            exit 1
+          fi
+          echo "--- o que saiu ---"
+          find dd/Build/Products -maxdepth 2 -name '*.app' -type d
+          APP="$(find dd/Build/Products -maxdepth 2 -path '*iphonesimulator*' -name 'GuardioesSOS.app' -type d | head -1)"
+          echo "dentro do app do iPhone:"
+          find "$APP" -maxdepth 4 \( -name '*.app' -o -name '*.appex' \) | sed "s|$APP/||"
+          if [ -z "$(find "$APP" -maxdepth 2 -name 'GuardioesRelogio.app' -type d)" ]; then
+            echo "::error::O app do relógio não foi embutido no app do iPhone."
+            exit 1
+          fi
+          W="$(find "$APP" -maxdepth 2 -name 'GuardioesRelogio.app' -type d | head -1)"
+          echo "--- Info.plist do relógio ---"
+          plutil -p "$W/Info.plist" | grep -E "CFBundle(Identifier|ShortVersionString|Version|DisplayName)|WK|NSLocation" || true
+          echo "--- dentro do app do relógio ---"
+          find "$W" -maxdepth 3 \( -name '*.appex' -o -name 'Metadata.appintents' \) | sed "s|$W/||"
+          if [ -z "$(find "$W" -maxdepth 2 -name 'GuardioesComplicacao.appex' -type d)" ]; then
+            echo "::error::A complicação não foi embutida no app do relógio."
             exit 1
           fi
 
       - name: Tirar os prints (iPhone Pro Max)
         run: |
           set -e
-          APP="$(find dd/Build/Products -name 'GuardioesSOS.app' -type d | head -1)"
+          APP="$(find dd/Build/Products -maxdepth 2 -path '*iphonesimulator*' -name 'GuardioesSOS.app' -type d | head -1)"
           echo "app: $APP"
 
           LINE="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9] Pro Max' | head -1)"
@@ -103,6 +126,7 @@ jobs:
           tirar 22-como-chega-escuro -tab inicio -mostrar como-chega
           tirar 23-ajustes-escuro -tab ajustes
           xcrun simctl ui "$DEV" appearance light || true
+          xcrun simctl shutdown "$DEV" || true
 
           echo "--- prints ---"
           ls -la telas
@@ -111,4 +135,87 @@ jobs:
         with:
           name: telas-iphone
           path: telas/*.png
+          if-no-files-found: error
+
+      - name: Tirar os prints (Apple Watch)
+        run: |
+          set -e
+          WAPP="$(find dd/Build/Products -maxdepth 2 -path '*watchsimulator*' -name 'GuardioesRelogio.app' -type d | head -1)"
+          echo "app do relógio: $WAPP"
+          echo "--- relógios disponíveis ---"
+          xcrun simctl list devices available | grep -i 'Apple Watch' || true
+
+          udid() { grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1; }
+          GRANDE="$(xcrun simctl list devices available | grep -E 'Apple Watch Series 1[0-9] \(4[5-9]mm\)' | head -1 | udid)"
+          [ -z "$GRANDE" ] && GRANDE="$(xcrun simctl list devices available | grep 'Apple Watch' | grep -v Ultra | tail -1 | udid)"
+          PEQUENO="$(xcrun simctl list devices available | grep -E 'Apple Watch SE.*\(40mm\)' | head -1 | udid)"
+          ULTRA="$(xcrun simctl list devices available | grep -E 'Apple Watch Ultra' | head -1 | udid)"
+          echo "grande: $GRANDE  pequeno: $PEQUENO  ultra: $ULTRA"
+          if [ -z "$GRANDE" ]; then
+            echo "::error::Nenhum simulador de Apple Watch neste Mac."
+            exit 1
+          fi
+
+          mkdir -p telas-relogio
+          tirar_no() {
+            DEV="$1"; NOME="$2"; shift 2
+            xcrun simctl launch "$DEV" br.com.guardioessos.watchkitapp -demo "$@"
+            sleep 6
+            xcrun simctl io "$DEV" screenshot "telas-relogio/$NOME.png"
+            xcrun simctl terminate "$DEV" br.com.guardioessos.watchkitapp || true
+            sleep 1
+          }
+          preparar() {
+            DEV="$1"
+            xcrun simctl boot "$DEV" || true
+            xcrun simctl bootstatus "$DEV" -b
+            xcrun simctl status_bar "$DEV" override --time "9:41" || true
+            xcrun simctl install "$DEV" "$WAPP"
+            # A primeira abertura demora (o sistema prepara o app): uma de aquecimento, sem print.
+            xcrun simctl launch "$DEV" br.com.guardioessos.watchkitapp -demo -tela menu
+            sleep 15
+            xcrun simctl terminate "$DEV" br.com.guardioessos.watchkitapp || true
+            sleep 1
+          }
+
+          preparar "$GRANDE"
+          tirar_no "$GRANDE" 01-contando-discreto -tela contando
+          tirar_no "$GRANDE" 02-contando-visivel -tela contando -visivel
+          tirar_no "$GRANDE" 03-enviando-visivel -tela enviando -visivel
+          tirar_no "$GRANDE" 04-saiu-visivel -tela saiu -visivel
+          tirar_no "$GRANDE" 05-saiu-teste-discreto -tela saiu -teste
+          tirar_no "$GRANDE" 06-saiu-teste-visivel -tela saiu-internet -teste -visivel
+          tirar_no "$GRANDE" 07-nao-saiu-discreto -tela nao-saiu
+          tirar_no "$GRANDE" 08-nao-saiu-visivel -tela nao-saiu -visivel
+          tirar_no "$GRANDE" 09-menu -tela menu
+          tirar_no "$GRANDE" 10-menu-modo-teste -tela menu -teste
+          tirar_no "$GRANDE" 11-menu-sem-iphone -tela menu -vazio
+          tirar_no "$GRANDE" 12-ajustes -tela ajustes
+          tirar_no "$GRANDE" 13-ajustes-discreto -tela ajustes -ate discreto
+          tirar_no "$GRANDE" 14-ajustes-discreto-desligado -tela ajustes -ate discreto -visivel
+          tirar_no "$GRANDE" 15-ajustes-fim -tela ajustes -rolar
+          xcrun simctl shutdown "$GRANDE" || true
+
+          if [ -n "$PEQUENO" ]; then
+            preparar "$PEQUENO"
+            tirar_no "$PEQUENO" 20-pequeno-contando-visivel -tela contando -visivel
+            tirar_no "$PEQUENO" 21-pequeno-nao-saiu-discreto -tela nao-saiu
+            tirar_no "$PEQUENO" 22-pequeno-menu -tela menu
+            tirar_no "$PEQUENO" 23-pequeno-saiu-visivel -tela saiu -visivel
+            tirar_no "$PEQUENO" 24-pequeno-nao-saiu-visivel -tela nao-saiu -visivel
+            xcrun simctl shutdown "$PEQUENO" || true
+          fi
+          if [ -n "$ULTRA" ]; then
+            preparar "$ULTRA"
+            tirar_no "$ULTRA" 30-ultra-menu -tela menu
+            xcrun simctl shutdown "$ULTRA" || true
+          fi
+
+          echo "--- prints do relógio ---"
+          ls -la telas-relogio
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: telas-relogio
+          path: telas-relogio/*.png
           if-no-files-found: error

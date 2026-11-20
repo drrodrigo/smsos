@@ -7,11 +7,22 @@
 # O pacote é o mesmo da Play, br.com.guardioessos. A versão (MARKETING_VERSION) acompanha a do
 # Android; o número do build (CURRENT_PROJECT_VERSION) vem da execução do GitHub, porque a Apple
 # recusa número repetido.
+#
+# Três alvos:
+#   GuardioesSOS          o app do iPhone (iOS 16)
+#   GuardioesRelogio      o app do Apple Watch (watchOS 9), EMBUTIDO no do iPhone: quem instala o
+#                         do iPhone (TestFlight ou App Store) ganha o do relógio junto
+#   GuardioesComplicacao  a complicação "SOS" do mostrador (WidgetKit), embutida no app do relógio
+# O que os dois apps dividem: Comum/ (o combinado entre eles e a regra de quem recebe) e alguns
+# arquivos do iPhone (a mensagem, os telefones, os contatos, a localização e o envio).
 name: GuardioesSOS
 options:
   deploymentTarget:
     iOS: "16.0"
+    watchOS: "9.0"
   createIntermediateGroups: true
+  # Português: as frases da Siri ("Socorro no GuardiõesSOS") e os textos do sistema dentro do app.
+  developmentLanguage: pt-BR
 settings:
   base:
     MARKETING_VERSION: "1.1"
@@ -23,6 +34,10 @@ targets:
     platform: iOS
     sources:
       - path: GuardioesSOS
+      - path: Comum
+    dependencies:
+      # O app do relógio vai dentro do app do iPhone (pasta Watch/).
+      - target: GuardioesRelogio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos
@@ -38,10 +53,70 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         ENABLE_BITCODE: "NO"
+
+  GuardioesRelogio:
+    type: application
+    platform: watchOS
+    sources:
+      - path: GuardioesRelogio
+        excludes:
+          - Info.plist
+      - path: Comum
+      - path: GuardioesSOS/Mensagem.swift
+      - path: GuardioesSOS/Telefone.swift
+      - path: GuardioesSOS/Contato.swift
+      - path: GuardioesSOS/Localizacao.swift
+      - path: GuardioesSOS/Backend.swift
+      - path: GuardioesSOS/Gateway.swift
+      # A chave de envio: o guardioes-iphone.yml escreve este arquivo antes de gerar o projeto,
+      # então o relógio recebe a MESMA chave do iPhone (para disparar sozinho pela internet).
+      - path: GuardioesSOS/Secrets.swift
+    dependencies:
+      # A complicação vai dentro do app do relógio (pasta PlugIns/).
+      - target: GuardioesComplicacao
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos.watchkitapp
+        PRODUCT_NAME: GuardioesRelogio
+        INFOPLIST_FILE: GuardioesRelogio/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        TARGETED_DEVICE_FAMILY: "4"
+        SKIP_INSTALL: "YES"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_BITCODE: "NO"
+
+  GuardioesComplicacao:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: GuardioesComplicacao
+        excludes:
+          - Info.plist
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos.watchkitapp.complicacao
+        PRODUCT_NAME: GuardioesComplicacao
+        INFOPLIST_FILE: GuardioesComplicacao/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        TARGETED_DEVICE_FAMILY: "4"
+        SKIP_INSTALL: "YES"
+        APPLICATION_EXTENSION_API_ONLY: "YES"
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_BITCODE: "NO"
 schemes:
   GuardioesSOS:
     build:
       targets:
         GuardioesSOS: all
+    archive:
+      config: Release
+  GuardioesRelogio:
+    build:
+      targets:
+        GuardioesRelogio: all
     archive:
       config: Release
