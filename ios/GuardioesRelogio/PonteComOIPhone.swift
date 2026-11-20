@@ -23,11 +23,27 @@ final class PonteComOIPhone: NSObject, WCSessionDelegate {
         case semResposta
     }
 
+    private var ligada = false
+
+    /// Liga a conversa (uma vez; chamar de novo não faz nada).
     func ligar() {
-        guard !Demo.ativo, WCSession.isSupported() else { return }
+        guard !Demo.ativo, WCSession.isSupported(), !ligada else { return }
+        ligada = true
         let sessao = WCSession.default
         sessao.delegate = self
         sessao.activate()
+    }
+
+    /// Aberto agora pela Siri ou pelo Botão de Ação, a conversa ainda está ligando: espera um pouco
+    /// (até `limite` segundos) antes de decidir entre o iPhone e a internet do relógio.
+    func esperarLigar(limite: TimeInterval = 2) async {
+        guard !Demo.ativo, WCSession.isSupported() else { return }
+        ligar()
+        var esperou: TimeInterval = 0
+        while WCSession.default.activationState != .activated && esperou < limite {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            esperou += 0.1
+        }
     }
 
     /// O iPhone está por perto (Bluetooth ou a mesma rede) e a conversa está ligada.

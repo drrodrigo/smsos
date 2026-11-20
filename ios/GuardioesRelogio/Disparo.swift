@@ -33,6 +33,7 @@ enum Disparo {
     static func executar(perfil: Perfil, posicao: CLLocation?) async -> Resultado {
         let id = UUID().uuidString
         let ponte = PonteComOIPhone.unica
+        await ponte.esperarLigar()
 
         if ponte.iPhoneAlcancavel {
             do {
