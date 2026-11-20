@@ -27,7 +27,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,7 +75,7 @@ fun PlacesScreen(state: AppState) {
                 HelpText("Comece pelos mais comuns:")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     sugestoes.forEach { (rotulo, nome) ->
-                        OutlinedButton(
+                        BotaoRelevo(
                             onClick = {
                                 val place = Place(name = nome)
                                 Repository.addPlace(place)
@@ -200,7 +199,7 @@ private fun PlaceEditor(place: Place, onClose: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 HelpText("No Google Maps, segure o dedo em cima do lugar e copie os números que aparecem.")
-                OutlinedButton(onClick = {
+                BotaoRelevo(onClick = {
                     val point = Coordinates.parse(coordinatesText)
                     if (point == null) {
                         context.toast("Não entendi essas coordenadas")
@@ -232,7 +231,7 @@ private fun PlaceEditor(place: Place, onClose: () -> Unit) {
             }
         }
         item {
-            OutlinedButton(onClick = { confirmingDelete = true }, Modifier.fillMaxWidth()) { Text("Excluir este lugar") }
+            BotaoRelevo(onClick = { confirmingDelete = true }, Modifier.fillMaxWidth()) { Text("Excluir este lugar") }
         }
     }
 
