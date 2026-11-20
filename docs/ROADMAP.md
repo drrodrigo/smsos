@@ -87,6 +87,12 @@ Usar os **dois botões de volume** para **dois tipos** de alerta, sem olhar a te
   "situações de mensagem" acima (cada gesto → um preset).
 - Segurar os 5s continua valendo em cada botão (evita disparo sem querer).
 
+### SOS pelo relógio (Galaxy Watch / Wear OS) — 1º passo PRONTO (20/11, `relogio/`)
+Dois toques no botão de cima abrem o Guardião no relógio, com a tela PRETA (modo discreto), e ele dispara
+sozinho em 3 s (ou na hora); tocar na tela ou o botão de voltar cancela. Complicação "SOS" no mostrador. Sai
+pelo celular (ponte do Wear OS). Falta: envio direto pelo relógio com Wi-Fi/LTE. Apertar 5 vezes ou segurar o
+botão físico não dá (a Samsung reserva). Detalhes: [`relogio-sos.md`](relogio-sos.md).
+
 ### Disfarce do app
 Ícone/nome que não entregam a função; abrir normal e acionar escondido.
 

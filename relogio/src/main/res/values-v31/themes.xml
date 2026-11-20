@@ -1,0 +1,11 @@
+<resources>
+    <!-- Wear OS 4 em diante (Android 13+) mostra uma tela de abertura com o ícone do app. Aqui ela é
+         TODA PRETA, sem o escudo: abrir o SOS pelo botão não pode chamar a atenção de ninguém. -->
+    <style name="Theme.GuardioesRelogio" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vazio</item>
+    </style>
+</resources>

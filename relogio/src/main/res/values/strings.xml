@@ -1,0 +1,5 @@
+<resources>
+    <!-- O nome do app vem do build (GuardiõesSOS / GuardiõesSOS teste). Estes são os da complicação. -->
+    <string name="complicacao_nome">SOS</string>
+    <string name="complicacao_descricao">Abrir o SOS do GuardiõesSOS</string>
+</resources>
