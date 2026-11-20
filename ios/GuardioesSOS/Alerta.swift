@@ -5,48 +5,41 @@ import AudioToolbox
 
 /// O SOS de verdade: pega a localização, escolhe quem recebe (guardiões + pessoas do lugar),
 /// manda pela nossa estrutura e guarda no histórico. Igual ao AlertManager do Android e ao
-/// disparar() da versão no navegador.
+/// disparar() da versão no navegador. O Apple Watch pede o SOS pelo mesmo executar() (PonteComORelogio).
 enum Alerta {
-    struct Destino {
-        let contatos: [Contato]
-        let lugar: String?
-    }
+    /// Quem recebe e o lugar (a regra mora em Comum/QuemRecebe.swift, que o relógio também usa).
+    typealias Destino = QuemRecebe.Destino
 
-    /// Quem recebe (igual ao destinatarios() do app.js / RecipientResolver.kt): os guardiões sempre;
-    /// as pessoas do lugar onde você está; e, sem GPS, as pessoas de TODOS os lugares.
     static func destinatarios(guardioes: [Contato], lugares: [Lugar], posicao: CLLocation?) -> Destino {
-        var lista: [Contato] = []
-        var vistos = Set<String>()
-        var lugar: String? = nil
-
-        func incluir(_ c: Contato) {
-            let t = Telefone.nacional(c.telefone)
-            guard Telefone.celularValido(t), !vistos.contains(t) else { return }
-            vistos.insert(t)
-            lista.append(Contato(id: c.id, nome: c.exibicao, telefone: t))
-        }
-
-        for c in guardioes { incluir(c) }
-        for l in lugares {
-            let dentro: Bool
-            if let p = posicao, let lat = l.latitude, let lng = l.longitude {
-                dentro = p.distance(from: CLLocation(latitude: lat, longitude: lng)) <= Double(l.raio)
-            } else {
-                dentro = posicao == nil
-            }
-            if dentro {
-                if posicao != nil && lugar == nil { lugar = l.nome }
-                for c in l.contatos { incluir(c) }
-            }
-        }
-        return Destino(contatos: lista, lugar: lugar)
+        QuemRecebe.calcular(guardioes: guardioes, lugares: lugares, posicao: posicao)
     }
 
+    /// O que aconteceu no SOS, sem tela nenhuma.
+    struct Resultado {
+        let teste: Bool
+        let destino: Destino
+        let mensagem: String
+        /// Os números (11 dígitos) que a nossa estrutura aceitou.
+        let aceitos: Set<String>
+
+        var total: Int { destino.contatos.count }
+        var enviados: Int { aceitos.count }
+    }
+
+    /// O SOS de verdade, SEM TELA: pega a localização, escolhe quem recebe, monta o texto e, fora do
+    /// modo teste, manda pela nossa estrutura; guarda no histórico e marca o alerta ativo.
+    /// É o MESMO caminho do botão SOS do iPhone (disparar, logo abaixo) e do pedido do Apple Watch.
+    /// - posicaoDada: a posição que veio de fora (a do relógio); sem ela, pega a do iPhone.
+    /// - etapa: avisa a tela quando passa de "pegando a localização" para "enviando".
     @MainActor
-    static func disparar(_ perfil: Perfil, app: AppState, camada: Camada, irPara: @escaping (Aba) -> Void) async {
-        vibrar()
-        camada.esperando("Pegando sua localização…")
-        let posicao: CLLocation? = Demo.ativo ? nil : await app.local.pegar(timeout: 8)
+    static func executar(_ perfil: Perfil, app: AppState, posicaoDada: CLLocation? = nil,
+                         etapa: ((String) -> Void)? = nil) async -> Resultado {
+        let posicao: CLLocation?
+        if let posicaoDada {
+            posicao = posicaoDada
+        } else {
+            posicao = Demo.ativo ? nil : await app.local.pegar(timeout: 8)
+        }
         let destino = destinatarios(guardioes: app.guardioes, lugares: app.lugares, posicao: posicao)
         let lat = posicao?.coordinate.latitude
         let lng = posicao?.coordinate.longitude
@@ -56,12 +49,39 @@ enum Alerta {
         if app.emTeste {
             app.registrar(RegistroAlerta(em: Date(), teste: true, perfil: perfil, total: total, enviados: 0,
                                          lugar: destino.lugar, latitude: lat, longitude: lng))
+            return Resultado(teste: true, destino: destino, mensagem: msg, aceitos: [])
+        }
+
+        if total == 0 {
+            return Resultado(teste: false, destino: destino, mensagem: msg, aceitos: [])
+        }
+
+        etapa?("Enviando o alerta…")
+        let aceitos = await Gateway.enviar(telefones: destino.contatos.map { $0.telefone }, texto: msg)
+        app.registrar(RegistroAlerta(em: Date(), teste: false, perfil: perfil, total: total, enviados: aceitos.count,
+                                     lugar: destino.lugar, latitude: lat, longitude: lng))
+        if !aceitos.isEmpty {
+            app.ativo = AlertaAtivo(em: Date(), telefones: Array(aceitos))
+        }
+        return Resultado(teste: false, destino: destino, mensagem: msg, aceitos: aceitos)
+    }
+
+    /// O botão SOS do iPhone: o mesmo executar(), com a espera, o diálogo do resultado e o plano B.
+    @MainActor
+    static func disparar(_ perfil: Perfil, app: AppState, camada: Camada, irPara: @escaping (Aba) -> Void) async {
+        vibrar()
+        camada.esperando("Pegando sua localização…")
+        let r = await executar(perfil, app: app) { camada.esperando($0) }
+        let total = r.total
+        let msg = r.mensagem
+
+        if r.teste {
             let texto: String
             if total == 0 {
                 texto = "Nenhum contato receberia o alerta. Cadastre contatos."
             } else {
-                let nomes = destino.contatos.map { $0.nome }.joined(separator: ", ")
-                texto = "Seria enviado para \(total) contato(s): \(nomes).\nLugar: \(destino.lugar ?? "nenhum lugar cadastrado").\n\n\(msg)"
+                let nomes = r.destino.contatos.map { $0.nome }.joined(separator: ", ")
+                texto = "Seria enviado para \(total) contato(s): \(nomes).\nLugar: \(r.destino.lugar ?? "nenhum lugar cadastrado").\n\n\(msg)"
             }
             camada.dialogo("Teste: o alerta funcionou (nenhum SMS enviado)", texto)
             return
@@ -73,16 +93,10 @@ enum Alerta {
             return
         }
 
-        camada.esperando("Enviando o alerta…")
-        let aceitos = await Gateway.enviar(telefones: destino.contatos.map { $0.telefone }, texto: msg)
-        let enviados = aceitos.count
-        app.registrar(RegistroAlerta(em: Date(), teste: false, perfil: perfil, total: total, enviados: enviados,
-                                     lugar: destino.lugar, latitude: lat, longitude: lng))
-
+        let enviados = r.enviados
         if enviados > 0 {
-            app.ativo = AlertaAtivo(em: Date(), telefones: Array(aceitos))
             vibrar()
-            let faltou = destino.contatos.filter { !aceitos.contains($0.telefone) }
+            let faltou = r.destino.contatos.filter { !r.aceitos.contains($0.telefone) }
             if !faltou.isEmpty {
                 planoB("Alerta enviado para \(enviados) de \(total)",
                        "\(faltou.count) contato(s) não receberam pelo nosso envio. Mande para eles pelo SMS do seu celular:",
@@ -95,7 +109,7 @@ enum Alerta {
 
         planoB("O alerta não saiu",
                "Sem internet ou o envio falhou. Mande agora pelo SMS do seu celular (abre já com o texto e os números):",
-               contatos: destino.contatos, msg: msg, camada: camada)
+               contatos: r.destino.contatos, msg: msg, camada: camada)
     }
 
     /// Plano B: o alerta não saiu pela nossa estrutura → abrir o SMS do próprio celular (ou ligar 190).

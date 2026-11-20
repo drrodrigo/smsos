@@ -4,6 +4,10 @@ import Combine
 /// Estado do app, guardado no aparelho (UserDefaults). Identidade = dispositivo (UUID) + telefone.
 /// O que guarda é o mesmo do Android: nome, guardiões, lugares, ajustes e o histórico (só aqui).
 final class AppState: ObservableObject {
+    /// O estado do app, um só: as telas e a ponte com o Apple Watch (que pode acordar o app em
+    /// segundo plano, sem tela nenhuma) mexem no MESMO estado. Criado na thread principal.
+    static let unico = AppState()
+
     @Published var nome: String { didSet { gravar(nome, K.nome) } }
     @Published var meuTelefone: String { didSet { gravar(meuTelefone, K.meuTelefone) } }
     @Published var perfil: Perfil { didSet { gravar(perfil.rawValue, K.perfil) } }
