@@ -61,6 +61,11 @@ escolhe rápido qual disparar, cada uma com seu texto e, se quiser, seu próprio
 - "Estou saindo / estou na rua", "cheguei", "a caminho de casa".
   (O GPS já diz onde a pessoa está; a situação muda o TEXTO e, às vezes, o grupo.)
 
+### SOS pelo relógio (Galaxy Watch / Wear OS)
+Dois toques no botão de cima abrem o Guardião, que dispara sozinho em 5 s (com "Cancelar");
+complicação de SOS no mostrador. Sai pelo celular (Bluetooth) ou direto pelo relógio com Wi-Fi/LTE.
+Segurar o botão físico não dá (a Samsung reserva). Detalhes: [`relogio-sos.md`](relogio-sos.md).
+
 ### Disfarce do app
 Ícone/nome que não entregam a função; abrir normal e acionar escondido.
 
