@@ -28,6 +28,19 @@ Chat: **Guardiões SOS**. Repositório do app: `drrodrigo/smsos` (namespace inte
   - Plano B: sem número confirmado ou sem internet, abre o SMS do próprio celular já com texto e números.
   - Ainda não tem: sirene para guardião pelo navegador (push), botão de volume, atualização de localização.
 - Agora que a Apple aprovou: decidir quando subir o 2º round como ATUALIZAÇÃO (pendência 10).
+- ✅ **20/11 (com o "pode" dele): a chave do iPhone vale em TODO o servidor.** `guardioes-alertar` (v3),
+  `guardioes-push` (v4), `guardioes-otp` (v4) e `guardioes-backup` (v4) passaram a aceitar os dois hashes
+  (Android `2307d2a6…` e iPhone `e3004feb…`), como `smsos-alerta`, `guardioes-registrar` e `guardioes-convite`
+  já faziam. Sonda com chave falsa → 401 nas quatro. Efeito: o iPhone (e o Apple Watch) tocam a sirene nos
+  guardiões e confirmam número; o APK da fábrica do GitHub (que sai com a chave do iPhone,
+  `GUARDIOES_GATEWAY_KEY`) também. Falta o segredo `GOOGLE_SERVICES_JSON` (passo dele) para o APK receber push.
+- **Fábrica do APK de teste** volta a funcionar (`.github/workflows/guardioes-android.yml`, a cada push na
+  `feat/captura-sos`; SDK `platforms;android-37.0`). 0.32.0 entregue a ele em 19/11.
+- **iPhone 1.1 com a cara do Android** na `feat/ios-fabrica` (PR #9, compilado no Mac do GitHub, `ios-compila.yml`).
+  TestFlight: ele clica em Run workflow no `guardioes-iphone.yml` (branch `feat/ios-fabrica`).
+- **Relógios** (pedido dele, 20/11): app do Galaxy Watch (`feat/relogio`) e do Apple Watch (`feat/relogio-apple`)
+  em construção. Disparo rápido e discreto: 2 toques no botão de cima (Galaxy) / complicação, Siri, Botão de Ação
+  (Apple Watch Ultra) → tela preta, dispara sozinho em 3 s. Ver `docs/relogio-sos.md`.
 
 ## Onde está (resumo rápido)
 
