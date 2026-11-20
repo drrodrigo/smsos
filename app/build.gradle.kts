@@ -130,6 +130,9 @@ dependencies {
     // criado na Play Console; sem ele, a tela do plano aparece mas a compra fica indisponível.
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 
+    // A ponte com o app do RELÓGIO (Wear OS): recebe o pedido de SOS do relógio e responde (relogio/).
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
+
     testImplementation("junit:junit:4.13.2")
     // Abre as telas num Android simulado, sem precisar de celular.
     testImplementation(composeBom)

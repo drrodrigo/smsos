@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O APP DO RELÓGIO do GuardiõesSOS (Wear OS 3+). Abriu = conta e dispara sozinho; o pedido vai pela ponte
+     do Wear OS para o app do celular, que manda o alerta pelo nosso servidor. O relógio NÃO manda SMS
+     (nunca SEND_SMS) e NÃO fala com o servidor. Ver docs/relogio-sos.md. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!-- A vibração de "abriu", "disparou", "chegou" e "não saiu". -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Mantém o relógio acordado SÓ durante a contagem e o envio (no máximo uns segundos). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="${appLabel}"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.GuardioesRelogio">
+
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="false" />
+
+        <!-- Não funciona sozinho: o alerta sai pelo app do celular (perto, pelo Bluetooth). -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <!-- A tela do SOS. É ela que o "pressionar duas vezes" do botão de cima abre (é a do ícone).
+             singleTask: abrir de novo com ela no fundo começa outra contagem (onNewIntent). -->
+        <activity
+            android:name=".TelaDoSos"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- A COMPLICAÇÃO "SOS" do mostrador: o toque abre a tela do SOS já contando. Não se atualiza
+             sozinha (UPDATE_PERIOD 0): não gasta bateria. ICON = a imagem monocromática. -->
+        <service
+            android:name=".ComplicacaoSos"
+            android:exported="true"
+            android:icon="@drawable/ic_escudo"
+            android:label="@string/complicacao_nome"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,ICON,SMALL_IMAGE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="0" />
+        </service>
+    </application>
+</manifest>

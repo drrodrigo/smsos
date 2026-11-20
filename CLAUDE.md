@@ -36,6 +36,14 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
 - Segredos (chave do gateway, keystore de release) ficam **fora do git**: `gateway.properties` e
   `keystore/release.properties` estão no `.gitignore`. Nunca commite chave.
 
+- **App do RELÓGIO (Wear OS 3+, módulo `relogio/`, 20/11):** abriu = conta (3 s, tela preta no modo discreto) e
+  dispara pelo celular (`OuvinteDoRelogio` → `AlertManager.trigger(..., TriggerSource.RELOGIO, ...)`). A ponte do
+  Wear OS só liga app com o MESMO pacote e a MESMA chave: o relógio usa `br.com.guardioessos` (`.teste` no
+  debug) e os MESMOS signingConfigs do celular; `versionCode` = o do celular **+100000** e `versionName` com o
+  sufixo **`-relogio`** (subiu a versão do celular, suba a do relógio). O contrato (`/guardioes/sos` e
+  `/guardioes/sos/resultado`, chaves do JSON) mora em `relogio/.../Contrato.kt` e `app/.../relogio/ContratoDoRelogio.kt`;
+  o `ContratoDoRelogioTest` trava os dois lados. Detalhes e como instalar: `docs/relogio-sos.md`.
+
 ## Envio do alerta (gateway)
 
 O alerta sai pela **nossa estrutura de SMS**, não pelo chip (o chip falhava: Bloqueador

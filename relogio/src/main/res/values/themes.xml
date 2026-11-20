@@ -1,0 +1,7 @@
+<resources>
+    <!-- Fundo PRETO desde o primeiro quadro: no modo discreto a tela tem de parecer apagada ao abrir. -->
+    <style name="Theme.GuardioesRelogio" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+    </style>
+</resources>

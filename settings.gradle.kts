@@ -20,3 +20,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "AlertaSilencioso"
 include(":app")
+// O app do RELÓGIO (Galaxy Watch / Wear OS 3+): o SOS que dispara pelo celular. Ver docs/relogio-sos.md.
+include(":relogio")

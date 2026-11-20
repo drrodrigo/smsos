@@ -30,6 +30,8 @@ enum class TriggerSource(val description: String) {
     SCREEN_ON("botão de volume, com a tela ligada"),
     SCREEN_OFF("botão de volume, com a tela apagada"),
     APP_BUTTON("botão dentro do app"),
+    /** O app do relógio (Wear OS) pediu o SOS pela ponte. Vira "Acionado pelo relógio" no histórico. */
+    RELOGIO("relógio"),
 }
 
 /**

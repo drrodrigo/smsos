@@ -15,6 +15,11 @@ name: fábrica do Android (APK de teste)
 #
 # 18/11: o SDK do compileSdk 37 se chama "platforms;android-37.0" no repositório do Google (o nome
 # "android-37" não existe — era por isso que a fábrica falhava em 06/11).
+#
+# 20/11: monta também o APK de teste do RELÓGIO (módulo relogio/, Wear OS), com o MESMO pacote
+# (br.com.guardioessos.teste) e a MESMA chave de teste do celular — sem isso a ponte do Wear OS não liga
+# os dois. Ele sai no MESMO Artifact, como GuardioesSOS-relogio-teste-vX.Y.Z.apk (instala no relógio por
+# ADB pelo Wi-Fi do relógio: docs/relogio-sos.md).
 on:
   push:
     branches: [feat/captura-sos]
@@ -71,19 +76,20 @@ jobs:
           if [ -n "$GS" ]; then printf '%s' "$GS" > app/google-services.json; echo "Firebase: sim (push com sirene)";
           else echo "::warning::Sem GOOGLE_SERVICES_JSON: o APK sai sem o aviso com sirene (push)."; fi
 
-      - name: Testes
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+      - name: Testes (celular e relógio)
+        run: ./gradlew :app:testDebugUnitTest :relogio:testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Montar o APK de teste (envia de verdade)
-        run: ./gradlew :app:assembleDebug -Preal --no-daemon --stacktrace
+      - name: Montar o APK de teste (envia de verdade) e o do relógio
+        run: ./gradlew :app:assembleDebug :relogio:assembleDebug -Preal --no-daemon --stacktrace
 
       - name: Nome com a versão
         id: nome
         run: |
           V=$(grep -m1 'versionName = ' app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
           mkdir -p saida && cp app/build/outputs/apk/debug/*.apk "saida/GuardioesSOS-teste-v$V.apk"
+          cp relogio/build/outputs/apk/debug/*.apk "saida/GuardioesSOS-relogio-teste-v$V.apk"
           echo "versao=$V" >> "$GITHUB_OUTPUT"
-          echo "### APK de teste v$V pronto" >> "$GITHUB_STEP_SUMMARY"
+          echo "### APK de teste v$V pronto (celular + relógio)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Guardar o APK (Artifact)
         uses: actions/upload-artifact@v4

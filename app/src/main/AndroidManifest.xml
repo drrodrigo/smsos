@@ -106,6 +106,18 @@
             </intent-filter>
         </service>
 
+        <!-- O SOS pelo RELÓGIO (Wear OS): o app do relógio manda o pedido pela ponte do Wear OS e este
+             serviço aciona o mesmo SOS do botão do app, mesmo com o app fechado. Só o nosso app de
+             relógio (mesmo pacote e mesma assinatura) fala neste caminho. Ver relogio/ContratoDoRelogio. -->
+        <service
+            android:name=".relogio.OuvinteDoRelogio"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:path="/guardioes/sos" />
+            </intent-filter>
+        </service>
+
         <!-- Quando a notificação chega com o app FECHADO, o Firebase usa este canal e este ícone. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
