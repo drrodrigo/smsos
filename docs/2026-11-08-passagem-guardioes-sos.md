@@ -38,6 +38,10 @@ Chat: **Guardiões SOS**. Repositório do app: `drrodrigo/smsos` (namespace inte
   `feat/captura-sos`; SDK `platforms;android-37.0`). 0.32.0 entregue a ele em 19/11.
 - **iPhone 1.1 com a cara do Android** na `feat/ios-fabrica` (PR #9, compilado no Mac do GitHub, `ios-compila.yml`).
   TestFlight: ele clica em Run workflow no `guardioes-iphone.yml` (branch `feat/ios-fabrica`).
+- ✅ **iPhone 1.1 (13) no TestFlight (20/11)**: ele rodou o `guardioes-iphone.yml` na `feat/ios-fabrica`; build VALID,
+  e ele confirmou no iPhone dele: "ficou com a mesma cara do android". Link público (após a revisão de teste da
+  Apple): https://testflight.apple.com/join/uPMRxmnq. O grupo interno "Equipe" deu 409 ao atribuir (inofensivo: o build
+  apareceu). O Apple Watch (PR #14) NÃO entra antes de assinar os 2 alvos novos (ver relatório no PR #14).
 - **Relógios** (pedido dele, 20/11): app do Galaxy Watch (`feat/relogio`) e do Apple Watch (`feat/relogio-apple`)
   em construção. Disparo rápido e discreto: 2 toques no botão de cima (Galaxy) / complicação, Siri, Botão de Ação
   (Apple Watch Ultra) → tela preta, dispara sozinho em 3 s. Ver `docs/relogio-sos.md`.
