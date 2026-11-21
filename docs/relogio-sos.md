@@ -143,3 +143,26 @@ servidor**, pela internet (`smsos-alerta` → `bipe-sms` → SMS Market, + siren
 1. **Testar num Galaxy Watch de verdade** (até aqui tudo foi montado e testado só no computador).
 2. **Envio direto pelo relógio com Wi-Fi/LTE** (sem o celular), com o GPS do relógio.
 3. Fábrica da loja para o relógio (montar o `.aab` assinado no GitHub), se o Rodrigo decidir publicar.
+
+## ✅ Testado de verdade (20/11/2026, 23h04) — Galaxy Watch do Rodrigo (SM-L315F)
+
+Dois toques no botão de cima → tela preta → 3 s → o relógio mostrou **"modo teste: nada foi enviado"**:
+o pedido foi pelo Bluetooth, o **GuardiõesSOS teste** do celular rodou o SOS em modo teste e respondeu.
+O caminho inteiro (relógio → ponte do Wear OS → `OuvinteDoRelogio` → `AlertManager` → resposta) funciona.
+
+### Os pulos do gato da instalação (o que travou e como passou)
+- **"Depurar por Wi-Fi" dizia "ligue o Wi-Fi" com o Wi-Fi ligado:** com o Bluetooth do relógio ligado ao
+  celular, o Galaxy Watch não usa o Wi-Fi de verdade. **Desligue o Bluetooth do relógio** só durante a
+  instalação (e religue depois: o SOS precisa dele).
+- **Wear OS 4+ pede pareamento:** no Wear Installer 2, ⋮ → **Pair with watch** → **ENABLE** e digite
+  **código ESPAÇO porta** (ex.: `697211 40787`), com a tela "Parear novo aparelho" do relógio ABERTA (o código
+  muda quando fecha). Depois, na tela inicial, a porta de CONEXÃO é a da tela principal da Depuração sem fio.
+- **O teclado do celular sem espaço:** desmarque "Use phone keypad for codes" (o teclado do app tem espaço).
+- **"Could not connect to watch":** a porta no celular voltou para 5555; ponha a do relógio.
+- **O arquivo vindo pelo WhatsApp não aparece** no Meus Arquivos nem no Wear Installer (pasta escondida).
+  Baixe pelo navegador do celular (link direto) → vai para **Download**.
+- 🔴 **NUNCA toque no APK do relógio no celular:** ele tem o MESMO pacote do app de teste do celular e
+  versionCode maior, então o Android oferece **"Atualizar este app? GuardiõesSOS teste"** — aceitar trocaria
+  o app do celular pelo do relógio. O APK do relógio só se abre pelo Wear Installer.
+- No Wear Installer, INSTALL sem escolher o arquivo deu "There was a problem installing the apk": escolha o
+  APK do relógio na lista de arquivos antes.
