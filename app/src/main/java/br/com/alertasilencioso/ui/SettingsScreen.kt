@@ -352,7 +352,7 @@ fun SettingsScreen(settings: Settings) {
                 }
                 HelpText(
                     "Cria um 2º ícone, \"SOS rápido\". Abriu: a tela fica preta e o SOS sai sozinho em ${SosRapido.SEGUNDOS} segundos. " +
-                        "Toque na tela para cancelar.",
+                        "Para cancelar, segure o dedo na tela (um toque leve não cancela, para o bolso não cancelar sem querer).",
                 )
                 if (settings.sosRapido) {
                     HelpText(
