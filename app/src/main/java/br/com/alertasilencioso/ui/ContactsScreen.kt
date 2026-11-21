@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.Convidar
+import br.com.alertasilencioso.alert.SituacaoDoGuardiao
 import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.AppState
 import br.com.alertasilencioso.data.Contact
@@ -31,6 +33,9 @@ fun ContactsScreen(state: AppState) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
     var convidando by remember { mutableStateOf(false) }
+    // Em que pé está cada convite, segundo o servidor (nulo = ainda não respondeu: vale o que o aparelho lembra).
+    var doServidor by remember { mutableStateOf<Map<String, SituacaoDoGuardiao>?>(null) }
+    LaunchedEffect(state.alwaysContacts.size) { Convidar.situacao()?.let { doServidor = it } }
 
     // Cria o convite pro app (código + link) e abre o WhatsApp DAQUELE número já com a mensagem pronta.
     // Usado tanto pelo botão "Convidar" de cada guardião que já está na lista (sem redigitar) quanto
@@ -47,6 +52,7 @@ fun ContactsScreen(state: AppState) {
             if (r == null) {
                 context.toast("Não consegui criar o convite agora. Confira a internet e tente de novo.")
             } else {
+                Repository.update { it.copy(convitesEnviados = it.convitesEnviados + PhoneNumbers.key(numero)) }
                 val nomeUsuario = state.settings.userName.ifBlank { "Alguém" }
                 val msg = "$nomeUsuario te escolheu como guardião no GuardiõesSOS. " +
                     "Se algo acontecer, você recebe o alerta com a localização. " +
@@ -78,6 +84,17 @@ fun ContactsScreen(state: AppState) {
             HelpText("Seus guardiões recebem o alerta em qualquer lugar onde você estiver. Por exemplo, seu filho, mesmo que ele esteja longe.")
         }
         item {
+            SectionCard("Dois tipos de guardião") {
+                Text("📩 Guardião SMS", style = MaterialTheme.typography.titleSmall)
+                HelpText("Você só põe o número (Da agenda ou Digitar). Ele recebe o SMS com a sua localização.")
+                Text("🔔 Guardião com app", style = MaterialTheme.typography.titleSmall)
+                HelpText(
+                    "Você toca em \"Convidar\". Ele recebe o convite pelo WhatsApp, instala o GuardiõesSOS e aceita. " +
+                        "Aí, além do SMS, o celular dele TOCA uma sirene, mesmo no silencioso.",
+                )
+            }
+        }
+        item {
             SectionCard("Meus guardiões") {
                 ContactListEditor(
                     contacts = state.alwaysContacts,
@@ -87,13 +104,14 @@ fun ContactsScreen(state: AppState) {
                     onUpdate = Repository::updateAlwaysContact,
                     // Um toque em "Convidar" ao lado de quem já está aqui — sem digitar nome e número de novo.
                     onInvite = { convidar(it.name, it.phone) },
+                    situacao = { SituacaoDoGuardiao.de(it.phone, doServidor, state.convitesEnviados) },
                 )
-                HelpText("Toque em \"Convidar\" ao lado de um guardião pra mandar o convite do app pelo WhatsApp — sem redigitar nada.")
+                HelpText("Toque em \"Convidar\" ao lado de um guardião SMS para ele virar guardião com app (o celular dele toca).")
             }
         }
         item {
             SectionCard("Convidar alguém novo") {
-                HelpText("Pra convidar quem ainda NÃO está na lista acima. Quem instala com o seu convite recebe o alerta na hora (aviso no celular) e vai poder te acompanhar.")
+                HelpText("Pra quem ainda NÃO está na lista acima. Ele já entra como guardião com app: recebe o SMS e, depois de aceitar o convite, o celular dele toca.")
                 Button(onClick = { convidando = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Convidar um guardião novo")
                 }

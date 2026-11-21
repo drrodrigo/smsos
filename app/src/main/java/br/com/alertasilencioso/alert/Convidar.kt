@@ -24,6 +24,37 @@ object Convidar {
 
     private fun url(): String = BuildConfig.GATEWAY_URL.substringBeforeLast('/') + "/guardioes-convite"
 
+    /**
+     * Em que pé está cada guardião que este aparelho convidou (ação "situacao" da guardioes-convite): falta aceitar,
+     * aceitou e o celular toca, ou aceitou sem aviso. Chave = [PhoneNumbers.key]. Nulo = sem resposta (sem internet,
+     * servidor sem a ação): a tela usa o que o aparelho lembra. Faz rede: chame fora da main.
+     */
+    suspend fun situacao(): Map<String, SituacaoDoGuardiao>? = withContext(Dispatchers.IO) {
+        if (!configurado()) return@withContext null
+        val dispositivo = Repository.state.value.settings.dispositivo
+        if (dispositivo.isBlank()) return@withContext null
+        val corpo = JSONObject().put("acao", "situacao").put("usuario_dispositivo", dispositivo).toString()
+        var conn: HttpURLConnection? = null
+        try {
+            conn = (URL(url()).openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = TIMEOUT_MS
+                readTimeout = TIMEOUT_MS
+                doOutput = true
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("x-smsos-app", BuildConfig.GATEWAY_KEY)
+            }
+            conn.outputStream.use { it.write(corpo.toByteArray(Charsets.UTF_8)) }
+            if (conn.responseCode !in 200..299) return@withContext null
+            SituacaoDoGuardiao.lerDoServidor(conn.inputStream.bufferedReader().use { it.readText() })
+        } catch (e: Exception) {
+            Log.w(TAG, "Sem a situação dos guardiões", e)
+            null
+        } finally {
+            conn?.disconnect()
+        }
+    }
+
     /** Cria (ou reaproveita) o convite para este telefone. Faz rede: chame fora da main. */
     suspend fun convidar(telefoneGuardiao: String): Resultado? = withContext(Dispatchers.IO) {
         if (!configurado()) return@withContext null

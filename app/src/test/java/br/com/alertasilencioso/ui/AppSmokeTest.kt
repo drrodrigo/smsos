@@ -117,6 +117,18 @@ class AppSmokeTest {
         compose.onNodeWithText("(31) 98888-7777").assertExists()
         // A janela de "Digitar" não é testada aqui: o simulador não desenha janelas de diálogo do Compose.
         compose.onNodeWithText("Digitar").assertExists()
+        // Os dois tipos de guardião (21/11): só o número = guardião SMS, com o botão "Convidar".
+        compose.onNodeWithText("📩 Guardião SMS · recebe só o SMS").assertExists()
+        compose.onNodeWithText("Convidar").assertExists()
+    }
+
+    @Test
+    fun conviteMandadoDaquiApareceComoConviteEnviado() {
+        Repository.addAlwaysContact(Contact(name = "Filha Teste", phone = "(31) 97777-6666"))
+        Repository.update { it.copy(convitesEnviados = setOf("31977776666")) }
+        openTab("Guardiões")
+        compose.onNode(hasText("Convite enviado", substring = true)).assertExists()
+        compose.onNodeWithText("Reenviar").assertExists()
     }
 
     @Test
