@@ -150,6 +150,13 @@ Dois toques no botão de cima → tela preta → 3 s → o relógio mostrou **"m
 o pedido foi pelo Bluetooth, o **GuardiõesSOS teste** do celular rodou o SOS em modo teste e respondeu.
 O caminho inteiro (relógio → ponte do Wear OS → `OuvinteDoRelogio` → `AlertManager` → resposta) funciona.
 
+**Envio REAL também (20/11, ~23h15):** com o modo teste desligado, dois toques no relógio → o SMS chegou à
+Fernanda (guardiã) com a localização. Na 1ª vez o celular dela estava no silencioso e o SMS chegou calado (SMS
+obedece o silencioso de quem recebe); na 2ª, fora do silencioso, apitou. Para tocar MESMO no silencioso, o
+guardião precisa do app (aceitar o convite em Protejo): a sirene usa USAGE_ALARM no volume máximo (`Alarme.kt`).
+Pendente de conferir: o histórico mostrou 2 disparos no mesmo minuto (23:05) no teste em modo teste — ver se o
+relógio repete o pedido quando a resposta demora (o `id` do pedido existe para isso).
+
 ### Os pulos do gato da instalação (o que travou e como passou)
 - **"Depurar por Wi-Fi" dizia "ligue o Wi-Fi" com o Wi-Fi ligado:** com o Bluetooth do relógio ligado ao
   celular, o Galaxy Watch não usa o Wi-Fi de verdade. **Desligue o Bluetooth do relógio** só durante a
