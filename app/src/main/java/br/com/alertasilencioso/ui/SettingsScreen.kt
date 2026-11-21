@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.alertasilencioso.alert.GatewaySender
 import br.com.alertasilencioso.alert.Otp
+import br.com.alertasilencioso.alert.SosRapido
 import br.com.alertasilencioso.billing.Billing
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.MessageBuilder
@@ -341,6 +342,25 @@ fun SettingsScreen(settings: Settings) {
                     }
                 }
                 HelpText("Atenção: o Android pede confirmação na tela quando um app manda mais de 30 SMS em meia hora. Por isso o padrão é mandar as atualizações só para os seus guardiões.")
+            }
+        }
+        item {
+            SectionCard("SOS rápido pelo botão lateral") {
+                SwitchRow("Criar o atalho \"SOS rápido\"", settings.sosRapido) { on ->
+                    save { it.copy(sosRapido = on) }
+                    SosRapido.aplicarAtalho(context, on)
+                }
+                HelpText(
+                    "Cria um 2º ícone, \"SOS rápido\". Abriu: a tela fica preta e o SOS sai sozinho em ${SosRapido.SEGUNDOS} segundos. " +
+                        "Toque na tela para cancelar.",
+                )
+                if (settings.sosRapido) {
+                    HelpText(
+                        "No Samsung, ligue no botão de ligar: Configurações → Recursos avançados → Tecla lateral → " +
+                            "Pressionar duas vezes → Aplicativos → SOS rápido. Assim, dois toques no botão de ligar " +
+                            "disparam o SOS mesmo com a tela apagada e bloqueada.",
+                    )
+                }
             }
         }
         item {

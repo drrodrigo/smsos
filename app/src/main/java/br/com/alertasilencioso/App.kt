@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.util.Log
 import br.com.alertasilencioso.alert.Registrar
+import br.com.alertasilencioso.alert.SosRapido
 import br.com.alertasilencioso.data.Repository
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -13,6 +14,8 @@ class App : Application() {
         super.onCreate()
         Repository.init(this)
         Repository.expireOldActiveAlert(System.currentTimeMillis())
+        // O 2º ícone "SOS rápido" segue o ajuste (ex.: depois de restaurar um backup com ele ligado).
+        SosRapido.aplicarAtalho(this, Repository.state.value.settings.sosRapido)
         // Cria o canal do push JÁ na abertura. Sem isso, uma notificação que chega com o app FECHADO
         // cai num canal inexistente e o Android não mostra. (minSdk 26: canal sempre disponível.)
         runCatching {

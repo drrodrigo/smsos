@@ -64,6 +64,28 @@
             </intent-filter>
         </activity>
 
+        <!-- O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s (toque cancela).
+             Nasce DESLIGADO (enabled=false): só aparece quando a pessoa liga em Ajustes (SosRapido.aplicarAtalho).
+             Abre por cima da tela bloqueada, para o "pressionar duas vezes" do botão lateral do Samsung. -->
+        <activity
+            android:name=".ui.SosRapidoActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="${sosRapidoLabel}"
+            android:taskAffinity="br.com.guardioessos.sosrapido"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.SosRapido">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ui.AlertaRecebidoActivity"
             android:exported="false"

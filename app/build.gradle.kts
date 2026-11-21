@@ -34,11 +34,14 @@ android {
         applicationId = "br.com.guardioessos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 52
-        versionName = "0.32.0"
+        versionCode = 53
+        versionName = "0.33.0"
 
         // Nome do app mostrado no celular (o debug troca para "GuardiõesSOS teste" lá embaixo).
         manifestPlaceholders["appLabel"] = "GuardiõesSOS"
+        // O 2º ícone, o atalho "SOS rápido" (ui/SosRapidoActivity). No debug ganha "teste" no nome, para não
+        // confundir com o da Play na lista de apps do botão lateral.
+        manifestPlaceholders["sosRapidoLabel"] = "SOS rápido"
 
         buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
         buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")
@@ -71,6 +74,7 @@ android {
             applicationIdSuffix = ".teste"
             versionNameSuffix = "-gesto"
             manifestPlaceholders["appLabel"] = "GuardiõesSOS teste"
+            manifestPlaceholders["sosRapidoLabel"] = "SOS rápido teste"
             // APK de teste é INERTE por padrão: sem a estrutura de SMS (gateway vazio) — não envia nem
             // toca no backup, pra proteger seus dados durante o desenvolvimento.
             // Com -Preal, o gateway de gateway.properties é embutido e o app ENVIA DE VERDADE — é o
