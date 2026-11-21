@@ -2,4 +2,11 @@
     <style name="Theme.AlertaSilencioso" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+
+    <!-- O "SOS rápido": preto desde o primeiro quadro (sem piscar branco ao abrir). -->
+    <style name="Theme.SosRapido" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
 </resources>

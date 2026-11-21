@@ -70,6 +70,12 @@ data class Settings(
     val followUpIntervalMinutes: Int = 3,
     val followUpAudience: FollowUpAudience = FollowUpAudience.ALWAYS_ONLY,
     val screenOffDetection: Boolean = true,
+    /**
+     * O atalho "SOS rápido" (um 2º ícone): abriu = tela preta, conta 3 s e dispara sozinho. Feito para o
+     * "pressionar duas vezes" do botão lateral do Samsung, que funciona com a tela apagada e bloqueada
+     * (o botão de volume, não: o Samsung não entrega o volume com a tela apagada). Nasce desligado.
+     */
+    val sosRapido: Boolean = false,
     /** Grava um vídeo (câmera frontal + áudio) ao acionar o SOS. Opt-in, experimental. */
     val capturarMidia: Boolean = false,
     /** Duração do vídeo do SOS, em segundos. */

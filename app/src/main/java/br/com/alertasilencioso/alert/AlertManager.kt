@@ -32,6 +32,8 @@ enum class TriggerSource(val description: String) {
     APP_BUTTON("botão dentro do app"),
     /** O app do relógio (Wear OS) pediu o SOS pela ponte. Vira "Acionado pelo relógio" no histórico. */
     RELOGIO("relógio"),
+    /** O atalho "SOS rápido" (o 2º ícone, aberto pelo botão lateral do Samsung). Ver [SosRapido]. */
+    BOTAO_LATERAL("atalho SOS rápido (botão lateral)"),
 }
 
 /**
