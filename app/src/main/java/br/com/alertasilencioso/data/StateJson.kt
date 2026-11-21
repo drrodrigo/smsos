@@ -13,6 +13,7 @@ internal object StateJson {
         put("history", JSONArray(state.history.map(::encodeAlert)))
         state.activeAlert?.let { put("activeAlert", encodeActive(it)) }
         put("screenOffReleaseSupported", state.screenOffReleaseSupported)
+        put("convitesEnviados", JSONArray(state.convitesEnviados.toList()))
     }.toString()
 
     fun decode(json: String): AppState {
@@ -24,6 +25,9 @@ internal object StateJson {
             history = root.optJSONArray("history").objects().map(::decodeAlert),
             activeAlert = root.optJSONObject("activeAlert")?.let(::decodeActive),
             screenOffReleaseSupported = root.optBoolean("screenOffReleaseSupported", false),
+            convitesEnviados = root.optJSONArray("convitesEnviados")
+                ?.let { a -> (0 until a.length()).mapNotNull { a.optString(it).takeIf(String::isNotBlank) }.toSet() }
+                ?: emptySet(),
         )
     }
 

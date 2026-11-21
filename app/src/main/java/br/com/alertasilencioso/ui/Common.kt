@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.GatewaySender
+import br.com.alertasilencioso.alert.SituacaoDoGuardiao
 import br.com.alertasilencioso.core.GeoPoint
 import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.Contact
@@ -153,6 +154,9 @@ fun ContactListEditor(
     // Quando passado, cada contato ganha um botão "Convidar" (um toque, sem redigitar nada): o app
     // já tem o nome e o número. Só a tela de guardiões usa; as outras listas passam nulo.
     onInvite: ((Contact) -> Unit)? = null,
+    // Quando passado, cada contato mostra o TIPO de guardião: "Guardião SMS" (só o número) ou "Guardião com app"
+    // (aceitou o convite: SMS + o celular toca). Só a tela de guardiões usa.
+    situacao: ((Contact) -> SituacaoDoGuardiao)? = null,
 ) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
@@ -199,8 +203,10 @@ fun ContactListEditor(
                     Text("⚠ $aviso", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
             }
-            if (onInvite != null) {
-                TextButton(onClick = { onInvite(contact) }) { Text("Convidar") }
+            val tipo = situacao?.invoke(contact)
+            if (onInvite != null && tipo?.tocaNoCelular != true) {
+                val reenviar = tipo == SituacaoDoGuardiao.CONVITE_ENVIADO || tipo == SituacaoDoGuardiao.ACEITOU_SEM_AVISO
+                TextButton(onClick = { onInvite(contact) }) { Text(if (reenviar) "Reenviar" else "Convidar") }
             }
             IconButton(onClick = { editing = contact }) {
                 Icon(Icons.Filled.Edit, contentDescription = "Editar ${contact.name}")
@@ -209,6 +215,7 @@ fun ContactListEditor(
                 Icon(Icons.Filled.Delete, contentDescription = "Remover ${contact.name}")
             }
         }
+        situacao?.invoke(contact)?.let { TipoDoGuardiao(it) }
     }
     if (contacts.size >= max) {
         HelpText("Você chegou ao limite de $max contatos nesta lista.")
@@ -334,4 +341,20 @@ fun ContactDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
+}
+
+/** A etiqueta do tipo de guardião, embaixo do nome: deixa claro quem só recebe SMS e quem também tem o celular tocando. */
+@Composable
+private fun TipoDoGuardiao(tipo: SituacaoDoGuardiao) {
+    val (texto, cor) = when (tipo) {
+        SituacaoDoGuardiao.SO_SMS ->
+            "📩 Guardião SMS · recebe só o SMS" to MaterialTheme.colorScheme.onSurfaceVariant
+        SituacaoDoGuardiao.CONVITE_ENVIADO ->
+            "⏳ Convite enviado · falta aceitar no app. Até lá, só SMS." to StatusColors.warning
+        SituacaoDoGuardiao.COM_APP ->
+            "🔔 Guardião com app · recebe o SMS e o celular dele TOCA" to StatusColors.ok
+        SituacaoDoGuardiao.ACEITOU_SEM_AVISO ->
+            "⚠ Aceitou, mas o app dele não está recebendo aviso · só SMS. Peça para abrir o GuardiõesSOS e permitir as notificações." to StatusColors.warning
+    }
+    Text(texto, style = MaterialTheme.typography.bodySmall, color = cor, modifier = Modifier.padding(bottom = 6.dp))
 }

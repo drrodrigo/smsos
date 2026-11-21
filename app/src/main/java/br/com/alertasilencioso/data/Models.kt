@@ -135,4 +135,9 @@ data class AppState(
     val activeAlert: ActiveAlert? = null,
     /** Se este aparelho avisa quando o botão é solto com a tela apagada (descoberto no primeiro uso). */
     val screenOffReleaseSupported: Boolean = false,
+    /**
+     * Números ([br.com.alertasilencioso.core.PhoneNumbers.key]) para quem este aparelho já mandou o convite do app.
+     * Só para a tela de Guardiões dizer "convite enviado" quando o servidor não responde.
+     */
+    val convitesEnviados: Set<String> = emptySet(),
 )
