@@ -3,11 +3,17 @@ package br.com.alertasilencioso.ui
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,8 +23,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.Convidar
 import br.com.alertasilencioso.alert.SituacaoDoGuardiao
@@ -35,6 +45,8 @@ fun ContactsScreen(state: AppState) {
     var convidando by remember { mutableStateOf(false) }
     // Em que pé está cada convite, segundo o servidor (nulo = ainda não respondeu: vale o que o aparelho lembra).
     var doServidor by remember { mutableStateOf<Map<String, SituacaoDoGuardiao>?>(null) }
+    // O "?" de cada tipo: falso = guardião SMS, verdadeiro = guardião com app, nulo = fechado.
+    var explicando by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(state.alwaysContacts.size) { Convidar.situacao()?.let { doServidor = it } }
 
     // Cria o convite pro app (código + link) e abre o WhatsApp DAQUELE número já com a mensagem pronta.
@@ -85,9 +97,9 @@ fun ContactsScreen(state: AppState) {
         }
         item {
             SectionCard("Dois tipos de guardião") {
-                Text("📩 Guardião SMS", style = MaterialTheme.typography.titleSmall)
+                TituloComAjuda("📩 Guardião SMS", "Como chega para o guardião SMS") { explicando = false }
                 HelpText("Você só põe o número (Da agenda ou Digitar). Ele recebe o SMS com a sua localização.")
-                Text("🔔 Guardião com app", style = MaterialTheme.typography.titleSmall)
+                TituloComAjuda("🔔 Guardião com app", "Como toca no celular do guardião com app") { explicando = true }
                 HelpText(
                     "Você toca em \"Convidar\". Ele recebe o convite pelo WhatsApp, instala o GuardiõesSOS e aceita. " +
                         "Aí, além do SMS, o celular dele TOCA uma sirene, mesmo no silencioso.",
@@ -122,6 +134,8 @@ fun ContactsScreen(state: AppState) {
         }
     }
 
+    explicando?.let { comApp -> ComoChegaDialog(comApp, state.settings) { explicando = null } }
+
     if (convidando) {
         ContactDialog(
             title = "Convidar guardião",
@@ -132,5 +146,21 @@ fun ContactsScreen(state: AppState) {
                 convidar(nome, fone)
             },
         )
+    }
+}
+
+/** Título com o "?" redondo ao lado: toca e abre a explicação de como chega para aquele tipo de guardião. */
+@Composable
+private fun TituloComAjuda(titulo: String, descricao: String, onAjuda: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(titulo, style = MaterialTheme.typography.titleSmall)
+        IconButton(onClick = onAjuda, modifier = Modifier.semantics { contentDescription = descricao }) {
+            Box(
+                Modifier.size(24.dp).border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
