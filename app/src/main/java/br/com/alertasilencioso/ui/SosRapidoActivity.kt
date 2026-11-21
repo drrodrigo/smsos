@@ -48,7 +48,7 @@ import br.com.alertasilencioso.data.Repository
  */
 class SosRapidoActivity : ComponentActivity() {
 
-    enum class Fase { CONTANDO, ENVIANDO, PRONTO, SEM_GUARDIAO }
+    enum class Fase { CONTANDO, ENVIANDO, PRONTO, JA_SAIU, SEM_GUARDIAO }
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -100,7 +100,7 @@ class SosRapidoActivity : ComponentActivity() {
                 brilho(discreto = true)
                 handler.postDelayed(espera, PASSO_DA_ESPERA)
             }
-            Fase.PRONTO, Fase.SEM_GUARDIAO -> finish()
+            Fase.PRONTO, Fase.JA_SAIU, Fase.SEM_GUARDIAO -> finish()
         }
     }
 
@@ -108,7 +108,7 @@ class SosRapidoActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (fase == Fase.PRONTO || fase == Fase.SEM_GUARDIAO) {
+        if (fase == Fase.PRONTO || fase == Fase.JA_SAIU || fase == Fase.SEM_GUARDIAO) {
             handler.removeCallbacksAndMessages(null)
             comecar()
         }
@@ -147,10 +147,18 @@ class SosRapidoActivity : ComponentActivity() {
         fase = Fase.ENVIANDO
         acionadoEm = System.currentTimeMillis()
         esperouMs = 0
-        try {
+        val acionou = try {
             SosRapido.acionar(applicationContext, SosRapido.perfil(Repository.state.value.settings))
         } catch (e: RuntimeException) {
             Log.e(TAG, "O SOS rápido falhou ao acionar", e)
+            true // na dúvida, espera o histórico como sempre (não diz "já tinha saído" sem saber)
+        }
+        if (!acionou) {
+            // Um alerta saiu há segundos (ex.: pelo relógio): os guardiões JÁ foram avisados. Diz isso, em vez de
+            // esperar 25 s e mostrar um "SOS acionado" que não aconteceu.
+            fase = Fase.JA_SAIU
+            handler.postDelayed({ finish() }, SosRapido.MOSTRA_PRONTO_MS * 2)
+            return
         }
         handler.postDelayed(espera, PASSO_DA_ESPERA)
     }
@@ -162,7 +170,7 @@ class SosRapidoActivity : ComponentActivity() {
 
     /** Toque leve: só fecha os avisos do fim. Na contagem NÃO cancela (dedo ou bolso encostando sem querer). */
     internal fun tocou() {
-        if (fase == Fase.PRONTO || fase == Fase.SEM_GUARDIAO) fechar()
+        if (fase == Fase.PRONTO || fase == Fase.JA_SAIU || fase == Fase.SEM_GUARDIAO) fechar()
     }
 
     /** Segurou o dedo na tela: na contagem, CANCELA (nada sai); nos avisos do fim, fecha. Enviando, nada (já saiu). */
@@ -202,6 +210,7 @@ class SosRapidoActivity : ComponentActivity() {
                     }
                     Fase.ENVIANDO -> Linha(if (teste) "acionando (modo teste)…" else "acionando…")
                     Fase.PRONTO -> Linha(if (teste) "Modo teste: nada foi enviado" else "SOS acionado ✓")
+                    Fase.JA_SAIU -> Linha("O alerta já tinha saído há poucos segundos ✓\nSeus guardiões já foram avisados.")
                     Fase.SEM_GUARDIAO -> {
                         Text(
                             "Nenhum guardião cadastrado",

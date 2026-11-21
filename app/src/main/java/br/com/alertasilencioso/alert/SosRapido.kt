@@ -28,8 +28,11 @@ object SosRapido {
     /** Quanto o "SOS acionado" fica na tela antes de fechar. */
     const val MOSTRA_PRONTO_MS = 2_500L
 
-    /** Quem aciona de verdade. Os testes trocam para contar os disparos sem mandar nada. */
-    internal var acionar: (Context, Profile) -> Unit = { c, p -> AlertManager.trigger(c, TriggerSource.BOTAO_LATERAL, p) }
+    /**
+     * Quem aciona de verdade. Falso = não acionou porque um alerta acabou de sair (ex.: o relógio, segundos antes).
+     * Os testes trocam para contar os disparos sem mandar nada.
+     */
+    internal var acionar: (Context, Profile) -> Boolean = { c, p -> AlertManager.trigger(c, TriggerSource.BOTAO_LATERAL, p) }
 
     /**
      * Qual SOS o atalho dispara: com os dois SOS ligados, SEGURANÇA (é o pânico, o mesmo do Volume −); com um só,

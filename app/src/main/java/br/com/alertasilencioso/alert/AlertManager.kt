@@ -55,7 +55,12 @@ object AlertManager {
     private lateinit var appContext: Context
     private val followUpTick = Runnable { sendFollowUp() }
 
-    fun trigger(context: Context, source: TriggerSource, profile: Profile = Repository.state.value.settings.profile) {
+    /**
+     * Aciona o SOS. Devolve falso quando NÃO acionou porque um alerta acabou de sair (30 s; 5 s no teste): os
+     * guardiões já foram avisados por ele. Quem tem tela (o "SOS rápido") usa isso para dizer a verdade em vez de
+     * mostrar "SOS acionado".
+     */
+    fun trigger(context: Context, source: TriggerSource, profile: Profile = Repository.state.value.settings.profile): Boolean {
         bind(context)
         val now = SystemClock.elapsedRealtime()
         val testMode = Repository.state.value.settings.testMode
@@ -63,7 +68,7 @@ object AlertManager {
         lastTriggerAt?.let {
             if (now - it < cooldown) {
                 Log.i(TAG, "Ignorado: um alerta acabou de ser acionado")
-                return
+                return false
             }
         }
         lastTriggerAt = now
@@ -82,6 +87,7 @@ object AlertManager {
         LocationFetcher(appContext).fetch(LOCATION_TIMEOUT_MILLIS) { location ->
             deliverAlert(startedAt, location, source, profile)
         }
+        return true
     }
 
     /** Avisa todos que receberam o alerta que está tudo bem e encerra as atualizações de localização. */
