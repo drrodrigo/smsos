@@ -120,6 +120,9 @@ class AppSmokeTest {
         // Os dois tipos de guardião (21/11): só o número = guardião SMS, com o botão "Convidar".
         compose.onNodeWithText("📩 Guardião SMS · recebe só o SMS").assertExists()
         compose.onNodeWithText("Convidar").assertExists()
+        // O "?" de cada tipo (a janela em si o simulador não desenha).
+        compose.onNodeWithContentDescription("Como chega para o guardião SMS").assertExists()
+        compose.onNodeWithContentDescription("Como toca no celular do guardião com app").assertExists()
     }
 
     @Test

@@ -1,5 +1,6 @@
 package br.com.alertasilencioso.ui
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,18 +58,7 @@ fun DemonstracaoCard(settings: Settings) {
             Text("Ver como a mensagem chega")
         }
         BotaoRelevo(
-            onClick = {
-                // Toca a sirene e abre a tela cheia de alerta recebido (a experiência do guardião).
-                // A própria tela tem "Silenciar/Fechar" que para tudo; e para sozinha em 2 min.
-                val (seguranca, _) = textosDemo(settings)
-                Alarme.tocar(context.applicationContext)
-                context.startActivity(
-                    Intent(context, AlertaRecebidoActivity::class.java)
-                        .putExtra("titulo", "TESTE — ⚠️ Alerta de emergência")
-                        .putExtra("corpo", "Isto é um TESTE. $seguranca")
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                )
-            },
+            onClick = { abrirDemoDoGuardiao(context, settings) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Testar a sirene e a tela do guardião")
@@ -92,9 +82,64 @@ fun DemonstracaoCard(settings: Settings) {
     }
 }
 
+/**
+ * Toca a sirene e abre a tela cheia de alerta recebido (a experiência do GUARDIÃO COM APP), aqui mesmo, com a
+ * mensagem de exemplo. A própria tela tem "Silenciar/Fechar" que para tudo; e para sozinha em 2 min. Nada é enviado.
+ */
+fun abrirDemoDoGuardiao(context: Context, settings: Settings) {
+    val (seguranca, _) = textosDemo(settings)
+    Alarme.tocar(context.applicationContext)
+    context.startActivity(
+        Intent(context, AlertaRecebidoActivity::class.java)
+            .putExtra("titulo", "TESTE — ⚠️ Alerta de emergência")
+            .putExtra("corpo", "Isto é um TESTE. $seguranca")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+    )
+}
+
+/**
+ * O "?" de cada tipo de guardião (pedido do Rodrigo, 21/11: "uma interrogaçãozinha... mostra a tela como é que
+ * abre no celular da pessoa, para a pessoa entender"). [comApp] falso = como chega para o GUARDIÃO SMS (o SMS);
+ * verdadeiro = como toca no celular do GUARDIÃO COM APP (sirene + tela vermelha), com o botão que mostra a tela.
+ */
+@Composable
+fun ComoChegaDialog(comApp: Boolean, settings: Settings, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val (seguranca, _) = textosDemo(settings)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (comApp) "Como toca no celular do guardião com app" else "Como chega para o guardião SMS") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (comApp) {
+                    Text("1. O celular dele TOCA uma sirene alta, mesmo no silencioso, vibra e pisca a lanterna.")
+                    Text("2. Abre uma tela VERMELHA por cima de tudo, mesmo com o celular bloqueado, com a sua mensagem e o botão \"Ver no mapa\".")
+                    Text("3. E chega também o SMS, igual ao do guardião SMS.")
+                    HelpText("O botão abaixo mostra essa tela aqui no SEU celular, com a sirene tocando. Nada é enviado; para parar, toque em Silenciar ou Fechar.")
+                } else {
+                    Text("Chega um SMS comum, assim (exemplo, nada foi enviado):")
+                    Balao("📩 SMS", seguranca)
+                    HelpText("Toca o som normal de mensagem do celular dele. Se o celular estiver no silencioso, não toca: ele só vê quando olhar. Para o celular TOCAR alto, convide ele para o app.")
+                }
+            }
+        },
+        confirmButton = {
+            if (comApp) {
+                TextButton(onClick = {
+                    onDismiss()
+                    abrirDemoDoGuardiao(context, settings)
+                }) { Text("Ver a tela (toca a sirene)") }
+            } else {
+                TextButton(onClick = onDismiss) { Text("Entendi") }
+            }
+        },
+        dismissButton = if (comApp) ({ TextButton(onClick = onDismiss) { Text("Fechar") } }) else null,
+    )
+}
+
 /** Um "balão" de mensagem, estilo SMS recebido, só pra demonstração. */
 @Composable
-private fun Balao(rotulo: String, texto: String) {
+internal fun Balao(rotulo: String, texto: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(rotulo, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         Surface(
