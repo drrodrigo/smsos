@@ -32,13 +32,13 @@ object Feedback {
     /** Duas vibrações bem curtas: confirma, depois, que os SMS saíram. */
     fun vibrateSent(context: Context) = vibrate(context, longArrayOf(0, 60, 120, 60))
 
+    /** Um toque curto: o "SOS rápido" abriu e começou a contar (só quem segura o celular sente). */
+    fun vibrarAbriu(context: Context) = vibrate(context, longArrayOf(0, 80))
+
     /**
      * Vibração forte e clara no instante em que o gesto é reconhecido (ao completar os segundos segurando).
      * É o aviso que a pessoa sente para saber que acionou, sem precisar contar o tempo de cabeça.
      */
-    /** Um toque curtinho: o "SOS rápido" abriu e começou a contar (só quem segura o celular sente). */
-    fun vibrarAbriu(context: Context) = vibrate(context, longArrayOf(0, 40))
-
     fun vibrateFired(context: Context) = vibrate(context, longArrayOf(0, 250, 150, 250, 150, 250))
 
     @SuppressLint("MissingPermission")

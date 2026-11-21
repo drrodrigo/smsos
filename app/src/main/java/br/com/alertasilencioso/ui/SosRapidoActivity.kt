@@ -10,8 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,8 +38,9 @@ import br.com.alertasilencioso.data.Repository
 
 /**
  * O atalho "SOS rápido" (o 2º ícone). Abriu = tela PRETA, conta [SosRapido.SEGUNDOS] e dispara SOZINHO, como o
- * relógio. Toque na tela ou "voltar" durante a contagem = cancela (nada sai). Apertar o botão de ligar NÃO cancela:
- * a contagem segue com a tela apagada (é o "dois toques e guarda no bolso").
+ * relógio. Para cancelar na contagem: SEGURAR o dedo na tela ou "voltar". Um toque leve NÃO cancela (21/11: o dedo
+ * que segura o celular, ou o bolso, encostava na tela preta e cancelava sem a pessoa saber). Apertar o botão de
+ * ligar também não cancela: a contagem segue com a tela apagada (é o "dois toques e guarda no bolso").
  *
  * Abre por cima da tela bloqueada (showWhenLocked/turnScreenOn no manifesto), para o "pressionar duas vezes" do
  * botão lateral do Samsung. Depois de disparar, a tela fica preta (brilho no mínimo, acesa) até o alerta entrar no
@@ -160,8 +160,13 @@ class SosRapidoActivity : ComponentActivity() {
         handler.postDelayed({ finish() }, SosRapido.MOSTRA_PRONTO_MS)
     }
 
-    /** Toque na tela: na contagem, CANCELA; no aviso final, fecha. Enviando, não faz nada (já saiu). */
+    /** Toque leve: só fecha os avisos do fim. Na contagem NÃO cancela (dedo ou bolso encostando sem querer). */
     internal fun tocou() {
+        if (fase == Fase.PRONTO || fase == Fase.SEM_GUARDIAO) fechar()
+    }
+
+    /** Segurou o dedo na tela: na contagem, CANCELA (nada sai); nos avisos do fim, fecha. Enviando, nada (já saiu). */
+    internal fun segurou() {
         if (fase != Fase.ENVIANDO) fechar()
     }
 
@@ -183,7 +188,7 @@ class SosRapidoActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tocou() }
+                .pointerInput(Unit) { detectTapGestures(onTap = { tocou() }, onLongPress = { segurou() }) }
                 .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -192,7 +197,7 @@ class SosRapidoActivity : ComponentActivity() {
                     Fase.CONTANDO -> {
                         Text("$faltam", color = APAGADO, fontSize = 64.sp, fontWeight = FontWeight.Light)
                         Spacer(Modifier.height(8.dp))
-                        Linha("SOS em ${faltam}s · toque para cancelar")
+                        Linha("SOS em ${faltam}s · segure o dedo na tela para cancelar")
                         if (teste) Linha("modo teste: não envia")
                     }
                     Fase.ENVIANDO -> Linha(if (teste) "acionando (modo teste)…" else "acionando…")

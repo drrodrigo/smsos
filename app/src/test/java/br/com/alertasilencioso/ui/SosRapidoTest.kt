@@ -30,7 +30,7 @@ import java.time.Duration
 
 /**
  * O atalho "SOS rápido" (botão lateral do Samsung): abriu = conta 3 s e dispara UMA vez; toque ou "voltar" na
- * contagem cancela; sem guardião não dispara; o 2º ícone segue o ajuste.
+ * contagem cancela (toque leve, não); sem guardião não dispara; o 2º ícone segue o ajuste.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34])
@@ -97,13 +97,23 @@ class SosRapidoTest {
     }
 
     @Test
-    fun `tocar na tela durante a contagem cancela - nada sai`() {
+    fun `segurar o dedo na tela durante a contagem cancela - nada sai`() {
         val tela = abrir().get()
         passar(1.5)
-        tela.tocou()
+        tela.segurou()
         assertTrue(tela.isFinishing)
         passar(10.0)
         assertTrue(disparos.isEmpty())
+    }
+
+    @Test
+    fun `toque leve na contagem NAO cancela - dedo ou bolso encostando`() {
+        val tela = abrir().get()
+        passar(1.0)
+        tela.tocou()
+        assertFalse(tela.isFinishing)
+        passar(2.1)
+        assertEquals(listOf(Profile.SEGURANCA), disparos)
     }
 
     @Test
@@ -117,10 +127,11 @@ class SosRapidoTest {
     }
 
     @Test
-    fun `tocar na tela depois de disparar nao fecha nem dispara de novo`() {
+    fun `tocar ou segurar depois de disparar nao fecha nem dispara de novo`() {
         val tela = abrir().get()
         passar(3.1)
         tela.tocou()
+        tela.segurou()
         assertFalse(tela.isFinishing)
         assertEquals(1, disparos.size)
     }

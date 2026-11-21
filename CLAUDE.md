@@ -40,7 +40,7 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
   tela apagada (testado no aparelho do Rodrigo). Saída: o 2º ícone "SOS rápido" (`ui/SosRapidoActivity`, regras em
   `alert/SosRapido.kt`), que nasce DESLIGADO e aparece com o ajuste "SOS rápido pelo botão lateral". Escolhido no
   "Pressionar duas vezes" da Tecla lateral, abre por cima da tela bloqueada: tela preta, 3 s, dispara
-  (`TriggerSource.BOTAO_LATERAL`); toque ou voltar cancela. Travas: `SosRapidoTest`.
+  (`TriggerSource.BOTAO_LATERAL`); SEGURAR o dedo ou voltar cancela (toque leve não: o bolso cancelava, 0.33.1). Travas: `SosRapidoTest`.
 - **App do RELÓGIO (Wear OS 3+, módulo `relogio/`, 20/11):** abriu = conta (3 s, tela preta no modo discreto) e
   dispara pelo celular (`OuvinteDoRelogio` → `AlertManager.trigger(..., TriggerSource.RELOGIO, ...)`). A ponte do
   Wear OS só liga app com o MESMO pacote e a MESMA chave: o relógio usa `br.com.guardioessos` (`.teste` no
