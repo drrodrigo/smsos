@@ -39,6 +39,7 @@ class SosRapidoTest {
     private val disparos = mutableListOf<Profile>()
     private val acionarDeVerdade = SosRapido.acionar
     private var alertaEntraNoHistorico = false
+    private var alertaAcabouDeSair = false
 
     @Before
     fun comecaDoZero() {
@@ -52,6 +53,7 @@ class SosRapidoTest {
         SosRapido.acionar = { _, perfil ->
             disparos += perfil
             if (alertaEntraNoHistorico) Repository.addAlert(registro())
+            !alertaAcabouDeSair
         }
     }
 
@@ -164,6 +166,17 @@ class SosRapidoTest {
         assertEquals(SosRapidoActivity.Fase.ENVIANDO, tela.fase)
         passar(1.5)
         assertEquals(SosRapidoActivity.Fase.PRONTO, tela.fase)
+    }
+
+    @Test
+    fun `um alerta acabou de sair (ex - pelo relogio) - diz que ja saiu, sem esperar nem mentir`() {
+        alertaAcabouDeSair = true
+        val tela = abrir().get()
+        passar(3.1)
+        assertEquals(SosRapidoActivity.Fase.JA_SAIU, tela.fase)
+        assertEquals(1, disparos.size)
+        passar(SosRapido.MOSTRA_PRONTO_MS * 2 / 1000.0 + 0.1)
+        assertTrue(tela.isFinishing)
     }
 
     @Test
