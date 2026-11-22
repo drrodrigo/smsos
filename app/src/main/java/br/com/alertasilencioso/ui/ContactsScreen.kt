@@ -3,16 +3,16 @@ package br.com.alertasilencioso.ui
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.alertasilencioso.alert.Convidar
 import br.com.alertasilencioso.alert.SituacaoDoGuardiao
@@ -149,18 +148,21 @@ fun ContactsScreen(state: AppState) {
     }
 }
 
-/** Título com o "?" redondo ao lado: toca e abre a explicação de como chega para aquele tipo de guardião. */
+/**
+ * Título com o ⓘ ao lado: toca e abre a explicação de como chega para aquele tipo de guardião. ⓘ CINZA, como na
+ * Configuração da tela Início: o "?" colorido parecia aviso de erro (Rodrigo, 22/11).
+ */
 @Composable
 private fun TituloComAjuda(titulo: String, descricao: String, onAjuda: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(titulo, style = MaterialTheme.typography.titleSmall)
         IconButton(onClick = onAjuda, modifier = Modifier.semantics { contentDescription = descricao }) {
-            Box(
-                Modifier.size(24.dp).border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            }
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
