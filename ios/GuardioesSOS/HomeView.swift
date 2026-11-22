@@ -319,7 +319,7 @@ struct InicioView: View {
 
 // MARK: - Um item da Configuração
 
-/// Título com ✓ verde ou ⚠ laranja e o "?" de ajuda; embaixo a explicação e o botão (SetupRow).
+/// Título com ✓ verde ou ⚠ laranja e o ⓘ de ajuda; embaixo a explicação e o botão (SetupRow).
 struct ItemConfig: View {
     @EnvironmentObject var camada: Camada
     let ok: Bool
@@ -344,9 +344,10 @@ struct ItemConfig: View {
                 Button {
                     camada.dialogo(titulo, ajuda)
                 } label: {
-                    Text("?")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Cor.primary)
+                    // ⓘ CINZA, não "?" colorido: ao lado do ✓ verde, o "?" parecia aviso de erro (Rodrigo, 22/11).
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Cor.onSurfaceVariant)
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
