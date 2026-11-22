@@ -7,6 +7,8 @@
 # guardioes-certificado-apple, com a senha GUARDIOES_SENHA_DA_CHAVE (um segredo deste repositório).
 #
 # Roda PELO BOTÃO (Actions > aplicativo do iPhone (GuardiõesSOS) > Run workflow), quando ele pedir.
+# 22/11: o botão pergunta "O que fazer". O padrão é SÓ CONFERIR A LOJA (só lê); para montar e mandar
+# um build novo ao TestFlight, escolha "montar e enviar para o TestFlight".
 # Pré-requisitos (uma vez): criar o app br.com.guardioessos na App Store Connect (a Apple não deixa
 # robô criar app) e criar o segredo GUARDIOES_SENHA_DA_CHAVE no repositório.
 
@@ -18,10 +20,11 @@ on:
       acao:
         description: 'O que fazer'
         type: choice
-        default: 'montar e enviar para o TestFlight'
+        # O padrão é a CONFERÊNCIA (só lê): um clique sem escolher nada nunca monta nem envia.
+        default: 'só conferir a loja (não muda nada)'
         options:
-          - 'montar e enviar para o TestFlight'
           - 'só conferir a loja (não muda nada)'
+          - 'montar e enviar para o TestFlight'
 
 permissions:
   contents: write
@@ -34,9 +37,9 @@ concurrency:
 
 jobs:
   # 22/11: por que o app aprovado não aparece na App Store? Só LÊ: versões, países e preço
-  # (ios/ci/loja.py). Roda quando ele escolhe "só conferir a loja" no botão.
+  # (ios/ci/loja.py). É o PADRÃO do botão: montar e enviar só quando ele escolhe isso.
   loja:
-    if: inputs.acao == 'só conferir a loja (não muda nada)'
+    if: inputs.acao != 'montar e enviar para o TestFlight'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -64,7 +67,7 @@ jobs:
         run: rm -rf "$RUNNER_TEMP/apple"
 
   iphone:
-    if: inputs.acao != 'só conferir a loja (não muda nada)'
+    if: inputs.acao == 'montar e enviar para o TestFlight'
     runs-on: macos-26
     timeout-minutes: 45
     outputs:
