@@ -145,23 +145,33 @@ def liberar_no_brasil():
                 })
                 print("Brasil ligado na disponibilidade que já existia.")
         return
+    # A Apple exige TODOS os países no pedido (22/11: 409 "expects an included resource ... 'MDG'"):
+    # o Brasil com available=True e cada um dos outros com available=False.
+    paises, _ = todas(a, "/v1/territories?limit=200&fields[territories]=currency")
+    codigos = sorted(t["id"] for t in paises)
+    if "BRA" not in codigos:
+        print(f"NÃO liberei: a Apple não listou o Brasil entre os {len(codigos)} países. Nada foi mudado.")
+        return
     a.pedir("POST", "/v2/appAvailabilities", {
         "data": {
             "type": "appAvailabilities",
             "attributes": {"availableInNewTerritories": False},
             "relationships": {
                 "app": {"data": {"type": "apps", "id": app_id}},
-                "territoryAvailabilities": {"data": [{"type": "territoryAvailabilities", "id": "${bra}"}]},
+                "territoryAvailabilities": {
+                    "data": [{"type": "territoryAvailabilities", "id": f"${{{c}}}"} for c in codigos],
+                },
             },
         },
         "included": [{
             "type": "territoryAvailabilities",
-            "id": "${bra}",
-            "attributes": {"available": True},
-            "relationships": {"territory": {"data": {"type": "territories", "id": "BRA"}}},
-        }],
+            "id": f"${{{c}}}",
+            "attributes": {"available": c == "BRA"},
+            "relationships": {"territory": {"data": {"type": "territories", "id": c}}},
+        } for c in codigos],
     })
-    print("Disponibilidade criada: SÓ no Brasil (sem países novos automáticos).")
+    print(f"Disponibilidade criada: SÓ no Brasil ({len(codigos) - 1} outros países marcados como NÃO), "
+          "sem países novos automáticos.")
 
 
 if __name__ == "__main__":
