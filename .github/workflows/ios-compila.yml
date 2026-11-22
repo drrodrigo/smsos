@@ -7,7 +7,7 @@ name: iPhone compila (cara do Android)
 
 on:
   push:
-    branches: [feat/ios-cara-android, feat/relogio-apple]
+    branches: [feat/ios-cara-android, feat/ios-botoes, fix/ios-ajuda-info-cinza, feat/relogio-apple, feat/relogio-apple-assinatura]
   workflow_dispatch:
 
 concurrency:

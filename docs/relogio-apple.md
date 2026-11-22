@@ -97,7 +97,7 @@ Código: `ios/GuardioesRelogio/` (o app), `ios/GuardioesComplicacao/` (a complic
 
 1. **TestFlight instala o app do relógio junto com o do iPhone** (o mesmo build). Depois de instalar o
    do iPhone pelo TestFlight, no app **Watch** do iPhone aparece o GuardiõesSOS em "Apps disponíveis":
-   toque em **Instalar**. (Antes, a assinatura do relógio precisa estar pronta: veja abaixo.)
+   toque em **Instalar**.
 2. **Teste seguro: deixe o modo teste ligado no iPhone** (vem ligado). O relógio faz tudo (conta, pega a
    localização, escolhe quem recebe, vibra o sucesso), o iPhone guarda "teste" no histórico e **nenhum
    SMS sai**.
@@ -118,24 +118,22 @@ Código: `ios/GuardioesRelogio/` (o app), `ios/GuardioesComplicacao/` (a complic
 dos prints não está emparelhado), a Siri, o Botão de Ação, a complicação no mostrador e o envio de
 verdade. Tudo isso só num relógio de verdade.
 
-## O que falta para enviar à Apple (assinatura do relógio)
+## A assinatura do relógio (feita em 22/11)
 
-Hoje o `guardioes-iphone.yml` assina só o iPhone. Com o relógio dentro do app, ele precisa de:
+O `guardioes-iphone.yml` assina os 3 pacotes:
 
-1. **Dois App IDs novos** na conta da Apple: `br.com.guardioessos.watchkitapp` (o app do relógio) e
-   `br.com.guardioessos.watchkitapp.complicacao` (a complicação). Nenhuma capacidade especial
-   (WatchConnectivity e WidgetKit não pedem). A porta `guardioes-apple-envio` hoje registra só
-   `br.com.guardioessos`.
-2. **Um perfil "App Store" para cada pacote** (os 3), com o MESMO certificado de distribuição.
-   `ios/ci/assinatura.py` hoje cria um perfil só (`perfil()` com `PACOTE`); precisa criar os 3 e
-   instalar os 3 no Mac. `ios/ci/apple.py` precisa achar o pacote pelo identificador.
-3. **O perfil por alvo no `xcodebuild archive`.** Hoje o `PROVISIONING_PROFILE_SPECIFIER` vai na linha
-   de comando e vale para TODOS os alvos: com o relógio dentro, o archive **falha** (o perfil do iPhone
-   não serve para o relógio). Precisa ir por alvo (por exemplo, um `.xcconfig` gerado no CI e ligado
-   a cada alvo no `project.yml`, ou `PROVISIONING_PROFILE_SPECIFIER` por alvo com variáveis).
-   **Até isso ser feito, não rode o `guardioes-iphone.yml` numa branch que tenha o relógio.**
+1. **Os dois App IDs novos**, `br.com.guardioessos.watchkitapp` (o app do relógio) e
+   `br.com.guardioessos.watchkitapp.complicacao` (a complicação), o `ios/ci/assinatura.py` registra na
+   Apple se faltarem (plataforma IOS, sem capacidade especial: WatchConnectivity e WidgetKit não pedem).
+   O `br.com.guardioessos` continua sendo registrado pelo "preparar" da porta `guardioes-apple-envio`.
+2. **Um perfil "App Store" por pacote** (os 3), com o MESMO certificado de distribuição. Cada um vai como
+   `<uuid>.mobileprovision` e a rotina copia todos para o Mac. Saídas do passo: `perfil`,
+   `perfil_relogio`, `perfil_complicacao`.
+3. **O perfil por alvo no archive:** cada alvo do `project.yml` tem
+   `PROVISIONING_PROFILE_SPECIFIER: "$(PERFIL_APP)"` / `"$(PERFIL_RELOGIO)"` / `"$(PERFIL_COMPLICACAO)"`,
+   e a rotina passa as três variáveis na linha de comando (vazias no resto, que compila sem assinar).
 4. **`ExportOptions.plist`** com os 3 pacotes em `provisioningProfiles`.
-5. A versão e o número do build do relógio já saem iguais aos do iPhone (a Apple exige): o mesmo
+5. A versão e o número do build do relógio saem iguais aos do iPhone (a Apple exige): o mesmo
    `MARKETING_VERSION` do `project.yml` e o `CURRENT_PROJECT_VERSION` da linha de comando.
 6. Na App Store Connect, o relógio não é um app separado: vai no mesmo registro do GuardiõesSOS. Para
    **publicar na loja** (não para o TestFlight), a Apple pede **prints do Apple Watch**; os do

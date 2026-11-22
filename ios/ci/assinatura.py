@@ -15,8 +15,8 @@ exige aparelho cadastrado na conta, e cria um certificado novo a cada execução
 nasce vazio).
 
 Uso: assinatura.py <pasta>
-  -> <pasta>/certificado.p12, <pasta>/perfil.mobileprovision, <pasta>/ExportOptions.plist
-  -> saídas do passo: time, perfil, uuid
+  -> <pasta>/certificado.p12, <pasta>/<uuid>.mobileprovision (um por pacote), <pasta>/ExportOptions.plist
+  -> saídas do passo: time, perfil, uuid e, com o app do relógio, perfil_relogio e perfil_complicacao
 """
 
 import base64
@@ -41,6 +41,20 @@ from apple import PACOTE, Apple, ErroDaApple, saida
 RELEASE = "guardioes-certificado-apple"
 CIFRADO = "certificado-apple.p12.cifrado"
 NOME_DO_PERFIL = "GuardioesSOS App Store (GitHub)"
+
+# 22/11: o app do Apple Watch (ios/GuardioesRelogio) e a complicação dele são pacotes próprios. Cada um
+# precisa do pacote registrado na Apple e do SEU perfil de loja. (saída do passo, pacote, nome do perfil)
+RELOGIO = "br.com.guardioessos.watchkitapp"
+COMPLICACAO = "br.com.guardioessos.watchkitapp.complicacao"
+PERFIS_DO_RELOGIO = [
+    ("perfil_relogio", RELOGIO, "GuardioesSOS Relogio App Store (GitHub)", "GuardiõesSOS Relógio"),
+    ("perfil_complicacao", COMPLICACAO, "GuardioesSOS Complicacao App Store (GitHub)", "GuardiõesSOS Complicação"),
+]
+
+
+def tem_relogio() -> bool:
+    """O projeto tem o app do relógio? (a pasta ios/GuardioesRelogio, ao lado desta ios/ci)"""
+    return os.path.isdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "GuardioesRelogio"))
 
 
 def senha() -> bytes:
@@ -182,21 +196,37 @@ def novo(apple: Apple, pasta: str):
     return chave, cert, r["data"]["id"]
 
 
-def perfil(apple: Apple, cert_id: str):
-    pacote = apple.pacote()
+def pacote_registrado(apple: Apple, identificador: str, nome: str, registrar: bool):
+    """O pacote na Apple; com `registrar`, registra se faltar (plataforma IOS: o relógio vai dentro do app)."""
+    for b in apple.get(f"/v1/bundleIds?filter[identifier]={identificador}&limit=200").get("data", []):
+        if b["attributes"].get("identifier") == identificador:
+            return b
+    if not registrar:
+        return None
+    r = apple.post(
+        "/v1/bundleIds",
+        {"data": {"type": "bundleIds", "attributes": {"identifier": identificador, "name": nome, "platform": "IOS"}}},
+    )
+    print(f"Pacote {identificador}: REGISTRADO agora na Apple.")
+    return r["data"]
+
+
+def perfil(apple: Apple, cert_id: str, identificador: str = PACOTE, nome_do_perfil: str = NOME_DO_PERFIL, nome: str = ""):
+    # O pacote do app o "preparar" da porta guardioes-apple-envio registra; os do relógio, registramos aqui.
+    pacote = pacote_registrado(apple, identificador, nome, registrar=identificador != PACOTE)
     if not pacote:
-        print(f"::error::O pacote {PACOTE} não está registrado na Apple (a porta guardioes-apple-envio registra no 'preparar').")
+        print(f"::error::O pacote {identificador} não está registrado na Apple (a porta guardioes-apple-envio registra no 'preparar').")
         sys.exit(1)
-    nome = urllib.parse.quote(NOME_DO_PERFIL)
-    for p in apple.get(f"/v1/profiles?filter[name]={nome}&limit=200").get("data", []):
-        if p["attributes"].get("name") == NOME_DO_PERFIL:
+    q = urllib.parse.quote(nome_do_perfil)
+    for p in apple.get(f"/v1/profiles?filter[name]={q}&limit=200").get("data", []):
+        if p["attributes"].get("name") == nome_do_perfil:
             apple.delete(f"/v1/profiles/{p['id']}")
     r = apple.post(
         "/v1/profiles",
         {
             "data": {
                 "type": "profiles",
-                "attributes": {"name": NOME_DO_PERFIL, "profileType": "IOS_APP_STORE"},
+                "attributes": {"name": nome_do_perfil, "profileType": "IOS_APP_STORE"},
                 "relationships": {
                     "bundleId": {"data": {"type": "bundleIds", "id": pacote["id"]}},
                     "certificates": {"data": [{"type": "certificates", "id": cert_id}]},
@@ -220,8 +250,18 @@ def main():
     with open(os.path.join(pasta, "certificado.p12"), "wb") as f:
         f.write(p12_do_mac(chave, cert))
     conteudo, uuid = perfil(apple, cert_id)
-    with open(os.path.join(pasta, "perfil.mobileprovision"), "wb") as f:
+    # Cada perfil vai com o nome <uuid>.mobileprovision (é o nome que o Xcode procura); a rotina copia todos.
+    with open(os.path.join(pasta, f"{uuid}.mobileprovision"), "wb") as f:
         f.write(conteudo)
+    perfis = {PACOTE: NOME_DO_PERFIL}
+    if tem_relogio():
+        for chave_saida, identificador, nome_do_perfil, nome in PERFIS_DO_RELOGIO:
+            conteudo_r, uuid_r = perfil(apple, cert_id, identificador, nome_do_perfil, nome)
+            with open(os.path.join(pasta, f"{uuid_r}.mobileprovision"), "wb") as f:
+                f.write(conteudo_r)
+            perfis[identificador] = nome_do_perfil
+            saida(chave_saida, nome_do_perfil)
+            print(f"Perfil de loja do {identificador} pronto ({uuid_r}).")
     with open(os.path.join(pasta, "ExportOptions.plist"), "wb") as f:
         plistlib.dump(
             {
@@ -230,7 +270,7 @@ def main():
                 "signingStyle": "manual",
                 "teamID": time,
                 "signingCertificate": "Apple Distribution",
-                "provisioningProfiles": {PACOTE: NOME_DO_PERFIL},
+                "provisioningProfiles": perfis,
                 "uploadSymbols": True,
                 "manageAppVersionAndBuildNumber": False,
             },

@@ -41,6 +41,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos
+        # Na rotina da loja (guardioes-iphone.yml): o perfil de loja DESTE alvo. Vazio no resto.
+        PROVISIONING_PROFILE_SPECIFIER: "$(PERFIL_APP)"
         PRODUCT_NAME: GuardioesSOS
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: GuardiõesSOS
@@ -77,6 +79,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos.watchkitapp
+        # Na rotina da loja (guardioes-iphone.yml): o perfil de loja DESTE alvo. Vazio no resto.
+        PROVISIONING_PROFILE_SPECIFIER: "$(PERFIL_RELOGIO)"
         PRODUCT_NAME: GuardioesRelogio
         INFOPLIST_FILE: GuardioesRelogio/Info.plist
         GENERATE_INFOPLIST_FILE: "NO"
@@ -99,6 +103,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.guardioessos.watchkitapp.complicacao
+        # Na rotina da loja (guardioes-iphone.yml): o perfil de loja DESTE alvo. Vazio no resto.
+        PROVISIONING_PROFILE_SPECIFIER: "$(PERFIL_COMPLICACAO)"
         PRODUCT_NAME: GuardioesComplicacao
         INFOPLIST_FILE: GuardioesComplicacao/Info.plist
         GENERATE_INFOPLIST_FILE: "NO"
