@@ -24,6 +24,7 @@ on:
         default: 'só conferir a loja (não muda nada)'
         options:
           - 'só conferir a loja (não muda nada)'
+          - 'liberar no Brasil (põe o app na App Store)'
           - 'montar e enviar para o TestFlight'
 
 permissions:
@@ -53,14 +54,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: O app na loja (só leitura)
+      - name: O app na loja (só lê; com "liberar no Brasil", põe à venda só no Brasil)
         env:
           APPLE_CHAVE: ${{ steps.chave.outputs.chave }}
           APPLE_KEY_ID: ${{ steps.chave.outputs.key_id }}
           APPLE_ISSUER_ID: ${{ steps.chave.outputs.issuer }}
         run: |
           pip install --quiet 'pyjwt>=2.8' 'cryptography>=42'
-          cd ios/ci && python loja.py | tee -a "$GITHUB_STEP_SUMMARY"
+          cd ios/ci
+          if [ "${{ inputs.acao }}" = 'liberar no Brasil (põe o app na App Store)' ]; then
+            python loja.py --liberar | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            python loja.py | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Apagar a chave
         if: always()
