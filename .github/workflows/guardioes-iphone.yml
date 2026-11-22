@@ -14,6 +14,14 @@ name: aplicativo do iPhone (GuardiõesSOS)
 
 on:
   workflow_dispatch:
+    inputs:
+      acao:
+        description: 'O que fazer'
+        type: choice
+        default: 'montar e enviar para o TestFlight'
+        options:
+          - 'montar e enviar para o TestFlight'
+          - 'só conferir a loja (não muda nada)'
 
 permissions:
   contents: write
@@ -25,7 +33,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 22/11: por que o app aprovado não aparece na App Store? Só LÊ: versões, países e preço
+  # (ios/ci/loja.py). Roda quando ele escolhe "só conferir a loja" no botão.
+  loja:
+    if: inputs.acao == 'só conferir a loja (não muda nada)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: A chave da Apple (pela porta guardioes-apple-envio do Supabase)
+        id: chave
+        run: bash ios/ci/chave-da-apple.sh "$RUNNER_TEMP/apple"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: O app na loja (só leitura)
+        env:
+          APPLE_CHAVE: ${{ steps.chave.outputs.chave }}
+          APPLE_KEY_ID: ${{ steps.chave.outputs.key_id }}
+          APPLE_ISSUER_ID: ${{ steps.chave.outputs.issuer }}
+        run: |
+          pip install --quiet 'pyjwt>=2.8' 'cryptography>=42'
+          cd ios/ci && python loja.py | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Apagar a chave
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/apple"
+
   iphone:
+    if: inputs.acao != 'só conferir a loja (não muda nada)'
     runs-on: macos-26
     timeout-minutes: 45
     outputs:
