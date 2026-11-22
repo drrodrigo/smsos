@@ -7,6 +7,8 @@
 # guardioes-certificado-apple, com a senha GUARDIOES_SENHA_DA_CHAVE (um segredo deste repositório).
 #
 # Roda PELO BOTÃO (Actions > aplicativo do iPhone (GuardiõesSOS) > Run workflow), quando ele pedir.
+# 22/11: o botão pergunta "O que fazer". O padrão é SÓ CONFERIR A LOJA (só lê); para montar e mandar
+# um build novo ao TestFlight, escolha "montar e enviar para o TestFlight".
 # Pré-requisitos (uma vez): criar o app br.com.guardioessos na App Store Connect (a Apple não deixa
 # robô criar app) e criar o segredo GUARDIOES_SENHA_DA_CHAVE no repositório.
 
@@ -14,6 +16,15 @@ name: aplicativo do iPhone (GuardiõesSOS)
 
 on:
   workflow_dispatch:
+    inputs:
+      acao:
+        description: 'O que fazer'
+        type: choice
+        # O padrão é a CONFERÊNCIA (só lê): um clique sem escolher nada nunca monta nem envia.
+        default: 'só conferir a loja (não muda nada)'
+        options:
+          - 'só conferir a loja (não muda nada)'
+          - 'montar e enviar para o TestFlight'
 
 permissions:
   contents: write
@@ -25,7 +36,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 22/11: por que o app aprovado não aparece na App Store? Só LÊ: versões, países e preço
+  # (ios/ci/loja.py). É o PADRÃO do botão: montar e enviar só quando ele escolhe isso.
+  loja:
+    if: inputs.acao != 'montar e enviar para o TestFlight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: A chave da Apple (pela porta guardioes-apple-envio do Supabase)
+        id: chave
+        run: bash ios/ci/chave-da-apple.sh "$RUNNER_TEMP/apple"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: O app na loja (só leitura)
+        env:
+          APPLE_CHAVE: ${{ steps.chave.outputs.chave }}
+          APPLE_KEY_ID: ${{ steps.chave.outputs.key_id }}
+          APPLE_ISSUER_ID: ${{ steps.chave.outputs.issuer }}
+        run: |
+          pip install --quiet 'pyjwt>=2.8' 'cryptography>=42'
+          cd ios/ci && python loja.py | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Apagar a chave
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/apple"
+
   iphone:
+    if: inputs.acao == 'montar e enviar para o TestFlight'
     runs-on: macos-26
     timeout-minutes: 45
     outputs:
