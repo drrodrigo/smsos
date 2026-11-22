@@ -61,6 +61,7 @@ jobs:
           APPLE_ISSUER_ID: ${{ steps.chave.outputs.issuer }}
         run: |
           pip install --quiet 'pyjwt>=2.8' 'cryptography>=42'
+          set -o pipefail  # se o python falhar, o passo fica VERMELHO (o tee não esconde o erro)
           cd ios/ci
           if [ "${{ inputs.acao }}" = 'liberar no Brasil (põe o app na App Store)' ]; then
             python loja.py --liberar | tee -a "$GITHUB_STEP_SUMMARY"
