@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -588,7 +589,7 @@ private fun SetupRow(
     onHelp: ((String, String) -> Unit)? = null,
     onAction: () -> Unit,
 ) {
-    // Em coluna: título (+ interrogação) em cima, texto na largura toda e botão embaixo.
+    // Em coluna: título (+ o ⓘ de ajuda) em cima, texto na largura toda e botão embaixo.
     // Antes era tudo na mesma linha e o texto ficava espremido num cantinho, difícil de ler.
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -601,12 +602,13 @@ private fun SetupRow(
             Spacer(Modifier.width(12.dp))
             Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             if (help != null && onHelp != null) {
+                // ⓘ CINZA, não "?" colorido: ao lado do ✓ verde, o "?" laranja parecia aviso de erro (Rodrigo, 22/11).
                 IconButton(onClick = { onHelp(title, help) }, modifier = Modifier.size(32.dp)) {
-                    Text(
-                        "?",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = "O que é: $title",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
