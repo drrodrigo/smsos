@@ -52,10 +52,12 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
   (em 3 s); o 1º e o 2º fecham sem desenhar nada (tema transparente). SEMPRE, sem chave. (A 0.35.1 pedia 2 toques
   na tela preta; ele viu o furo: o curioso toca na tela preta "para testar" e dispara.) BLOQUEADO (botão lateral)
   dispara direto. Ajustes tem "Pôr o SOS rápido na tela inicial" (atalho fixado).
-  **Botão lateral (0.36.1):** a lista do Samsung mostra APPS, não ícones (escolher o GuardiõesSOS abria a
-  configuração). Por isso o ícone principal tem o atalho estático "SOS rápido" (`res/xml/atalhos.xml`, extra
-  `ORIGEM=atalho`, pacote por `@string/pacote_do_app`): no Samsung, Aplicativos → GuardiõesSOS → ⚙️ → SOS rápido.
-  Pelo atalho dispara direto, mesmo desbloqueado. Travas: `SosRapidoTest`.
+  **Botão lateral:** a lista do Samsung mostra APPS, não ícones, e abre a "porta de entrada" do pacote (escolher o
+  GuardiõesSOS abria a configuração). A engrenagem ⚙️ de funções (0.36.1, atalho estático `res/xml/atalhos.xml`)
+  NÃO aparece para app de outra empresa no Samsung dele. Desde a 0.36.2 a porta do pacote é o SOS rápido (filtro
+  MAIN + INFO, que o Android escolhe antes do LAUNCHER): bloqueado = dispara; pela porta com o celular DESBLOQUEADO
+  ("Abrir" da Play, informações do app) abre o MainActivity, nunca dispara (`SosRapido.comoAbrir`). O atalho
+  estático continua (menu do ícone, `ORIGEM=atalho` = dispara direto). Travas: `SosRapidoTest`.
 - **App do RELÓGIO (Wear OS 3+, módulo `relogio/`, 20/11):** abriu = conta (3 s, tela preta no modo discreto) e
   dispara pelo celular (`OuvinteDoRelogio` → `AlertManager.trigger(..., TriggerSource.RELOGIO, ...)`). A ponte do
   Wear OS só liga app com o MESMO pacote e a MESMA chave: o relógio usa `br.com.guardioessos` (`.teste` no

@@ -88,6 +88,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 24/11: a PORTA DE ENTRADA do pacote (o Android escolhe INFO antes de LAUNCHER). A lista do botão
+                 lateral do Samsung é por app e abre esta porta: com o celular bloqueado, dispara. O "Abrir" da Play e
+                 o das informações do app também chegam aqui, e com o celular desbloqueado a tela só abre o app de
+                 configuração (SosRapido.comoAbrir). -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.INFO" />
+            </intent-filter>
         </activity>
 
         <activity

@@ -366,8 +366,8 @@ fun SettingsScreen(settings: Settings) {
                 HelpText(
                     "Samsung: dá para disparar até com a tela apagada, com 2 toques no botão de ligar (aí dispara direto, " +
                         "sem os ${SosRapido.TOQUES_NO_ICONE} toques). Configurações → Recursos avançados → Tecla lateral → Pressionar duas vezes → " +
-                        "Aplicativos → GuardiõesSOS → toque na engrenagem ⚙️ ao lado → SOS rápido. Depois de atualizar o " +
-                        "app, confira essa escolha: o Samsung às vezes desfaz.",
+                        "Aplicativos → GuardiõesSOS. Com o celular bloqueado, os 2 toques disparam o SOS; com ele desbloqueado, " +
+                        "abrem o app. Depois de atualizar o app, confira essa escolha: o Samsung às vezes desfaz.",
                 )
             }
         }

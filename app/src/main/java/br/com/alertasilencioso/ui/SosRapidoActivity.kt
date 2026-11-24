@@ -136,14 +136,24 @@ class SosRapidoActivity : ComponentActivity() {
     }
 
     /**
-     * Pode começar? Celular BLOQUEADO, ou veio do atalho do botão lateral: sim, direto. DESBLOQUEADO e tocaram no
-     * ícone SOS rápido: só no [SosRapido.TOQUES_NO_ICONE]º toque seguido (contra curiosos).
+     * Pode começar? Ver [SosRapido.comoAbrir]: bloqueado (botão lateral com a tela apagada) ou do atalho, direto; pela
+     * porta do pacote com o celular desbloqueado ("Abrir" da Play), abre o app de configuração; pelo ícone SOS
+     * rápido, só no [SosRapido.TOQUES_NO_ICONE]º toque seguido (contra curiosos).
      */
     private fun podeAbrir(): Boolean {
         val bloqueado = getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
-        // Do atalho do botão lateral (ou do menu do ícone principal): direto, a pessoa apertou de propósito.
+        // Do atalho do menu do ícone principal: direto, a pessoa apertou de propósito.
         val doAtalho = intent?.getStringExtra(SosRapido.EXTRA_ORIGEM) == SosRapido.ORIGEM_ATALHO
-        return bloqueado || doAtalho || SosRapido.contarToqueNoIcone(SystemClock.elapsedRealtime())
+        // Pela "porta de entrada" do pacote (botão lateral do Samsung, "Abrir" da Play): chega com a categoria INFO.
+        val aberturaDoPacote = intent?.hasCategory(Intent.CATEGORY_INFO) == true
+        return when (SosRapido.comoAbrir(bloqueado, doAtalho, aberturaDoPacote)) {
+            SosRapido.Abertura.DISPARA -> true
+            SosRapido.Abertura.CONTA_TOQUE -> SosRapido.contarToqueNoIcone(SystemClock.elapsedRealtime())
+            SosRapido.Abertura.ABRE_O_APP -> {
+                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                false
+            }
+        }
     }
 
     /** Fecha sem mostrar nada e sem animação: para quem tocou, o ícone não fez nada. */
