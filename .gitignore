@@ -15,3 +15,7 @@ gateway.properties
 app/google-services.json
 app/src/debug/google-services.json
 prints-appstore/
+
+# Rascunho do Python (py_compile / import): nunca vai para o git.
+__pycache__/
+*.pyc
