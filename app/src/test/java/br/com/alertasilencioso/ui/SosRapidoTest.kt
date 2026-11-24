@@ -282,6 +282,45 @@ class SosRapidoTest {
     }
 
     @Test
+    fun `a porta de entrada do pacote e o SOS rapido (o botao lateral do Samsung abre ela)`() {
+        val porta = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        assertEquals(SosRapidoActivity::class.java.name, porta?.component?.className)
+    }
+
+    @Test
+    fun `pela porta do pacote com o celular BLOQUEADO (botao lateral, tela apagada) dispara`() {
+        bloqueado(true)
+        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_INFO)
+            .setClass(context, SosRapidoActivity::class.java)
+        val tela = Robolectric.buildActivity(SosRapidoActivity::class.java, intent).setup().get()
+        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
+        passar(3.1)
+        assertEquals(1, disparos.size)
+    }
+
+    @Test
+    fun `pela porta do pacote DESBLOQUEADO (Abrir da Play) abre o app de configuracao e nada sai`() {
+        bloqueado(false)
+        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_INFO)
+            .setClass(context, SosRapidoActivity::class.java)
+        val tela = Robolectric.buildActivity(SosRapidoActivity::class.java, intent).setup().get()
+        assertTrue(tela.isFinishing)
+        assertEquals(MainActivity::class.java.name, shadowOf(tela).nextStartedActivity?.component?.className)
+        passar(10.0)
+        assertTrue(disparos.isEmpty())
+    }
+
+    @Test
+    fun `como abrir - bloqueado ou atalho dispara, porta do pacote abre o app, icone conta toques`() {
+        assertEquals(SosRapido.Abertura.DISPARA, SosRapido.comoAbrir(bloqueado = true, doAtalho = false, aberturaDoPacote = true))
+        assertEquals(SosRapido.Abertura.DISPARA, SosRapido.comoAbrir(bloqueado = false, doAtalho = true, aberturaDoPacote = false))
+        assertEquals(SosRapido.Abertura.ABRE_O_APP, SosRapido.comoAbrir(bloqueado = false, doAtalho = false, aberturaDoPacote = true))
+        assertEquals(SosRapido.Abertura.CONTA_TOQUE, SosRapido.comoAbrir(bloqueado = false, doAtalho = false, aberturaDoPacote = false))
+    }
+
+    @Test
     fun `a conta dos toques no icone - 3 dentro de 3 s, e zera depois de disparar`() {
         assertFalse(SosRapido.contarToqueNoIcone(1_000))
         assertFalse(SosRapido.contarToqueNoIcone(2_000))

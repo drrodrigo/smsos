@@ -50,6 +50,26 @@ object SosRapido {
      */
     const val EXTRA_ORIGEM = "br.com.alertasilencioso.ORIGEM"
     const val ORIGEM_ATALHO = "atalho"
+
+    /** O que fazer quando a tela do SOS rápido é aberta. */
+    enum class Abertura { DISPARA, CONTA_TOQUE, ABRE_O_APP }
+
+    /**
+     * 24/11: a lista do botão lateral do Samsung é por APP e abre a "porta de entrada" do pacote. Desde a 0.36.2 essa
+     * porta é o SOS rápido (filtro MAIN + INFO no manifesto, que o Android escolhe antes do LAUNCHER). Quem abre por
+     * ela chega com a categoria INFO ([aberturaDoPacote]): o botão lateral, mas também o "Abrir" da Play e o das
+     * informações do app.
+     *
+     *  - Celular BLOQUEADO (o botão lateral com a tela apagada) ou o atalho com ORIGEM=atalho: DISPARA.
+     *  - Porta do pacote com o celular DESBLOQUEADO ("Abrir" da Play, informações do app, botão lateral com o celular
+     *    em uso): ABRE O APP de configuração, como antes (nunca dispara um SOS por engano ao abrir pela Play).
+     *  - O ícone SOS rápido / o atalho na tela inicial, desbloqueado: CONTA OS TOQUES (3 seguidos, contra curiosos).
+     */
+    fun comoAbrir(bloqueado: Boolean, doAtalho: Boolean, aberturaDoPacote: Boolean): Abertura = when {
+        bloqueado || doAtalho -> Abertura.DISPARA
+        aberturaDoPacote -> Abertura.ABRE_O_APP
+        else -> Abertura.CONTA_TOQUE
+    }
     const val JANELA_DOS_TOQUES_MS = 3_000L
 
     private val toquesNoIcone = ArrayDeque<Long>()
