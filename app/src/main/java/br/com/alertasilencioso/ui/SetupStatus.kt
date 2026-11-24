@@ -29,7 +29,7 @@ data class SetupStatus(
                 granted(context, Manifest.permission.ACCESS_COARSE_LOCATION),
             // Sem o gesto do botao de volume (ACESSIBILIDADE off), o SOS so dispara com o app
             // aberto, entao a localizacao de primeiro plano basta. Nao cobramos a de 2o plano.
-            backgroundLocation = !Features.ACESSIBILIDADE ||
+            backgroundLocation = !Features.LOCALIZACAO_O_TEMPO_TODO ||
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
                 granted(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
             notifications = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||

@@ -56,7 +56,7 @@ private const val HOME_LOCATION_TIMEOUT_MILLIS = 30_000L
 private enum class WizardStep { WELCOME, NAME, CONTACTS, LOCATION, BACKGROUND_LOCATION, ACCESSIBILITY, BATTERY, PLACE, TEST }
 
 private fun WizardStep.applies(): Boolean = when (this) {
-    WizardStep.BACKGROUND_LOCATION -> Features.ACESSIBILIDADE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    WizardStep.BACKGROUND_LOCATION -> Features.LOCALIZACAO_O_TEMPO_TODO && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     WizardStep.ACCESSIBILITY -> Features.ACESSIBILIDADE
     else -> true
 }

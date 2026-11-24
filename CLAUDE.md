@@ -36,6 +36,12 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
 - Segredos (chave do gateway, keystore de release) ficam **fora do git**: `gateway.properties` e
   `keystore/release.properties` estão no `.gitignore`. Nunca commite chave.
 
+- 🔴 **SEM ACESSIBILIDADE em nenhum build (0.35.0, 24/11):** com o serviço de Acessibilidade no APK de teste, o
+  **Nubank bloqueou a conta do Rodrigo** ("o aplicativo GuardiõesSOS teste possui características suspeitas"): app de
+  fora da Play + Acessibilidade é o perfil do golpe da "mão fantasma", e o banco olha os apps que TÊM o serviço,
+  ligado ou não. E no Samsung ela nem resolvia o volume com a tela apagada. `Features.ACESSIBILIDADE = false`; o
+  `<service>` guardado em `docs/acessibilidade-service.xml.txt`. **Não leve a Acessibilidade para a loja**: o banco
+  do cliente bloquearia e a pessoa desinstalaria o GuardiõesSOS. Tela apagada = SOS rápido + relógio.
 - **SOS rápido pelo BOTÃO LATERAL (0.33.0, 21/11):** o Samsung NÃO entrega o botão de volume a app nenhum com a
   tela apagada (testado no aparelho do Rodrigo). Saída: o 2º ícone "SOS rápido" (`ui/SosRapidoActivity`, regras em
   `alert/SosRapido.kt`), que nasce DESLIGADO e aparece com o ajuste "SOS rápido pelo botão lateral". Escolhido no
