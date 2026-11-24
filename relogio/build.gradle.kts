@@ -30,8 +30,8 @@ android {
         // Wear OS 3 em diante (Galaxy Watch 4, 5, 6, 7, Ultra e os outros relógios Wear OS).
         minSdk = 30
         targetSdk = 36
-        versionCode = 100058
-        versionName = "0.34.3-relogio"
+        versionCode = 100059
+        versionName = "0.35.0-relogio"
 
         manifestPlaceholders["appLabel"] = "GuardiõesSOS"
     }
