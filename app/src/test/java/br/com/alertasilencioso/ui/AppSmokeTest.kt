@@ -78,6 +78,8 @@ class AppSmokeTest {
 
         openTab("Ajustes")
         compose.onNodeWithText("Seu nome").assertExists()
+        // O botão de pânico (o 2º ícone, SOS rápido) se liga aqui (Rodrigo, 24/11).
+        scrollTo("Botão de pânico (ícone SOS rápido)")
         scrollTo("Testar o envio de SMS")
 
         openTab("Início")
