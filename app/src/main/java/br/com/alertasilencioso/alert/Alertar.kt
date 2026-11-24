@@ -2,12 +2,14 @@ package br.com.alertasilencioso.alert
 
 import android.util.Log
 import br.com.alertasilencioso.BuildConfig
+import br.com.alertasilencioso.core.PhoneNumbers
 import br.com.alertasilencioso.data.Repository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -34,10 +36,16 @@ object Alertar {
     }
 
     private fun enviar(dispositivo: String, titulo: String, corpo: String) {
+        val estado = Repository.state.value
+        // Os guardiões PAUSADOS neste aparelho (24/11): o servidor deixa a sirene de fora deles. Até a
+        // guardioes-alertar ler este campo (precisa do OK do Rodrigo para ir ao ar), ela ignora e toca em todos.
+        val pausados = (estado.alwaysContacts + estado.places.flatMap { it.contacts })
+            .filterNot { it.ativo }.map { PhoneNumbers.key(it.phone) }.filter { it.isNotEmpty() }.distinct()
         val body = JSONObject().apply {
             put("dispositivo", dispositivo)
             put("titulo", titulo)
             put("corpo", corpo)
+            put("pausados", JSONArray(pausados))
         }.toString()
         var conn: HttpURLConnection? = null
         try {

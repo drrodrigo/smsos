@@ -9,6 +9,12 @@ data class Contact(
     val id: String = newId(),
     val name: String,
     val phone: String,
+    /**
+     * Recebe os alertas? Falso = PAUSADO (Rodrigo, 24/11: "desligar para fazer um teste, deixar só uma pessoa, ou não
+     * mandar no fim de semana"). Pausado continua na lista, mas não recebe SMS, nem as atualizações, nem conta como
+     * guardião. Liga de novo com um toque.
+     */
+    val ativo: Boolean = true,
 )
 
 /** Um lugar cadastrado (casa, escritório...) com as pessoas que devem ser avisadas quando o alerta sai de lá. */

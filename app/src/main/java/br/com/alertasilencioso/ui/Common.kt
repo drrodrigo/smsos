@@ -40,6 +40,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -157,6 +160,8 @@ fun ContactListEditor(
     // Quando passado, cada contato mostra o TIPO de guardião: "Guardião SMS" (só o número) ou "Guardião com app"
     // (aceitou o convite: SMS + o celular toca). Só a tela de guardiões usa.
     situacao: ((Contact) -> SituacaoDoGuardiao)? = null,
+    // Cada contato ganha a chave "Recebe os alertas" (pausar sem apagar, 24/11). Guardiões e Lugares usam.
+    pausavel: Boolean = false,
 ) {
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
@@ -193,7 +198,11 @@ fun ContactListEditor(
             ?: "Número incompleto. Toque para corrigir.".takeIf { !PhoneNumbers.isPlausible(contact.phone) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).clickable { editing = contact }.padding(vertical = 4.dp)) {
-                Text(contact.name.ifBlank { "Sem nome" }, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    contact.name.ifBlank { "Sem nome" },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (contact.ativo) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Text(
                     if (contact.phone.isBlank()) "Sem número" else PhoneNumbers.format(contact.phone),
                     style = MaterialTheme.typography.bodyMedium,
@@ -215,7 +224,8 @@ fun ContactListEditor(
                 Icon(Icons.Filled.Delete, contentDescription = "Remover ${contact.name}")
             }
         }
-        situacao?.invoke(contact)?.let { TipoDoGuardiao(it) }
+        if (contact.ativo) situacao?.invoke(contact)?.let { TipoDoGuardiao(it) }
+        if (pausavel) ChaveDeAlerta(contact) { onUpdate(contact.copy(ativo = it)) }
     }
     if (contacts.size >= max) {
         HelpText("Você chegou ao limite de $max contatos nesta lista.")
@@ -357,4 +367,25 @@ private fun TipoDoGuardiao(tipo: SituacaoDoGuardiao) {
             "⚠ Aceitou, mas o app dele não está recebendo aviso · só SMS. Peça para abrir o GuardiõesSOS e permitir as notificações." to StatusColors.warning
     }
     Text(texto, style = MaterialTheme.typography.bodySmall, color = cor, modifier = Modifier.padding(bottom = 6.dp))
+}
+
+/**
+ * A chave de PAUSAR um contato sem apagar (Rodrigo, 24/11: "desligar para fazer um teste, deixar só uma pessoa, ou não
+ * mandar no fim de semana"). Pausado não recebe SMS nem as atualizações, e não conta como guardião.
+ */
+@Composable
+private fun ChaveDeAlerta(contact: Contact, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+        Switch(
+            checked = contact.ativo,
+            onCheckedChange = onChange,
+            modifier = Modifier.semantics { contentDescription = "Recebe os alertas: ${contact.name}" },
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            if (contact.ativo) "Recebe os alertas" else "⏸ Pausado: não recebe nada até você ligar de novo",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (contact.ativo) MaterialTheme.colorScheme.onSurfaceVariant else StatusColors.warning,
+        )
+    }
 }

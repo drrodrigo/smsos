@@ -55,6 +55,10 @@ object RecipientResolver {
         return 2 * EARTH_RADIUS_METERS * asin(sqrt(h))
     }
 
+    /**
+     * Quem de fato recebe: só os ATIVOS (o guardião pausado fica de fora, 24/11), com número, sem repetir número.
+     * É a mesma conta para o alerta, as atualizações e os números que as telas mostram.
+     */
     fun distinctByPhone(contacts: List<Contact>): List<Contact> =
-        contacts.filter { PhoneNumbers.key(it.phone).isNotEmpty() }.distinctBy { PhoneNumbers.key(it.phone) }
+        contacts.filter { it.ativo && PhoneNumbers.key(it.phone).isNotEmpty() }.distinctBy { PhoneNumbers.key(it.phone) }
 }
