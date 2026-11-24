@@ -54,21 +54,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlertaSilencioso">
 
-        <activity
-            android:name=".ui.MainActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <!-- O atalho "SOS rápido" (botão lateral do Samsung: Aplicativos → GuardiõesSOS → ⚙️ → SOS rápido). -->
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/atalhos" />
-        </activity>
-
-        <!-- O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s.
+        <!-- 24/11: o SOS rápido vem ANTES do MainActivity de propósito. A lista do botão lateral do Samsung é por
+             app e guarda a 1ª tela "de abrir" do pacote; com ele em 1º, os 2 toques no botão de ligar (celular
+             bloqueado) abrem o SOS rápido, não a configuração. Não troque a ordem.
+             O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s.
              SEMPRE LIGADO (Rodrigo, 24/11: "se tiver a opção de desligar, ele desliga, aí não consegue fazer pelo
              celular"): é ele que os 2 toques no botão lateral do Samsung abrem. Pelo ícone com o celular
              desbloqueado, pede mais 2 toques na tela preta (contra curiosos). Abre por cima da tela bloqueada. -->
@@ -97,6 +86,21 @@
                 <category android:name="android.intent.category.INFO" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- O atalho "SOS rápido" (botão lateral do Samsung: Aplicativos → GuardiõesSOS → ⚙️ → SOS rápido). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/atalhos" />
+        </activity>
+
 
         <activity
             android:name=".ui.AlertaRecebidoActivity"

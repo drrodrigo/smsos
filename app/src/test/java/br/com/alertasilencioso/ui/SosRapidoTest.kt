@@ -288,6 +288,17 @@ class SosRapidoTest {
     }
 
     @Test
+    fun `o SOS rapido vem antes do MainActivity no manifesto (a lista do botao lateral guarda a 1a tela)`() {
+        // No celular de verdade, as telas "de abrir" de um pacote saem na ordem do manifesto, e o Samsung guarda a 1ª.
+        // (O Robolectric não segue essa ordem, então a trava olha o arquivo.)
+        val manifesto = java.io.File("src/main/AndroidManifest.xml").readText()
+        val sos = manifesto.indexOf("android:name=\".ui.SosRapidoActivity\"")
+        val principal = manifesto.indexOf("android:name=\".ui.MainActivity\"")
+        assertTrue("as duas telas estão no manifesto", sos > 0 && principal > 0)
+        assertTrue("o SOS rápido tem que vir ANTES do MainActivity", sos < principal)
+    }
+
+    @Test
     fun `pela porta do pacote com o celular BLOQUEADO (botao lateral, tela apagada) dispara`() {
         bloqueado(true)
         val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
