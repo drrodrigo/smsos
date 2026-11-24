@@ -62,6 +62,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- O atalho "SOS rápido" (botão lateral do Samsung: Aplicativos → GuardiõesSOS → ⚙️ → SOS rápido). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/atalhos" />
         </activity>
 
         <!-- O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s.

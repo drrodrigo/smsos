@@ -136,12 +136,14 @@ class SosRapidoActivity : ComponentActivity() {
     }
 
     /**
-     * Pode começar? Celular BLOQUEADO (os 2 toques no botão de ligar): sim, direto. DESBLOQUEADO (tocaram no ícone):
-     * só no [SosRapido.TOQUES_NO_ICONE]º toque seguido (contra curiosos).
+     * Pode começar? Celular BLOQUEADO, ou veio do atalho do botão lateral: sim, direto. DESBLOQUEADO e tocaram no
+     * ícone SOS rápido: só no [SosRapido.TOQUES_NO_ICONE]º toque seguido (contra curiosos).
      */
     private fun podeAbrir(): Boolean {
         val bloqueado = getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
-        return bloqueado || SosRapido.contarToqueNoIcone(SystemClock.elapsedRealtime())
+        // Do atalho do botão lateral (ou do menu do ícone principal): direto, a pessoa apertou de propósito.
+        val doAtalho = intent?.getStringExtra(SosRapido.EXTRA_ORIGEM) == SosRapido.ORIGEM_ATALHO
+        return bloqueado || doAtalho || SosRapido.contarToqueNoIcone(SystemClock.elapsedRealtime())
     }
 
     /** Fecha sem mostrar nada e sem animação: para quem tocou, o ícone não fez nada. */
