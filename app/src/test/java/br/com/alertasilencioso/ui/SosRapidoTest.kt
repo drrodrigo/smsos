@@ -50,6 +50,8 @@ class SosRapidoTest {
                 alwaysContacts = listOf(Contact(name = "Fernanda", phone = "31999998888")),
             )
         }
+        // Por padrão, o celular BLOQUEADO (os 2 toques no botão de ligar): dispara direto, sem confirmação.
+        bloqueado(true)
         SosRapido.acionar = { _, perfil ->
             disparos += perfil
             if (alertaEntraNoHistorico) Repository.addAlert(registro())
@@ -62,6 +64,9 @@ class SosRapidoTest {
         SosRapido.acionar = acionarDeVerdade
         RobolectricJarLeak.fechar()
     }
+
+    private fun bloqueado(sim: Boolean) =
+        shadowOf(context.getSystemService(android.app.KeyguardManager::class.java)).setKeyguardLocked(sim)
 
     private fun registro() = AlertRecord(
         timestamp = System.currentTimeMillis() + 60_000,
@@ -190,6 +195,67 @@ class SosRapidoTest {
     }
 
     @Test
+    fun `desbloqueado, tocar no icone so abre a tela preta - sem os toques, fecha e nada sai`() {
+        bloqueado(false)
+        val tela = abrir().get()
+        assertEquals(SosRapidoActivity.Fase.CONFIRMANDO, tela.fase)
+        passar(SosRapido.ESPERA_DA_CONFIRMACAO_MS / 1000.0 + 0.1)
+        assertTrue(tela.isFinishing)
+        passar(10.0)
+        assertTrue(disparos.isEmpty())
+    }
+
+    @Test
+    fun `desbloqueado, um toque so (curioso) nao dispara`() {
+        bloqueado(false)
+        val tela = abrir().get()
+        tela.tocou()
+        assertEquals(SosRapidoActivity.Fase.CONFIRMANDO, tela.fase)
+        passar(10.0)
+        assertTrue(disparos.isEmpty())
+    }
+
+    @Test
+    fun `desbloqueado, os toques de confirmacao comecam a contagem e o SOS sai`() {
+        bloqueado(false)
+        val tela = abrir().get()
+        repeat(SosRapido.TOQUES_PARA_CONFIRMAR) { tela.tocou() }
+        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
+        passar(3.1)
+        assertEquals(listOf(Profile.SEGURANCA), disparos)
+    }
+
+    @Test
+    fun `desbloqueado, segurar o dedo na confirmacao fecha sem disparar`() {
+        bloqueado(false)
+        val tela = abrir().get()
+        tela.tocou()
+        tela.segurou()
+        assertTrue(tela.isFinishing)
+        passar(10.0)
+        assertTrue(disparos.isEmpty())
+    }
+
+    @Test
+    fun `com o ajuste desligado, desbloqueado dispara direto como antes`() {
+        Repository.updateSettings { it.copy(sosRapidoConfirmar = false) }
+        bloqueado(false)
+        val tela = abrir().get()
+        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
+        passar(3.1)
+        assertEquals(1, disparos.size)
+    }
+
+    @Test
+    fun `so pede confirmacao com o celular desbloqueado e o ajuste ligado`() {
+        assertTrue(SosRapido.pedeConfirmacao(Settings(), celularBloqueado = false))
+        assertFalse(SosRapido.pedeConfirmacao(Settings(), celularBloqueado = true))
+        assertFalse(SosRapido.pedeConfirmacao(Settings(sosRapidoConfirmar = false), celularBloqueado = false))
+        assertTrue(Settings().sosRapidoConfirmar)
+        assertFalse(StateJson.decode(StateJson.encode(AppState(settings = Settings(sosRapidoConfirmar = false)))).settings.sosRapidoConfirmar)
+    }
+
+    @Test
     fun `o 2o icone segue o ajuste - nasce desligado`() {
         val atalho = ComponentName(context, SosRapidoActivity::class.java)
         val pm = context.packageManager
@@ -197,6 +263,18 @@ class SosRapidoTest {
         SosRapido.aplicarAtalho(context, true)
         assertEquals(PackageManager.COMPONENT_ENABLED_STATE_ENABLED, pm.getComponentEnabledSetting(atalho))
         assertTrue(SosRapido.atalhoLigado(context))
+        SosRapido.aplicarAtalho(context, false)
+        assertFalse(SosRapido.atalhoLigado(context))
+    }
+
+    @Test
+    fun `por na tela inicial fixa o atalho do SOS rapido, e desligar o deixa desligado`() {
+        SosRapido.aplicarAtalho(context, true)
+        val sm = context.getSystemService(android.content.pm.ShortcutManager::class.java)
+        if (SosRapido.porNaTelaInicial(context)) {
+            assertTrue(sm.pinnedShortcuts.any { it.id == SosRapido.ID_DO_ATALHO })
+        }
+        // Desligar não pode quebrar, com ou sem o atalho fixado.
         SosRapido.aplicarAtalho(context, false)
         assertFalse(SosRapido.atalhoLigado(context))
     }

@@ -2,4 +2,5 @@
     <string name="app_name">GuardiõesSOS</string>
     <string name="accessibility_service_label">GuardiõesSOS – botão de pânico</string>
     <string name="accessibility_service_description">Percebe quando você segura o botão de volume para enviar o alerta de emergência por SMS. Não lê a tela nem o que você digita.</string>
+    <string name="sos_rapido_nome">SOS rápido</string>
 </resources>

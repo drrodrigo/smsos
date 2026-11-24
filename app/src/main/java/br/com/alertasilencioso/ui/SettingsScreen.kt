@@ -345,21 +345,41 @@ fun SettingsScreen(settings: Settings) {
             }
         }
         item {
-            SectionCard("SOS rápido pelo botão lateral") {
-                SwitchRow("Criar o atalho \"SOS rápido\"", settings.sosRapido) { on ->
+            SectionCard("Botão de pânico (ícone SOS rápido)") {
+                SwitchRow("Ligar o ícone \"SOS rápido\"", settings.sosRapido) { on ->
                     save { it.copy(sosRapido = on) }
                     SosRapido.aplicarAtalho(context, on)
                 }
                 HelpText(
-                    "Cria um 2º ícone, \"SOS rápido\". Abriu: a tela fica preta e o SOS sai sozinho em ${SosRapido.SEGUNDOS} segundos. " +
-                        "Para cancelar, segure o dedo na tela (um toque leve não cancela, para o bolso não cancelar sem querer).",
+                    "Liga um 2º ícone no seu celular, o \"SOS rápido\". Coloque ele na tela inicial, num lugar fácil: " +
+                        "numa emergência, um toque e a tela fica preta, em silêncio, e o SOS sai sozinho em " +
+                        "${SosRapido.SEGUNDOS} segundos. Para cancelar, segure o dedo na tela (um toque leve não cancela, " +
+                        "para a bolsa ou o bolso não cancelarem sem querer). Se sair sem querer, toque em \"Estou bem\" " +
+                        "na tela Início.",
                 )
                 if (settings.sosRapido) {
+                    BotaoRelevo(
+                        onClick = {
+                            if (!SosRapido.porNaTelaInicial(context)) {
+                                context.toast("Este celular não deixa pôr sozinho: abra a lista de apps, segure o SOS rápido e arraste para a tela inicial.")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Pôr o SOS rápido na tela inicial") }
+                    SwitchRow("Pedir mais ${SosRapido.TOQUES_PARA_CONFIRMAR} toques (contra curiosos)", settings.sosRapidoConfirmar) { on ->
+                        save { it.copy(sosRapidoConfirmar = on) }
+                    }
                     HelpText(
-                        "No Samsung, ligue no botão de ligar: Configurações → Recursos avançados → Tecla lateral → " +
-                            "Pressionar duas vezes → Aplicativos → SOS rápido. Assim, dois toques no botão de ligar " +
-                            "disparam o SOS mesmo com a tela apagada e bloqueada.",
+                        "Com o celular desbloqueado, tocar no ícone só deixa a tela preta. Para disparar, toque mais " +
+                            "${SosRapido.TOQUES_PARA_CONFIRMAR} vezes na tela preta (em até ${SosRapido.ESPERA_DA_CONFIRMACAO_MS / 1000} segundos). " +
+                            "Sem os toques, ela fecha sozinha e nada é enviado: quem pegar o seu celular e tocar no ícone " +
+                            "por curiosidade não dispara nada. Com o celular bloqueado (2 toques no botão de ligar), dispara direto.",
                     )
+                    HelpText(
+                        "Samsung: dá para disparar até com a tela apagada, com 2 toques no botão de ligar. Configurações → " +
+                            "Recursos avançados → Tecla lateral → Pressionar duas vezes → Aplicativos → SOS rápido.",
+                    )
+                    HelpText("Desligou aqui: o ícone some e os 2 toques no botão de ligar param de disparar.")
                 }
             }
         }
