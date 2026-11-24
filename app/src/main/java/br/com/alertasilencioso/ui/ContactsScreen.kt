@@ -116,6 +116,7 @@ fun ContactsScreen(state: AppState) {
                     // Um toque em "Convidar" ao lado de quem já está aqui — sem digitar nome e número de novo.
                     onInvite = { convidar(it.name, it.phone) },
                     situacao = { SituacaoDoGuardiao.de(it.phone, doServidor, state.convitesEnviados) },
+                    pausavel = true,
                 )
                 HelpText("Toque em \"Convidar\" ao lado de um guardião SMS para ele virar guardião com app (o celular dele toca).")
             }

@@ -72,6 +72,14 @@ class SituacaoDoGuardiaoTest {
     }
 
     @Test
+    fun `o guardiao pausado fica guardado como pausado (e o antigo, sem o campo, ativo)`() {
+        val estado = AppState(alwaysContacts = listOf(br.com.alertasilencioso.data.Contact(name = "Ana", phone = "31988887777", ativo = false)))
+        assertFalse(StateJson.decode(StateJson.encode(estado)).alwaysContacts.single().ativo)
+        val antigo = """{"alwaysContacts":[{"id":"x","name":"Ana","phone":"31988887777"}]}"""
+        assertTrue(StateJson.decode(antigo).alwaysContacts.single().ativo)
+    }
+
+    @Test
     fun `os convites mandados daqui ficam guardados`() {
         val estado = AppState(convitesEnviados = setOf("31984491586"))
         assertEquals(setOf("31984491586"), StateJson.decode(StateJson.encode(estado)).convitesEnviados)

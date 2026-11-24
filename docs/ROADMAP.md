@@ -340,3 +340,16 @@ Depois de ver onde a pessoa está, a tela do alerta deveria oferecer, em ordem n
 
 Pré-requisito: o push de alerta precisa carregar o **telefone de quem acionou** (`dados.telefone`)
 pra habilitar Ligar/WhatsApp. Hoje carrega só título + corpo + link do mapa.
+
+### Guardiões por ocasião e pausa (Rodrigo, 24/11)
+
+- **Feito (0.36.0): pausar cada guardião sem apagar.** Chave "Recebe os alertas" em cada contato (Guardiões e
+  Lugares). Pausado não recebe SMS nem as atualizações e não conta como guardião (`Contact.ativo`,
+  `RecipientResolver.distinctByPhone`). Uso dele: fazer um teste deixando só uma pessoa, não mandar no fim de semana.
+  O app já manda a lista dos pausados (`pausados`) para a `guardioes-alertar`; **a sirene só respeita a pausa quando
+  a função do servidor ler esse campo** (vai ao ar com o OK dele).
+- **Próxima rodada: guardiões por OCASIÃO** ("a turma do final de semana", Casa, Trabalho). Grupos com nome, cada
+  guardião num ou mais grupos, e qual grupo está valendo agora (escolha na mão ou por horário/dia da semana). Os
+  Lugares já cobrem "onde"; isto cobre "quando".
+- **Do lado de quem protege (aba Protejo):** silenciar por um tempo os alertas de alguém que eu protejo. Ele: "às
+  vezes não precisa". Ideia guardada.

@@ -238,7 +238,7 @@ class SosRapidoActivity : ComponentActivity() {
                     Fase.JA_SAIU -> Linha("O alerta já tinha saído há poucos segundos ✓\nSeus guardiões já foram avisados.")
                     Fase.SEM_GUARDIAO -> {
                         Text(
-                            "Nenhum guardião cadastrado",
+                            "Nenhum guardião para avisar",
                             color = Color.White,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -246,7 +246,7 @@ class SosRapidoActivity : ComponentActivity() {
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            "O SOS não foi enviado. Abra o GuardiõesSOS e cadastre quem deve ser avisado.",
+                            "O SOS não foi enviado. Abra o GuardiõesSOS e cadastre um guardião, ou ligue os que estão pausados.",
                             color = Color(0xFFDDDDDD),
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,

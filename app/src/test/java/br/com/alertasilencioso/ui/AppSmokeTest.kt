@@ -127,6 +127,17 @@ class AppSmokeTest {
         compose.onNodeWithContentDescription("Como toca no celular do guardião com app").assertExists()
         // 22/11: nada de "?" colorido (parecia erro ao lado do ✓ verde); a ajuda é o ⓘ cinza.
         assert(compose.onAllNodesWithText("?").fetchSemanticsNodes().isEmpty())
+        // 24/11: a chave de pausar cada guardião (sem apagar).
+        compose.onNodeWithText("Recebe os alertas").assertExists()
+        compose.onNodeWithContentDescription("Recebe os alertas: Filho Teste").assertExists()
+    }
+
+    @Test
+    fun guardiaoPausadoApareceComoPausado() {
+        Repository.addAlwaysContact(Contact(name = "Filha Pausada", phone = "(31) 97777-6666", ativo = false))
+        openTab("Guardiões")
+        compose.onNodeWithText("Filha Pausada").assertExists()
+        compose.onNodeWithText("⏸ Pausado: não recebe nada até você ligar de novo").assertExists()
     }
 
     @Test

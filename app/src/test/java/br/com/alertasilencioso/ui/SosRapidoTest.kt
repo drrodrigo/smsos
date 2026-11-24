@@ -154,6 +154,15 @@ class SosRapidoTest {
     }
 
     @Test
+    fun `todos os guardioes pausados - nao dispara e avisa`() {
+        Repository.update { it.copy(alwaysContacts = it.alwaysContacts.map { c -> c.copy(ativo = false) }) }
+        val tela = abrir().get()
+        assertEquals(SosRapidoActivity.Fase.SEM_GUARDIAO, tela.fase)
+        passar(10.0)
+        assertTrue(disparos.isEmpty())
+    }
+
+    @Test
     fun `o alerta entrou no historico - mostra acionado e fecha sozinho`() {
         alertaEntraNoHistorico = true
         val tela = abrir().get()

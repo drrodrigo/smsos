@@ -69,4 +69,22 @@ class RecipientResolverTest {
         val d = RecipientResolver.distanceMeters(GeoPoint(-19.0, -42.0), GeoPoint(-19.001, -42.0))
         assertEquals(111.2, d, 0.5)
     }
+
+    @Test
+    fun `guardiao PAUSADO nao recebe nem conta (24-11)`() {
+        val ativa = Contact(name = "Ana", phone = "31988887777")
+        val pausado = Contact(name = "Beto", phone = "31977776666", ativo = false)
+        val vizinhoPausado = Contact(name = "Caio", phone = "31966665555", ativo = false)
+        val casa = Place(name = "Casa", contacts = listOf(vizinhoPausado))
+        val r = RecipientResolver.resolve(null, null, listOf(ativa, pausado), listOf(casa))
+        assertEquals(listOf("Ana"), r.recipients.map { it.name })
+        assertEquals(1, RecipientResolver.distinctByPhone(listOf(ativa, pausado, vizinhoPausado)).size)
+    }
+
+    @Test
+    fun `o mesmo numero ativo num lugar ainda recebe, mesmo pausado na lista de sempre`() {
+        val pausado = Contact(name = "Ana", phone = "31988887777", ativo = false)
+        val noLugar = Contact(name = "Ana", phone = "(31) 98888-7777")
+        assertEquals(1, RecipientResolver.distinctByPhone(listOf(pausado, noLugar)).size)
+    }
 }

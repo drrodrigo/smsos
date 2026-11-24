@@ -86,12 +86,14 @@ internal object StateJson {
         )
     }
 
-    private fun encodeContact(c: Contact) = JSONObject().put("id", c.id).put("name", c.name).put("phone", c.phone)
+    private fun encodeContact(c: Contact) =
+        JSONObject().put("id", c.id).put("name", c.name).put("phone", c.phone).put("ativo", c.ativo)
 
     private fun decodeContact(o: JSONObject) = Contact(
         id = o.optString("id").ifEmpty { newId() },
         name = o.optString("name"),
         phone = o.optString("phone"),
+        ativo = o.optBoolean("ativo", true),
     )
 
     private fun encodeContacts(list: List<Contact>) = JSONArray(list.map(::encodeContact))
