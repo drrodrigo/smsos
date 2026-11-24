@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -39,8 +40,8 @@ import br.com.alertasilencioso.data.Repository
 
 /**
  * O atalho "SOS rápido" (o 2º ícone). Abriu = tela PRETA, conta [SosRapido.SEGUNDOS] e dispara SOZINHO, como o
- * relógio. Aberto pelo ÍCONE com o celular desbloqueado, antes espera [SosRapido.TOQUES_PARA_CONFIRMAR] toques na tela
- * preta (contra curiosos, 24/11); sem eles, fecha em [SosRapido.ESPERA_DA_CONFIRMACAO_MS] e nada sai. Para cancelar na contagem: SEGURAR o dedo na tela ou "voltar". Um toque leve NÃO cancela (21/11: o dedo
+ * relógio. Pelo ÍCONE com o celular desbloqueado, só no [SosRapido.TOQUES_NO_ICONE]º toque seguido no ícone (contra
+ * curiosos, 24/11): o 1º e o 2º fecham na hora sem desenhar nada (janela transparente). Para cancelar na contagem: SEGURAR o dedo na tela ou "voltar". Um toque leve NÃO cancela (21/11: o dedo
  * que segura o celular, ou o bolso, encostava na tela preta e cancelava sem a pessoa saber). Apertar o botão de
  * ligar também não cancela: a contagem segue com a tela apagada (é o "dois toques e guarda no bolso").
  *
@@ -50,7 +51,7 @@ import br.com.alertasilencioso.data.Repository
  */
 class SosRapidoActivity : ComponentActivity() {
 
-    enum class Fase { CONFIRMANDO, CONTANDO, ENVIANDO, PRONTO, JA_SAIU, SEM_GUARDIAO }
+    enum class Fase { CONTANDO, ENVIANDO, PRONTO, JA_SAIU, SEM_GUARDIAO }
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -61,10 +62,6 @@ class SosRapidoActivity : ComponentActivity() {
     private var teste by mutableStateOf(false)
     private var acionadoEm = 0L
     private var esperouMs = 0L
-    private var toques = 0
-
-    /** Ninguém confirmou com os toques: fecha em silêncio, nada sai. */
-    private val desistir = Runnable { if (fase == Fase.CONFIRMANDO) finish() }
 
     private val tique = object : Runnable {
         override fun run() {
@@ -86,13 +83,19 @@ class SosRapidoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repository.init(applicationContext)
+        val salvo = savedInstanceState?.getString(FASE)?.let { runCatching { Fase.valueOf(it) }.getOrNull() }
+        // 1º ou 2º toque no ícone com o celular desbloqueado: fecha na hora, sem desenhar nada (a janela é transparente):
+        // para quem tocou, o ícone "não faz nada". Só o 3º toque seguido segue adiante.
+        if (salvo == null && !podeAbrir()) {
+            sairSemNada()
+            return
+        }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onBackPressedDispatcher.addCallback(this) { fechar() }
         setContent { TelaDoSosRapido() }
 
-        val salvo = savedInstanceState?.getString(FASE)?.let { runCatching { Fase.valueOf(it) }.getOrNull() }
         when (salvo) {
-            null -> abrir()
+            null -> comecar()
             // Recriou no meio (raro: o manifesto segura giro e tema): continua de onde estava, sem disparar duas vezes.
             Fase.CONTANDO -> {
                 faltam = savedInstanceState.getInt(FALTAM, SosRapido.SEGUNDOS)
@@ -106,7 +109,7 @@ class SosRapidoActivity : ComponentActivity() {
                 brilho(discreto = true)
                 handler.postDelayed(espera, PASSO_DA_ESPERA)
             }
-            Fase.CONFIRMANDO, Fase.PRONTO, Fase.JA_SAIU, Fase.SEM_GUARDIAO -> finish()
+            Fase.PRONTO, Fase.JA_SAIU, Fase.SEM_GUARDIAO -> finish()
         }
     }
 
@@ -116,7 +119,7 @@ class SosRapidoActivity : ComponentActivity() {
         setIntent(intent)
         if (fase == Fase.PRONTO || fase == Fase.JA_SAIU || fase == Fase.SEM_GUARDIAO) {
             handler.removeCallbacksAndMessages(null)
-            abrir()
+            if (podeAbrir()) comecar() else sairSemNada()
         }
     }
 
@@ -133,20 +136,19 @@ class SosRapidoActivity : ComponentActivity() {
     }
 
     /**
-     * Abriu. Celular desbloqueado (tocaram no ícone) e o ajuste ligado: a tela preta espera os toques de confirmação
-     * (contra curiosos). Bloqueado (os 2 toques no botão de ligar): começa a contar direto.
+     * Pode começar? Celular BLOQUEADO (os 2 toques no botão de ligar): sim, direto. DESBLOQUEADO (tocaram no ícone):
+     * só no [SosRapido.TOQUES_NO_ICONE]º toque seguido (contra curiosos).
      */
-    private fun abrir() {
+    private fun podeAbrir(): Boolean {
         val bloqueado = getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
-        if (SosRapido.pedeConfirmacao(Repository.state.value.settings, bloqueado)) {
-            fase = Fase.CONFIRMANDO
-            toques = 0
-            brilho(discreto = true)
-            handler.removeCallbacks(desistir)
-            handler.postDelayed(desistir, SosRapido.ESPERA_DA_CONFIRMACAO_MS)
-        } else {
-            comecar()
-        }
+        return bloqueado || SosRapido.contarToqueNoIcone(SystemClock.elapsedRealtime())
+    }
+
+    /** Fecha sem mostrar nada e sem animação: para quem tocou, o ícone não fez nada. */
+    private fun sairSemNada() {
+        finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
     }
 
     private fun comecar() {
@@ -191,22 +193,9 @@ class SosRapidoActivity : ComponentActivity() {
         handler.postDelayed({ finish() }, SosRapido.MOSTRA_PRONTO_MS)
     }
 
-    /**
-     * Toque leve. Confirmando: conta os toques; chegou a [SosRapido.TOQUES_PARA_CONFIRMAR], começa a contagem.
-     * Nos avisos do fim: fecha. Na contagem NÃO cancela (dedo ou bolso encostando sem querer).
-     */
+    /** Toque leve: só fecha os avisos do fim. Na contagem NÃO cancela (dedo ou bolso encostando sem querer). */
     internal fun tocou() {
-        when (fase) {
-            Fase.CONFIRMANDO -> {
-                toques += 1
-                if (toques >= SosRapido.TOQUES_PARA_CONFIRMAR) {
-                    handler.removeCallbacks(desistir)
-                    comecar()
-                }
-            }
-            Fase.PRONTO, Fase.JA_SAIU, Fase.SEM_GUARDIAO -> fechar()
-            else -> Unit
-        }
+        if (fase == Fase.PRONTO || fase == Fase.JA_SAIU || fase == Fase.SEM_GUARDIAO) fechar()
     }
 
     /** Segurou o dedo na tela: na contagem, CANCELA (nada sai); nos avisos do fim, fecha. Enviando, nada (já saiu). */
@@ -238,8 +227,6 @@ class SosRapidoActivity : ComponentActivity() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 when (fase) {
-                    // Preto puro, sem texto: quem tocou por curiosidade não vê nada nem sabe o que fazer.
-                    Fase.CONFIRMANDO -> Unit
                     Fase.CONTANDO -> {
                         Text("$faltam", color = APAGADO, fontSize = 64.sp, fontWeight = FontWeight.Light)
                         Spacer(Modifier.height(8.dp))

@@ -52,6 +52,7 @@ class SosRapidoTest {
         }
         // Por padrão, o celular BLOQUEADO (os 2 toques no botão de ligar): dispara direto, sem confirmação.
         bloqueado(true)
+        SosRapido.zerarToques()
         SosRapido.acionar = { _, perfil ->
             disparos += perfil
             if (alertaEntraNoHistorico) Repository.addAlert(registro())
@@ -195,95 +196,72 @@ class SosRapidoTest {
     }
 
     @Test
-    fun `desbloqueado, tocar no icone so abre a tela preta - sem os toques, fecha e nada sai`() {
+    fun `desbloqueado, o 1o e o 2o toque no icone fecham na hora e nada sai`() {
         bloqueado(false)
-        val tela = abrir().get()
-        assertEquals(SosRapidoActivity.Fase.CONFIRMANDO, tela.fase)
-        passar(SosRapido.ESPERA_DA_CONFIRMACAO_MS / 1000.0 + 0.1)
-        assertTrue(tela.isFinishing)
+        val primeiro = abrir().get()
+        assertTrue("1º toque: fecha sem mostrar nada", primeiro.isFinishing)
+        passar(0.5)
+        val segundo = abrir().get()
+        assertTrue("2º toque: fecha sem mostrar nada", segundo.isFinishing)
         passar(10.0)
         assertTrue(disparos.isEmpty())
     }
 
     @Test
-    fun `desbloqueado, um toque so (curioso) nao dispara`() {
+    fun `desbloqueado, o 3o toque seguido no icone comeca a contagem e o SOS sai`() {
         bloqueado(false)
-        val tela = abrir().get()
-        tela.tocou()
-        assertEquals(SosRapidoActivity.Fase.CONFIRMANDO, tela.fase)
-        passar(10.0)
-        assertTrue(disparos.isEmpty())
-    }
-
-    @Test
-    fun `desbloqueado, os toques de confirmacao comecam a contagem e o SOS sai`() {
-        bloqueado(false)
-        val tela = abrir().get()
-        repeat(SosRapido.TOQUES_PARA_CONFIRMAR) { tela.tocou() }
-        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
+        abrir()
+        passar(0.4)
+        abrir()
+        passar(0.4)
+        val terceiro = abrir().get()
+        assertFalse(terceiro.isFinishing)
+        assertEquals(SosRapidoActivity.Fase.CONTANDO, terceiro.fase)
         passar(3.1)
         assertEquals(listOf(Profile.SEGURANCA), disparos)
     }
 
     @Test
-    fun `desbloqueado, segurar o dedo na confirmacao fecha sem disparar`() {
+    fun `desbloqueado, toques espacados demais nao somam (curioso que toca de vez em quando)`() {
         bloqueado(false)
-        val tela = abrir().get()
-        tela.tocou()
-        tela.segurou()
-        assertTrue(tela.isFinishing)
+        abrir()
+        passar(2.0)
+        abrir()
+        passar(2.0) // o 1º já passou dos 3 s: sobram 2 toques na conta
+        val terceiro = abrir().get()
+        assertTrue(terceiro.isFinishing)
         passar(10.0)
         assertTrue(disparos.isEmpty())
     }
 
     @Test
-    fun `com o ajuste desligado, desbloqueado dispara direto como antes`() {
-        Repository.updateSettings { it.copy(sosRapidoConfirmar = false) }
-        bloqueado(false)
-        val tela = abrir().get()
-        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
-        passar(3.1)
-        assertEquals(1, disparos.size)
+    fun `a conta dos toques no icone - 3 dentro de 3 s, e zera depois de disparar`() {
+        assertFalse(SosRapido.contarToqueNoIcone(1_000))
+        assertFalse(SosRapido.contarToqueNoIcone(2_000))
+        assertTrue(SosRapido.contarToqueNoIcone(3_000))
+        assertFalse("zerou: começa de novo", SosRapido.contarToqueNoIcone(3_500))
+        assertFalse(SosRapido.contarToqueNoIcone(4_000))
+        assertFalse("o de 3.500 saiu da janela de 3 s", SosRapido.contarToqueNoIcone(7_600))
     }
 
     @Test
-    fun `so pede confirmacao com o celular desbloqueado e o ajuste ligado`() {
-        assertTrue(SosRapido.pedeConfirmacao(Settings(), celularBloqueado = false))
-        assertFalse(SosRapido.pedeConfirmacao(Settings(), celularBloqueado = true))
-        assertFalse(SosRapido.pedeConfirmacao(Settings(sosRapidoConfirmar = false), celularBloqueado = false))
-        assertTrue(Settings().sosRapidoConfirmar)
-        assertFalse(StateJson.decode(StateJson.encode(AppState(settings = Settings(sosRapidoConfirmar = false)))).settings.sosRapidoConfirmar)
-    }
-
-    @Test
-    fun `o 2o icone segue o ajuste - nasce desligado`() {
+    fun `o 2o icone fica sempre ligado - e quem tinha desligado volta a ter`() {
         val atalho = ComponentName(context, SosRapidoActivity::class.java)
         val pm = context.packageManager
+        assertTrue("nasce ligado (manifesto)", SosRapido.atalhoLigado(context))
+        // Quem desligou numa versão antiga (com a chave) volta a ter o ícone ao abrir o app.
+        pm.setComponentEnabledSetting(atalho, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
         assertFalse(SosRapido.atalhoLigado(context))
-        SosRapido.aplicarAtalho(context, true)
-        assertEquals(PackageManager.COMPONENT_ENABLED_STATE_ENABLED, pm.getComponentEnabledSetting(atalho))
+        SosRapido.garantirAtalho(context)
         assertTrue(SosRapido.atalhoLigado(context))
-        SosRapido.aplicarAtalho(context, false)
-        assertFalse(SosRapido.atalhoLigado(context))
     }
 
     @Test
-    fun `por na tela inicial fixa o atalho do SOS rapido, e desligar o deixa desligado`() {
-        SosRapido.aplicarAtalho(context, true)
+    fun `por na tela inicial fixa o atalho do SOS rapido`() {
+        SosRapido.garantirAtalho(context)
         val sm = context.getSystemService(android.content.pm.ShortcutManager::class.java)
         if (SosRapido.porNaTelaInicial(context)) {
             assertTrue(sm.pinnedShortcuts.any { it.id == SosRapido.ID_DO_ATALHO })
         }
-        // Desligar não pode quebrar, com ou sem o atalho fixado.
-        SosRapido.aplicarAtalho(context, false)
-        assertFalse(SosRapido.atalhoLigado(context))
-    }
-
-    @Test
-    fun `o ajuste do SOS rapido e guardado (nasce desligado)`() {
-        assertFalse(Settings().sosRapido)
-        val ligado = AppState(settings = Settings(sosRapido = true))
-        assertTrue(StateJson.decode(StateJson.encode(ligado)).settings.sosRapido)
-        assertFalse(StateJson.decode("""{"settings":{}}""").settings.sosRapido)
     }
 }
