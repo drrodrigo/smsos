@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  O ATALHO "SOS rápido" do ícone principal (24/11). A lista do botão lateral do Samsung ("Pressionar duas vezes"
+  → Aplicativos) mostra os APPS, não os ícones: escolher o GuardiõesSOS abria o app de configuração. Para app que
+  oferece atalhos, o Samsung mostra a engrenagem ⚙️ ao lado e deixa escolher a função: é este. Ele também aparece
+  segurando o dedo no ícone do GuardiõesSOS.
+
+  O `origem=atalho` diz à SosRapidoActivity que veio do botão lateral (ou do menu do ícone): dispara direto, sem
+  os 3 toques contra curiosos (esses são só para o ícone SOS rápido na tela, com o celular desbloqueado).
+  O pacote vem de @string/pacote_do_app (o debug é ".teste"; ver build.gradle.kts).
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="sos-rapido-botao-lateral"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sos_rapido_nome"
+        android:shortcutLongLabel="@string/sos_rapido_nome">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="@string/pacote_do_app"
+            android:targetClass="br.com.alertasilencioso.ui.SosRapidoActivity">
+            <extra
+                android:name="br.com.alertasilencioso.ORIGEM"
+                android:value="atalho" />
+        </intent>
+    </shortcut>
+</shortcuts>

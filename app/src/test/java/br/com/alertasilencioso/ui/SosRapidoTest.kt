@@ -244,6 +244,44 @@ class SosRapidoTest {
     }
 
     @Test
+    fun `desbloqueado, pelo atalho do botao lateral dispara direto (sem os 3 toques)`() {
+        bloqueado(false)
+        val intent = android.content.Intent(context, SosRapidoActivity::class.java)
+            .putExtra(SosRapido.EXTRA_ORIGEM, SosRapido.ORIGEM_ATALHO)
+        val tela = Robolectric.buildActivity(SosRapidoActivity::class.java, intent).setup().get()
+        assertEquals(SosRapidoActivity.Fase.CONTANDO, tela.fase)
+        passar(3.1)
+        assertEquals(listOf(Profile.SEGURANCA), disparos)
+    }
+
+    @Test
+    fun `o atalho do icone principal abre o SOS rapido, no pacote deste build, com origem atalho`() {
+        // O botão lateral do Samsung escolhe ESTE atalho (Aplicativos → GuardiõesSOS → ⚙️ → SOS rápido).
+        assertEquals(context.packageName, context.getString(br.com.alertasilencioso.R.string.pacote_do_app))
+        val xml = context.resources.getXml(br.com.alertasilencioso.R.xml.atalhos)
+        var alvo: String? = null
+        var pacote: String? = null
+        var origem: String? = null
+        val android = "http://schemas.android.com/apk/res/android"
+        while (xml.next() != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+            if (xml.eventType != org.xmlpull.v1.XmlPullParser.START_TAG) continue
+            when (xml.name) {
+                "intent" -> {
+                    alvo = xml.getAttributeValue(android, "targetClass")
+                    val ref = xml.getAttributeResourceValue(android, "targetPackage", 0)
+                    pacote = if (ref != 0) context.getString(ref) else xml.getAttributeValue(android, "targetPackage")
+                }
+                "extra" -> if (xml.getAttributeValue(android, "name") == SosRapido.EXTRA_ORIGEM) {
+                    origem = xml.getAttributeValue(android, "value")
+                }
+            }
+        }
+        assertEquals(SosRapidoActivity::class.java.name, alvo)
+        assertEquals(context.packageName, pacote)
+        assertEquals(SosRapido.ORIGEM_ATALHO, origem)
+    }
+
+    @Test
     fun `a conta dos toques no icone - 3 dentro de 3 s, e zera depois de disparar`() {
         assertFalse(SosRapido.contarToqueNoIcone(1_000))
         assertFalse(SosRapido.contarToqueNoIcone(2_000))

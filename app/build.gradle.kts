@@ -34,14 +34,16 @@ android {
         applicationId = "br.com.guardioessos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 62
-        versionName = "0.36.0"
+        versionCode = 63
+        versionName = "0.36.1"
 
         // Nome do app mostrado no celular (o debug troca para "GuardiõesSOS teste" lá embaixo).
         manifestPlaceholders["appLabel"] = "GuardiõesSOS"
         // O 2º ícone, o atalho "SOS rápido" (ui/SosRapidoActivity). No debug ganha "teste" no nome, para não
         // confundir com o da Play na lista de apps do botão lateral.
         manifestPlaceholders["sosRapidoLabel"] = "SOS rápido"
+        // O pacote, para o atalho do botão lateral (res/xml/atalhos.xml): o debug troca para ".teste".
+        resValue("string", "pacote_do_app", "br.com.guardioessos")
 
         buildConfigField("String", "GATEWAY_URL", "\"$gatewayUrl\"")
         buildConfigField("String", "GATEWAY_KEY", "\"$gatewayKey\"")
@@ -75,6 +77,7 @@ android {
             versionNameSuffix = "-gesto"
             manifestPlaceholders["appLabel"] = "GuardiõesSOS teste"
             manifestPlaceholders["sosRapidoLabel"] = "SOS rápido teste"
+            resValue("string", "pacote_do_app", "br.com.guardioessos.teste")
             // APK de teste é INERTE por padrão: sem a estrutura de SMS (gateway vazio) — não envia nem
             // toca no backup, pra proteger seus dados durante o desenvolvimento.
             // Com -Preal, o gateway de gateway.properties é embutido e o app ENVIA DE VERDADE — é o
@@ -91,6 +94,8 @@ android {
     }
 
     buildFeatures {
+        // O atalho do botão lateral (res/xml/atalhos.xml) precisa do pacote de cada build (string pacote_do_app).
+        resValues = true
         compose = true
         buildConfig = true
     }

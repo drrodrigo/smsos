@@ -43,6 +43,13 @@ object SosRapido {
      * BLOQUEADO (2 toques no botão de ligar), dispara direto: a pessoa pode nem olhar.
      */
     const val TOQUES_NO_ICONE = 3
+
+    /**
+     * Extra do atalho do ícone principal (res/xml/atalhos.xml): "atalho" = veio do BOTÃO LATERAL do Samsung (ou do
+     * menu do ícone). Dispara direto, como com o celular bloqueado: a pessoa apertou de propósito.
+     */
+    const val EXTRA_ORIGEM = "br.com.alertasilencioso.ORIGEM"
+    const val ORIGEM_ATALHO = "atalho"
     const val JANELA_DOS_TOQUES_MS = 3_000L
 
     private val toquesNoIcone = ArrayDeque<Long>()
