@@ -3,9 +3,13 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
-    <!-- O "SOS rápido": preto desde o primeiro quadro (sem piscar branco ao abrir). -->
+    <!-- O "SOS rápido". -->
     <style name="Theme.SosRapido" parent="android:Theme.Material.NoActionBar.Fullscreen">
-        <item name="android:windowBackground">@android:color/black</item>
+        <!-- Transparente: o 1º e o 2º toque no ícone fecham sem mostrar nada (contra curiosos); o preto da contagem
+             quem pinta é a tela (Compose). Sem animação de abrir/fechar, para nem piscar. -->
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
         <item name="android:statusBarColor">@android:color/black</item>
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>

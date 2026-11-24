@@ -14,8 +14,8 @@ class App : Application() {
         super.onCreate()
         Repository.init(this)
         Repository.expireOldActiveAlert(System.currentTimeMillis())
-        // O 2º ícone "SOS rápido" segue o ajuste (ex.: depois de restaurar um backup com ele ligado).
-        SosRapido.aplicarAtalho(this, Repository.state.value.settings.sosRapido)
+        // O 2º ícone "SOS rápido" fica sempre ligado (quem teve a chave de desligar volta a ter).
+        SosRapido.garantirAtalho(this)
         // Cria o canal do push JÁ na abertura. Sem isso, uma notificação que chega com o app FECHADO
         // cai num canal inexistente e o Android não mostra. (minSdk 26: canal sempre disponível.)
         runCatching {

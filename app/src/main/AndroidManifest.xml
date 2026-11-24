@@ -64,12 +64,12 @@
             </intent-filter>
         </activity>
 
-        <!-- O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s (toque cancela).
-             Nasce DESLIGADO (enabled=false): só aparece quando a pessoa liga em Ajustes (SosRapido.aplicarAtalho).
-             Abre por cima da tela bloqueada, para o "pressionar duas vezes" do botão lateral do Samsung. -->
+        <!-- O atalho "SOS rápido": um 2º ícone que, aberto, apaga a tela e dispara sozinho em 3 s.
+             SEMPRE LIGADO (Rodrigo, 24/11: "se tiver a opção de desligar, ele desliga, aí não consegue fazer pelo
+             celular"): é ele que os 2 toques no botão lateral do Samsung abrem. Pelo ícone com o celular
+             desbloqueado, pede mais 2 toques na tela preta (contra curiosos). Abre por cima da tela bloqueada. -->
         <activity
             android:name=".ui.SosRapidoActivity"
-            android:enabled="false"
             android:exported="true"
             android:label="${sosRapidoLabel}"
             android:taskAffinity="br.com.guardioessos.sosrapido"

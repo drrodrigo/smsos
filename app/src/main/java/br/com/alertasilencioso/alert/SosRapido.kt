@@ -18,6 +18,8 @@ import br.com.alertasilencioso.ui.SosRapidoActivity
 /**
  * As regras do atalho "SOS rápido" (o 2º ícone, [SosRapidoActivity]), fora da tela para os testes travarem.
  *
+ * SEMPRE LIGADO, sem chave (24/11): é o que os 2 toques no botão de ligar abrem.
+ *
  * Por que existe: o Samsung NÃO entrega o botão de volume a nenhum app com a tela apagada (testado no aparelho do
  * Rodrigo, 21/11). Mas o "pressionar duas vezes" do botão lateral abre um app escolhido por cima da tela
  * bloqueada. Com este atalho escolhido lá, dois toques no botão de ligar = tela preta, 3 s e o SOS sai, igual ao
@@ -33,18 +35,33 @@ object SosRapido {
     /** Quanto o "SOS acionado" fica na tela antes de fechar. */
     const val MOSTRA_PRONTO_MS = 2_500L
 
-    /** Contra curiosos: quantos toques na tela preta confirmam o SOS aberto pelo ícone com o celular desbloqueado. */
-    const val TOQUES_PARA_CONFIRMAR = 2
-
-    /** Quanto a tela preta espera a confirmação; sem ela, fecha e nada sai. */
-    const val ESPERA_DA_CONFIRMACAO_MS = 5_000L
-
     /**
-     * Pede os toques de confirmação? Só com o celular DESBLOQUEADO (alguém tocou no ícone) e o ajuste ligado. Com o
-     * celular bloqueado (os 2 toques no botão de ligar, a tela apagada) dispara direto: a pessoa pode nem olhar.
+     * Contra CURIOSOS (Rodrigo, 24/11): com o celular DESBLOQUEADO, o SOS rápido só dispara com [TOQUES_NO_ICONE]
+     * toques seguidos NO ÍCONE, dentro de [JANELA_DOS_TOQUES_MS]. O 1º e o 2º toque não mostram nada (a tela fica
+     * onde estava): quem tocou por curiosidade acha que o ícone não faz nada. (Antes era 1 toque + 2 na tela preta,
+     * mas ele viu o furo: "a pessoa toca na tela preta para testar... e dispara do mesmo jeito".) Com o celular
+     * BLOQUEADO (2 toques no botão de ligar), dispara direto: a pessoa pode nem olhar.
      */
-    fun pedeConfirmacao(settings: Settings, celularBloqueado: Boolean): Boolean =
-        settings.sosRapidoConfirmar && !celularBloqueado
+    const val TOQUES_NO_ICONE = 3
+    const val JANELA_DOS_TOQUES_MS = 3_000L
+
+    private val toquesNoIcone = ArrayDeque<Long>()
+
+    /** Conta um toque no ícone ([agora] = SystemClock.elapsedRealtime). Verdadeiro no 3º dentro da janela (e zera). */
+    @Synchronized
+    fun contarToqueNoIcone(agora: Long): Boolean {
+        while (toquesNoIcone.isNotEmpty() && agora - toquesNoIcone.first() > JANELA_DOS_TOQUES_MS) toquesNoIcone.removeFirst()
+        toquesNoIcone.addLast(agora)
+        if (toquesNoIcone.size >= TOQUES_NO_ICONE) {
+            toquesNoIcone.clear()
+            return true
+        }
+        return false
+    }
+
+    /** Para os testes começarem do zero. */
+    @Synchronized
+    internal fun zerarToques() = toquesNoIcone.clear()
 
     /**
      * Quem aciona de verdade. Falso = não acionou porque um alerta acabou de sair (ex.: o relógio, segundos antes).
@@ -63,30 +80,19 @@ object SosRapido {
         RecipientResolver.distinctByPhone(estado.alwaysContacts + estado.places.flatMap { it.contacts }).size
 
     /**
-     * Mostra ou esconde o 2º ícone conforme o ajuste. Desligado volta ao do manifesto (enabled=false): o ícone some
-     * da gaveta e da lista do botão lateral, e nada mais abre o atalho.
+     * O 2º ícone fica SEMPRE ligado (24/11). Quem teve a versão com a chave de desligar (0.33 a 0.35.1) pode ter
+     * ficado com ele desligado: aqui volta ao do manifesto (ligado), e o atalho fixado na tela inicial também.
      */
-    fun aplicarAtalho(context: Context, ligado: Boolean) {
+    fun garantirAtalho(context: Context) {
         runCatching {
             val pm = context.packageManager
             val atalho = ComponentName(context, SosRapidoActivity::class.java)
-            val desejado = if (ligado) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
-            if (pm.getComponentEnabledSetting(atalho) != desejado) {
-                pm.setComponentEnabledSetting(atalho, desejado, PackageManager.DONT_KILL_APP)
+            if (pm.getComponentEnabledSetting(atalho) != PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+                pm.setComponentEnabledSetting(atalho, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP)
             }
-        }.onFailure { Log.w("SosRapido", "Não mudou o atalho", it) }
-        // O que foi fixado na tela inicial acompanha: desligado, fica cinza e avisa onde religar.
-        runCatching {
-            if (ligado) {
-                ShortcutManagerCompat.enableShortcuts(context, listOf(atalhoDaTelaInicial(context)))
-            } else {
-                ShortcutManagerCompat.disableShortcuts(
-                    context,
-                    listOf(ID_DO_ATALHO),
-                    "O SOS rápido está desligado. Ligue em GuardiõesSOS > Ajustes.",
-                )
-            }
-        }.onFailure { Log.w("SosRapido", "Não mudou o atalho da tela inicial", it) }
+        }.onFailure { Log.w("SosRapido", "Não ligou o atalho", it) }
+        runCatching { ShortcutManagerCompat.enableShortcuts(context, listOf(atalhoDaTelaInicial(context))) }
+            .onFailure { Log.w("SosRapido", "Não ligou o atalho da tela inicial", it) }
     }
 
     /** Id do atalho "SOS rápido" fixado na tela inicial (o botão "Pôr na tela inicial" dos Ajustes). */
@@ -111,7 +117,7 @@ object SosRapido {
 
     /** O atalho está aparecendo (ligado de fato no aparelho)? */
     fun atalhoLigado(context: Context): Boolean = runCatching {
-        context.packageManager.getComponentEnabledSetting(ComponentName(context, SosRapidoActivity::class.java)) ==
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        val estado = context.packageManager.getComponentEnabledSetting(ComponentName(context, SosRapidoActivity::class.java))
+        estado == PackageManager.COMPONENT_ENABLED_STATE_ENABLED || estado == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
     }.getOrDefault(false)
 }

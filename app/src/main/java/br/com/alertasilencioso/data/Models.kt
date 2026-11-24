@@ -70,18 +70,6 @@ data class Settings(
     val followUpIntervalMinutes: Int = 3,
     val followUpAudience: FollowUpAudience = FollowUpAudience.ALWAYS_ONLY,
     val screenOffDetection: Boolean = true,
-    /**
-     * O atalho "SOS rápido" (um 2º ícone): abriu = tela preta, conta 3 s e dispara sozinho. Feito para o
-     * "pressionar duas vezes" do botão lateral do Samsung, que funciona com a tela apagada e bloqueada
-     * (o botão de volume, não: o Samsung não entrega o volume com a tela apagada). Nasce desligado.
-     */
-    val sosRapido: Boolean = false,
-    /**
-     * Contra CURIOSOS (Rodrigo, 24/11: "um filho olhar o celular e clicar"): com o celular DESBLOQUEADO, tocar no
-     * ícone do SOS rápido só abre a tela preta, que espera mais [br.com.alertasilencioso.alert.SosRapido.TOQUES_PARA_CONFIRMAR]
-     * toques nela; sem eles, fecha e nada sai. Com o celular bloqueado (os 2 toques no botão de ligar), dispara direto.
-     */
-    val sosRapidoConfirmar: Boolean = true,
     /** Grava um vídeo (câmera frontal + áudio) ao acionar o SOS. Opt-in, experimental. */
     val capturarMidia: Boolean = false,
     /** Duração do vídeo do SOS, em segundos. */
