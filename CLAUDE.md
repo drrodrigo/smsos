@@ -57,7 +57,9 @@ transparente**. O GPT não entrega SVG vetorial de verdade — e tudo bem, o app
   NÃO aparece para app de outra empresa no Samsung dele. Desde a 0.36.2 a porta do pacote é o SOS rápido (filtro
   MAIN + INFO, que o Android escolhe antes do LAUNCHER): bloqueado = dispara; pela porta com o celular DESBLOQUEADO
   ("Abrir" da Play, informações do app) abre o MainActivity, nunca dispara (`SosRapido.comoAbrir`). O atalho
-  estático continua (menu do ícone, `ORIGEM=atalho` = dispara direto). Travas: `SosRapidoTest`.
+  estático continua (menu do ícone, `ORIGEM=atalho` = dispara direto). A 0.36.2 NÃO resolveu (o Samsung não usa a
+  porta INFO): desde a 0.36.3 o SosRapidoActivity vem ANTES do MainActivity no manifesto (o Samsung guarda a 1ª
+  tela "de abrir" do pacote); não troque a ordem (`SosRapidoTest` trava). Travas: `SosRapidoTest`.
 - **App do RELÓGIO (Wear OS 3+, módulo `relogio/`, 20/11):** abriu = conta (3 s, tela preta no modo discreto) e
   dispara pelo celular (`OuvinteDoRelogio` → `AlertManager.trigger(..., TriggerSource.RELOGIO, ...)`). A ponte do
   Wear OS só liga app com o MESMO pacote e a MESMA chave: o relógio usa `br.com.guardioessos` (`.teste` no
