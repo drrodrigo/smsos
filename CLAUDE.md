@@ -1,5 +1,22 @@
 # CLAUDE.md — GuardiõesSOS
 
+> **Começando aqui? Leia a passagem:** [`docs/2026-11-25-passagem.md`](docs/2026-11-25-passagem.md)
+> — onde está cada parte (Play, App Store, TestFlight, relógios, site, servidor), o banco medido e as
+> pendências. O ramo de trabalho do Android é o **`feat/captura-sos`**; o do iPhone, o **`feat/ios-fabrica`**.
+
+## 🔵 Primeira mensagem desta conversa: marque o chat
+
+Antes de responder, rode no banco (`mcp__Supabase__execute_sql`, projeto `ymszgqpgxtprkqxjhtwb`):
+
+    select comum.abrir_conversa('guardioessos', '<título que ele deu à conversa>');
+
+Marca o chat deste sistema como **ligado** na tela Passagens
+(`https://www.solucoesdaweb.com.br/admin/passagens`). Se a resposta vier com
+`conversa_anterior_sem_passagem: true`, a conversa anterior ficou sem retrato: **pergunte a
+ele em uma linha se vai fazer a passagem da conversa antiga** antes de começar. Se vier
+`false`, não pergunte nada. O passo a passo inteiro:
+`docs/COMO-FAZER-A-PASSAGEM.md` do `drrodrigo/solucoesdaweb`.
+
 App Android de **botão de pânico silencioso**. A pessoa segura o botão de volume (ou o botão
 na tela) e, sem ninguém perceber, dispara um SMS com a localização pros seus **guardiões**.
 Dois tipos de SOS: **Segurança** (perigo/assalto) e **Saúde** (passou mal/caiu).
